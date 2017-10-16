@@ -1,0 +1,4 @@
+LIBRARY "X3DAudio1_7"
+EXPORTS
+X3DAudioCalculate=Fake_X3DAudioCalculate
+X3DAudioInitialize=Fake_X3DAudioInitialize
