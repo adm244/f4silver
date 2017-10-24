@@ -60,6 +60,8 @@ extern "C" {
   
   uint64 TESScriptCompileAddress = 0x004E7B10;
   uint64 GlobalScriptStateAddress = 0x05AF9720;
+  
+  uint64 TESScriptExecuteAddress = 0x004E2440;
 }
 
 internal void HookMainLoop()
@@ -84,6 +86,8 @@ internal void Initialize()
   
   TESScript_Compile = (_TESScript_Compile)(TESScriptCompileAddress + baseAddress);
   GlobalScriptStateAddress += baseAddress;
+  
+  TESScript_Execute = (_TESScript_Execute)(TESScriptExecuteAddress + baseAddress);
 }
 
 internal bool enabled = true;

@@ -28,9 +28,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 /*
   Compile as x64 code
   
-  #define MAX_SCRIPT_SIZE 16384
-  #define MAX_SCRIPT_LINE 260
-  
   struct ArgsType {
     char *type; // 8 bytes
     int32 unk01; // 4 bytes
@@ -80,15 +77,24 @@ OTHER DEALINGS IN THE SOFTWARE.
     
     void __fastcall CreateTESString(TESString *tesString, char *string, __int64 length);
   
-  ScriptCompile(?):
+  TESScript::Compile(?):
     address: 0x004E7B10
     
     // globalObject - *(0x05AF9720)
     // scriptObject - scriptObject(?)
     // unk02 - always 0
     // compilerTypeIndex - 1 for "SysWindowCompileAndRun"
-    bool __fastcall ScriptCompile(void *globalObject, TESScript *scriptObject, int32 unk02, int32 compilerTypeIndex);
+    bool __fastcall TESScript::Compile(void *globalObject, TESScript *scriptObject, int32 unk02, int32 compilerTypeIndex);
   
+  TESScript::Execute(?):
+    address: 0x004E2440
+    
+    // scriptObject - previously compiled TESScript object
+    // unk01 - should be 0
+    // unk02 - should be 0
+    // unk03 - should be 0
+    // unk04 - must be 1
+    bool __fastcall TESScript::Execute(TESScript *scriptObject, uint64 unk01, uint64 unk02, uint64 unk03, bool unk04);
   
   TESScript creation address: 0x004E2AC4
   TESScript vtable address: 0x02CADC08
@@ -130,6 +136,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include <string.h>
 
+#define MAX_SCRIPT_SIZE 16384
+#define MAX_SCRIPT_LINE 260
+#define VM_OPCODE_LENGTH 4
+
 struct TESScript { // struct_a2
   uint64 vtable; // 0x00
   uint64 unk08;
@@ -143,7 +153,7 @@ struct TESScript { // struct_a2
   uint32 unk1C;
   uint32 unk20;
   uint32 unk24;
-  uint32 unk28;
+  uint32 bytecodeLength; // 0x28
   uint32 unk2C;
   uint8 unk30;
   uint8 unk31;
@@ -151,13 +161,13 @@ struct TESScript { // struct_a2
     uint8 gap33;
   uint32 unk34;
   char *scriptText; // 0x38
-  uint64 unk40;
+  char *scriptBytecode; // 0x40
   uint64 unk48;
   uint32 unk50;
   uint32 unk54;
   uint64 unk58;
-  uint64 unk60;
-  uint64 unk68;
+  uint64 reference01; // 0x60
+  uint64 reference02; // 0x68
   uint64 unk70;
   uint64 unk78;
   char scriptLineText[260];
@@ -173,6 +183,9 @@ internal _TESScript_Constructor TESScript_Constructor;
 typedef bool (__fastcall *_TESScript_Compile)(void *globalObject, TESScript *scriptObject, int32 unk02, int32 compilerTypeIndex);
 internal _TESScript_Compile TESScript_Compile;
 
+typedef bool (__fastcall *_TESScript_Execute)(TESScript *scriptObject, uint64 unk01, uint64 unk02, uint64 unk03, bool unk04);
+internal _TESScript_Execute TESScript_Execute;
+
 /*
   Script compile and run process:
     1) Allocate memory for Script object
@@ -185,12 +198,14 @@ internal _TESScript_Compile TESScript_Compile;
     5) Copy script text from Script object into allocated memory
     6) Set scriptText pointer to point to allocated memory
     
-    7) Pass globalObject, Script object, 0 and 1 into sub_004E7B10
+    7) COMPILE: Pass globalObject, Script object, 0 and 1 into sub_004E7B10
+    8) RUN: Pass Script object, 0, 0, 0 and 1 into sub_004E2440
 */
 
-//FIX(adm244): NOT WORKING!
 internal bool ExecuteScriptLine(char *text)
 {
+  bool result = false;
+  
   TESScript scriptObject = {0};
   TESScript_Constructor(&scriptObject);
   
@@ -203,8 +218,13 @@ internal bool ExecuteScriptLine(char *text)
   scriptObject.scriptText = text;
   memcpy(scriptObject.scriptLineText, text, strlen(text));
   
-  //TODO(adm244): find out a way to execute compiled script!
-  return TESScript_Compile((void *)GetGlobalScriptObject(), &scriptObject, 0, 1);
+  //TODO(adm244): check bytecodeLength (should be > 0)
+  if( TESScript_Compile((void *)GetGlobalScriptObject(), &scriptObject, 0, 1) ) {
+    result = true;
+    TESScript_Execute(&scriptObject, 0, 0, 0, 1);
+  }
+  
+  return result;
 }
 
 #endif
