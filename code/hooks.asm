@@ -23,23 +23,15 @@
 
 ;IMPORTANT(adm244): SCRATCH VERSION JUST TO GET IT UP WORKING
 
-;extern baseAddress: qword
-;extern CompileAndRunAddress: qword
-;extern ScriptObjectAddress: qword
-;extern Unk1ObjectAddress: qword
-
 extern ProcessWindowAddress: qword
 extern Unk3ObjectAddress: qword
 
-;extern ConsolePrintAddress: qword
 extern Unk2ObjectAddress: qword
-;extern mainloop_hook_patch_address: qword
 extern mainloop_hook_return_address: qword
 
-extern GameLoop: proc
+extern GlobalScriptStateAddress: qword
 
-.data
-  unkval01 dd 1
+extern GameLoop: proc
 
 .code
   GameLoop_Hook proc
@@ -63,8 +55,6 @@ extern GameLoop: proc
     pop rbp
     pop rbx
     
-    ;mov rax, qword ptr ds:[01455FF648h]
-    ;mov rbx, qword ptr ds:[rax+030h]
     mov rcx, Unk3ObjectAddress
     call ProcessWindowAddress
     
@@ -78,41 +68,10 @@ extern GameLoop: proc
     ret
   GetConsoleObject endp
   
-  ;NOTE(adm244): compiles and runs passed in rcx script
-  ;CompileAndRun proc
-  ;  ; rcx: this, rdx: unk1, r8: scriptText, r9: unk3
-  ;  mov r8, rcx
-  ;  ;lea r9, unkval01
-  ;  
-  ;  mov rax, qword ptr [ScriptObjectAddress]
-  ;  mov rcx, qword ptr [rax]
-  ;  
-  ;  ;this:
-  ;  ; rax = [0x05A669B0]
-  ;  ; r15 = [rax + 0xB8]
-  ;  ; [r15 - 0x38]
-  ;  
-  ;  mov rax, qword ptr [Unk1ObjectAddress]
-  ;  mov rdx, qword ptr [rax]
-  ;  ;mov rax, qword ptr [rax + 0B8h]
-  ;  ;mov rdx, qword ptr [rax - 038h]
-  ;  
-  ;  mov rax, CompileAndRunAddress
-  ;  call rax
-  ;  
-  ;  ret
-  ;CompileAndRun endp
-  
-  ;NOTE(adm244): prints string passed in rcx out to game console
-  ;ConsolePrint proc
-  ;  mov rdx, rcx
-  ;  
-  ;  mov rax, qword ptr [Unk2ObjectAddress]
-  ;  mov rcx, qword ptr [rax]
-  ;  
-  ;  mov rax, ConsolePrintAddress
-  ;  call rax
-  ;  
-  ;  ret
-  ;ConsolePrint endp
+  GetGlobalScriptObject proc
+    mov rax, qword ptr [GlobalScriptStateAddress]
+    mov rax, qword ptr [rax]
+    
+    ret
+  GetGlobalScriptObject endp
 end

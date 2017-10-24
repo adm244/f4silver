@@ -28,39 +28,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 /*
   Compile as x64 code
   
-  Fallout 4 RE:
-  (all addresses are relative to base)
-    SaveGame: 0x00CDC4D0
-    LoadGame: 0x00CDC9D0
-    DeleteSaveGame: 0x00CEAF30
-    
-    GameDataReady: 0x0082F8D0
-    
-    FirstConsoleCommand: 0x03724DC0
-    FirstObScriptCommand: 0x03714DD0
-    
-    Console Manager: 0x058FEEB0
-    Console Pointer: 0x05AF97A8
-    
-    Load Game Event: 0x00442D20
-    Init Script Event: 0x00442BE0
-    Death Event: 0x004423C0
-    Combat Event: 0x00441F60
-    
-    IsMenuOpen: 0x020406C0
-    
-    GameVM: 0x058F1708
-  
-  Print to console:
-    this: 0x0586C4C0
-    method: 0x012490E0
-  
-  CompileAndRun(?):
-    address: 0x004EAE20
-  
-  //IMPORTANT(adm244): new are from here
-  
   #define MAX_SCRIPT_SIZE 16384
+  #define MAX_SCRIPT_LINE 260
   
   struct ArgsType {
     char *type; // 8 bytes
@@ -80,33 +49,6 @@ OTHER DEALINGS IN THE SOFTWARE.
     // unk3 - script line?
     int8 StandardCompile(int16 argsCount, ArgsType *argsType, Struct_4 *unk2, char *text);
   
-  struct Struct_a2 {
-    int64 vtable; // 0x00
-    int64 unk08;
-    int16 unk10;
-    int16 unk12;
-    int16 unk14;
-    int16 unk16;
-    int16 unk18;
-    int16 scriptTextLength; // 0x1A
-    int64 unk1C;
-    int64 unk24;
-    int32 unk2C;
-    int8 unk30;
-    int8 unk31;
-    int8 unk32;
-    int8 gap33;
-    int32 unk34;
-    char *scriptText; // 0x38
-    int8 gap40[20];
-    int32 unk54;
-    int64 unk58;
-    int64 unk60;
-    int64 unk68;
-    int64 unk70;
-    int64 unk78;
-  }; // 128 bytes (0x80)
-  
   struct Struct_4 {
     int32 unk0;
     char string[512];
@@ -116,8 +58,6 @@ OTHER DEALINGS IN THE SOFTWARE.
   
   //NOTE(adm244): this is NOT a compile and run!
   CompileAndRun_Prob:
-    // This is most likely a proper CompileAndRun function
-    
     address: 0x004EB830
     
     // unk0 - ???
@@ -127,7 +67,7 @@ OTHER DEALINGS IN THE SOFTWARE.
     // unk3 - structure with arguments or something ???
     (p.s. unk2 is allocated on stack and is probably a Script object)
     
-    int64 CompileAndRun_Prob(void *unk0, Struct_a2 *unk1, Struct_6 *unk2, Struct_4 *unk3);
+    int64 CompileAndRun_Prob(void *unk0, TESScript *unk1, Struct_6 *unk2, Struct_4 *unk3);
   
   struct TESString {
     char *string;
@@ -140,24 +80,24 @@ OTHER DEALINGS IN THE SOFTWARE.
     
     void __fastcall CreateTESString(TESString *tesString, char *string, __int64 length);
   
-  CompileAndRun(?):
+  ScriptCompile(?):
     address: 0x004E7B10
     
-    // globalObject - 0x05AF9720
+    // globalObject - *(0x05AF9720)
     // scriptObject - scriptObject(?)
     // unk02 - always 0
     // compilerTypeIndex - 1 for "SysWindowCompileAndRun"
-    bool __fastcall sub_004E7B10(void *globalObject, struct_a2 *scriptObject, int32 unk02, int32 compilerTypeIndex);
+    bool __fastcall ScriptCompile(void *globalObject, TESScript *scriptObject, int32 unk02, int32 compilerTypeIndex);
   
   
-  struct_a2 creation address: 0x004E2AC4
-  struct_a2 vtable address: 0x02CADC08
+  TESScript creation address: 0x004E2AC4
+  TESScript vtable address: 0x02CADC08
   
-  Struct_a2_ctor(?):
+  TESScript::Constructor(?):
     address: 0x00151E30
     
     // scriptObject - script object memory
-    struct_a2 * __fastcall Struct_a2::ctor(struct_a2 *scriptObject);
+    void __fastcall TESScript::Constructor(TESScript *scriptObject);
 */
 
 /*
@@ -188,8 +128,83 @@ OTHER DEALINGS IN THE SOFTWARE.
 #ifndef _F4_FUNCTIONS_
 #define _F4_FUNCTIONS_
 
+#include <string.h>
+
+struct TESScript { // struct_a2
+  uint64 vtable; // 0x00
+  uint64 unk08;
+  uint16 flags10;
+  uint16 unk12;
+  uint16 unk14;
+  uint16 unk16;
+  uint16 unk18;
+  uint8 byte1A;
+  uint8 byte1B;
+  uint32 unk1C;
+  uint32 unk20;
+  uint32 unk24;
+  uint32 unk28;
+  uint32 unk2C;
+  uint8 unk30;
+  uint8 unk31;
+  uint8 unk32;
+    uint8 gap33;
+  uint32 unk34;
+  char *scriptText; // 0x38
+  uint64 unk40;
+  uint64 unk48;
+  uint32 unk50;
+  uint32 unk54;
+  uint64 unk58;
+  uint64 unk60;
+  uint64 unk68;
+  uint64 unk70;
+  uint64 unk78;
+  char scriptLineText[260];
+}; // 388 bytes (0x184)
+
 //NOTE(adm244): prints out a c-style formated string into the game console
 typedef void (__fastcall *_ConsolePrint)(uint64 obj, char *format, ...);
 internal _ConsolePrint ConsolePrint;
+
+typedef void (__fastcall *_TESScript_Constructor)(TESScript *scriptObject);
+internal _TESScript_Constructor TESScript_Constructor;
+
+typedef bool (__fastcall *_TESScript_Compile)(void *globalObject, TESScript *scriptObject, int32 unk02, int32 compilerTypeIndex);
+internal _TESScript_Compile TESScript_Compile;
+
+/*
+  Script compile and run process:
+    1) Allocate memory for Script object
+    2) Initialize Script object
+      2.1) Set vtable and flags
+      2.2) Initialize the rest of a structure with zero
+      2.3) Initialize script text at field70 (260 bytes long) with zeros (optional?)
+    3) Allocate memory for script text
+    4) Initialize memory for script text with zeros
+    5) Copy script text from Script object into allocated memory
+    6) Set scriptText pointer to point to allocated memory
+    
+    7) Pass globalObject, Script object, 0 and 1 into sub_004E7B10
+*/
+
+//FIX(adm244): NOT WORKING!
+internal bool ExecuteScriptLine(char *text)
+{
+  TESScript scriptObject = {0};
+  TESScript_Constructor(&scriptObject);
+  
+  scriptObject.byte1A = 0x16;
+  scriptObject.flags10 |= 0x4000;
+  scriptObject.byte1B = 0x41;
+  scriptObject.unk1C = 1;
+  scriptObject.unk34 = 1;
+  
+  scriptObject.scriptText = text;
+  memcpy(scriptObject.scriptLineText, text, strlen(text));
+  
+  //TODO(adm244): find out a way to execute compiled script!
+  return TESScript_Compile((void *)GetGlobalScriptObject(), &scriptObject, 0, 1);
+}
 
 #endif

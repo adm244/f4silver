@@ -32,55 +32,34 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include "types.h"
 #include "utils.cpp"
+
+extern "C" {
+  void GameLoop_Hook();
+  //uint8 CompileAndRun(char *text);
+  uint64 GetConsoleObject();
+  uint64 GetGlobalScriptObject();
+}
+
 #include "f4_functions.cpp"
 
 extern "C" uint64 baseAddress = 0;
 internal HMODULE f4silver = 0;
 
-#define F4VER_1_9_4 0x1
-#define F4VER_1_10_26 0x2
-
-#define F4VER F4VER_1_10_26
-
 //NOTE(adm244): addresses for hooks
 extern "C" {
-#if F4VER == F4VER_1_10_26
   uint64 mainloop_hook_patch_address = 0x00D34DB7;
   uint64 mainloop_hook_return_address = 0x00D34DC3;
 
   uint64 ProcessWindowAddress = 0x00D36B90;
   uint64 Unk3ObjectAddress = 0x05AC25E8;
   
-  // CompileAndRun(???): 0x004E7C60
-  
-  /*uint64 CompileAndRunAddress = 0x004E9780;
-  
-  uint64 ScriptObjectAddress = 0x05A66918;
-  uint64 Unk1ObjectAddress = 0x05A669B0;*/
-  
   uint64 ConsolePrintAddress = 0x01260EE0;
   uint64 Unk2ObjectAddress = 0x058FEEB0;
-#elif F4VER == F4VER_1_9_4
-  uint64 mainloop_hook_patch_address = 0x00D1D117;
-  uint64 mainloop_hook_return_address = 0x00D1D123;
-
-  uint64 ProcessWindowAddress = 0x00D1EEF0;
-  uint64 Unk3ObjectAddress = 0x05A2F648;
   
-  //uint64 CompileAndRunAddress = 0x004E9780;
+  uint64 TESScriptConstructorAddress = 0x00151E30;
   
-  //uint64 ScriptObjectAddress = 0x05A66918;
-  //uint64 Unk1ObjectAddress = 0x05A669B0;
-  
-  uint64 ConsolePrintAddress = 0x012490E0;
-  uint64 Unk2ObjectAddress = 0x0586C4C0;
-#endif
-}
-
-extern "C" {
-  void GameLoop_Hook();
-  uint8 CompileAndRun(char *text);
-  uint64 GetConsoleObject();
+  uint64 TESScriptCompileAddress = 0x004E7B10;
+  uint64 GlobalScriptStateAddress = 0x05AF9720;
 }
 
 internal void HookMainLoop()
@@ -98,23 +77,22 @@ internal void Initialize()
   ProcessWindowAddress += baseAddress;
   Unk3ObjectAddress += baseAddress;
   
-  //CompileAndRunAddress += baseAddress;
-  //CompileAndRunThisAddress += baseAddress;
-  
-  //ScriptObjectAddress += baseAddress;
-  //Unk1ObjectAddress += baseAddress;
-  
-  //ConsolePrintAddress += baseAddress;
   ConsolePrint = (_ConsolePrint)(ConsolePrintAddress + baseAddress);
   Unk2ObjectAddress += baseAddress;
+  
+  TESScript_Constructor = (_TESScript_Constructor)(TESScriptConstructorAddress + baseAddress);
+  
+  TESScript_Compile = (_TESScript_Compile)(TESScriptCompileAddress + baseAddress);
+  GlobalScriptStateAddress += baseAddress;
 }
 
 internal bool enabled = true;
 extern "C" void GameLoop()
 {
   if( IsActivated(VK_HOME, &enabled) ) {
+    ExecuteScriptLine("ToggleWireFrame");
     //CompileAndRun("ToggleWireFrame");
-    ConsolePrint(GetConsoleObject(), "This is a test: %d", 10);
+    //ConsolePrint(GetConsoleObject(), "This is a test: %d", 10);
     //ConsolePrint(GetConsoleObject(), "This is a test");
   }
 }
