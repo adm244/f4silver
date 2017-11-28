@@ -40,6 +40,7 @@ extern "C" {
   uint64 GetGlobalScriptObject();
 }
 
+#include "f4_version.h"
 #include "f4_functions.cpp"
 
 extern "C" uint64 baseAddress = 0;
@@ -47,21 +48,21 @@ internal HMODULE f4silver = 0;
 
 //NOTE(adm244): addresses for hooks
 extern "C" {
-  uint64 mainloop_hook_patch_address = 0x00D34DB7;
-  uint64 mainloop_hook_return_address = 0x00D34DC3;
+  uint64 mainloop_hook_patch_address;
+  uint64 mainloop_hook_return_address;
 
-  uint64 ProcessWindowAddress = 0x00D36B90;
-  uint64 Unk3ObjectAddress = 0x05AC25E8;
+  uint64 ProcessWindowAddress;
+  uint64 Unk3ObjectAddress;
   
-  uint64 ConsolePrintAddress = 0x01260EE0;
-  uint64 Unk2ObjectAddress = 0x058FEEB0;
+  uint64 ConsolePrintAddress;
+  uint64 Unk2ObjectAddress;
   
-  uint64 TESScriptConstructorAddress = 0x00151E30;
+  uint64 TESScriptConstructorAddress;
   
-  uint64 TESScriptCompileAddress = 0x004E7B10;
-  uint64 GlobalScriptStateAddress = 0x05AF9720;
+  uint64 TESScriptCompileAddress;
+  uint64 GlobalScriptStateAddress;
   
-  uint64 TESScriptExecuteAddress = 0x004E2440;
+  uint64 TESScriptExecuteAddress;
 }
 
 internal void HookMainLoop()
@@ -69,7 +70,46 @@ internal void HookMainLoop()
   WriteBranch(mainloop_hook_patch_address, (uint64)&GameLoop_Hook);
 }
 
-internal void Initialize()
+internal void DefineAddresses()
+{
+  if( F4_VERSION == F4_VERSION_1_10_40 ) {
+    mainloop_hook_patch_address = 0x00D36707;
+    mainloop_hook_return_address = 0x00D36713;
+
+    ProcessWindowAddress = 0x00D384E0;
+    Unk3ObjectAddress = 0x05ADE288;
+
+    ConsolePrintAddress = 0x01262830;
+    Unk2ObjectAddress = 0x0591AB30;
+
+    TESScriptConstructorAddress = 0x00151E30;
+
+    TESScriptCompileAddress = 0x004E7B30;
+    GlobalScriptStateAddress = 0x05B15420;
+
+    TESScriptExecuteAddress = 0x004E2460;
+  } else if( F4_VERSION == F4_VERSION_1_10_26 ) {
+    mainloop_hook_patch_address = 0x00D34DB7;
+    mainloop_hook_return_address = 0x00D34DC3;
+
+    ProcessWindowAddress = 0x00D36B90;
+    Unk3ObjectAddress = 0x05AC25E8;
+    
+    ConsolePrintAddress = 0x01260EE0;
+    Unk2ObjectAddress = 0x058FEEB0;
+    
+    TESScriptConstructorAddress = 0x00151E30;
+    
+    TESScriptCompileAddress = 0x004E7B10;
+    GlobalScriptStateAddress = 0x05AF9720;
+    
+    TESScriptExecuteAddress = 0x004E2440;
+  } else {
+    //TODO(adm244): unsupported version
+  }
+}
+
+internal void ShiftAddresses()
 {
   baseAddress = (uint64)GetModuleHandle(0);
   
@@ -90,13 +130,19 @@ internal void Initialize()
   TESScript_Execute = (_TESScript_Execute)(TESScriptExecuteAddress + baseAddress);
 }
 
+internal void Initialize()
+{
+  DefineAddresses();
+  ShiftAddresses();
+}
+
 internal bool enabled = true;
 extern "C" void GameLoop()
 {
   if( IsActivated(VK_HOME, &enabled) ) {
     ExecuteScriptLine("ToggleWireFrame");
     //CompileAndRun("ToggleWireFrame");
-    //ConsolePrint(GetConsoleObject(), "This is a test: %d", 10);
+    ConsolePrint(GetConsoleObject(), "This is a test: %d", 10);
     //ConsolePrint(GetConsoleObject(), "This is a test");
   }
 }

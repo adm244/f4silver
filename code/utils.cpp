@@ -41,9 +41,12 @@ internal void SafeWriteBuf(uint64 addr, void *data, uint64 len)
 {
   DWORD oldProtect;
 
-  VirtualProtect((void *)addr, len, PAGE_EXECUTE_READWRITE, &oldProtect);
-  memcpy((void *)addr, data, len);
-  VirtualProtect((void *)addr, len, oldProtect, &oldProtect);
+  if( VirtualProtect((void *)addr, len, PAGE_EXECUTE_READWRITE, &oldProtect) ) {
+    memcpy((void *)addr, data, len);
+    VirtualProtect((void *)addr, len, oldProtect, &oldProtect);
+  } else {
+    //TODO(adm244): cannot change page access, fatal!
+  }
 }
 
 internal void WriteBranch(uint64 source, uint64 dest)
