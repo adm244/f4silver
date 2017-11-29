@@ -44,7 +44,7 @@ PUSHD "%bin%"
 "%compiler%" %args%
 POPD
 
-REM COPY "mwsilver.ini" "%bin%"
+COPY "f4silver.ini" "%bin%"
 ECHO: Build finished.
 GOTO:EOF
 

@@ -40,4 +40,7 @@ typedef unsigned short uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
 
+typedef long long pointer;
+typedef unsigned int uint;
+
 #endif

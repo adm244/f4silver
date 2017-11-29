@@ -28,10 +28,13 @@ OTHER DEALINGS IN THE SOFTWARE.
 //IMPORTANT(adm244): patch only AFTER executable is decrypted!
 // (just wait a bit?)
 
+#include <stdio.h>
+#include <string>
 #include <windows.h>
 
-#include "types.h"
-#include "utils.cpp"
+#include "common/types.h"
+#include "common/utils.cpp"
+#include "common/queue.cpp"
 
 extern "C" {
   void GameLoop_Hook();
@@ -40,11 +43,35 @@ extern "C" {
   uint64 GetGlobalScriptObject();
 }
 
-#include "f4_version.h"
-#include "f4_functions.cpp"
-
 extern "C" uint64 baseAddress = 0;
 internal HMODULE f4silver = 0;
+
+internal HANDLE TimerQueue = 0;
+
+internal uint8 IsInterior = 0;
+internal uint8 ActualGameplay = 1;
+
+#include "f4/version.h"
+#include "f4/functions.cpp"
+
+//FIX(adm244): hack!
+#define MAX_SECTION 32767
+#define MAX_FILENAME 260
+#define MAX_DESCRIPTION 255
+#define MAX_BATCHES 50
+
+#include "silverlib/config.cpp"
+#include "silverlib/batch_processor.cpp"
+#include "silverlib/random/functions.cpp"
+
+internal HANDLE QueueHandle = 0;
+internal DWORD QueueThreadID = 0;
+
+internal Queue BatchQueue;
+internal Queue InteriorPendingQueue;
+internal Queue ExteriorPendingQueue;
+
+internal uint8 IsTimedOut = 0;
 
 //NOTE(adm244): addresses for hooks
 extern "C" {
@@ -63,6 +90,150 @@ extern "C" {
   uint64 GlobalScriptStateAddress;
   
   uint64 TESScriptExecuteAddress;
+}
+
+internal void DisplayMessage(char *message)
+{
+  //TODO(adm244): implement this!
+  ConsolePrint(GetConsoleObject(), message);
+}
+
+internal void DisplaySuccessMessage(char *message)
+{
+  //TODO(adm244): implement this!
+  DisplayMessage(message);
+}
+
+internal void DisplayRandomSuccessMessage(char *message)
+{
+  //TODO(adm244): implement this!
+  DisplayMessage(message);
+}
+
+internal inline void MakePreSave()
+{
+  if( Settings.SavePreActivation ) {
+    //TODO(adm244): implement this!
+    //SaveGame("PreActivation", "pre");
+  }
+}
+
+internal inline void MakePostSave()
+{
+  if( Settings.SavePostActivation ) {
+  //TODO(adm244): implement this!
+    //SaveGame("PostActivation", "post");
+  }
+}
+
+internal VOID CALLBACK TimerQueueCallback(PVOID lpParam, BOOLEAN TimerOrWaitFired)
+{
+  RandomClearCounters();
+  
+  IsTimedOut = 1;
+}
+
+internal void TimerCreate(HANDLE timerQueue, uint timeout)
+{
+  HANDLE newTimerQueue;
+  if( !CreateTimerQueueTimer(&newTimerQueue, TimerQueue,
+                            (WAITORTIMERCALLBACK)TimerQueueCallback,
+                            0, timeout, 0, 0) ) {
+    DisplayMessage("Ooops... Timer is dead :'(");
+    DisplayMessage("We're sad pandas now :(");
+  }
+}
+
+internal void ProcessQueue(Queue *queue, bool checkExecState)
+{
+  pointer dataPointer;
+  
+  while( dataPointer = QueueGet(queue) ) {
+    BatchData *batch = (BatchData *)dataPointer;
+    bool isQueueEmpty = QueueIsEmpty(queue);
+    
+    if( checkExecState ) {
+      uint8 executionState = GetBatchExecState(batch->filename);
+    
+      bool executionStateValid = ((executionState == EXEC_EXTERIOR_ONLY) && !IsInterior)
+        || ((executionState == EXEC_INTERIOR_ONLY) && IsInterior)
+        || (executionState == EXEC_DEFAULT);
+      
+      if( !executionStateValid ) {
+        if( executionState == EXEC_EXTERIOR_ONLY ) {
+          QueuePut(&ExteriorPendingQueue, dataPointer);
+        } else {
+          QueuePut(&InteriorPendingQueue, dataPointer);
+        }
+        
+        return;
+      }
+    }
+    
+    if( isQueueEmpty ) MakePreSave();
+  
+    ExecuteBatch(batch->filename);
+    DisplaySuccessMessage(batch->description);
+    
+    if( isQueueEmpty ) MakePostSave();
+  }
+}
+
+internal DWORD WINAPI QueueHandler(LPVOID data)
+{
+  for(;;) {
+    if( IsActivated(&CommandToggle) ) {
+      keys_active = !keys_active;
+      
+      //TODO(adm244): display it somehow on loading screen
+      if( ActualGameplay ) {
+        DisplayMessage(keys_active ? Strings.MessageOn : Strings.MessageOff);
+      }
+    }
+  
+    if( keys_active ){
+      for( int i = 0; i < batches_count; ++i ){
+        if( IsActivated(batches[i].key, &batches[i].enabled) ){
+          QueuePut(&BatchQueue, (pointer)&batches[i]);
+        }
+      }
+      
+      if( IsActivated(&CommandRandom) ) {
+        //int index = RandomInt(0, batches_count - 1);
+        int index = GetNextBatchIndex(batches_count);
+        QueuePut(&BatchQueue, (pointer)&batches[index]);
+        DisplayRandomSuccessMessage(batches[index].description);
+      }
+    }
+  }
+}
+
+internal uint8 IsPlayerInInterior()
+{
+  //TODO(adm244): implement this!
+  return 0;
+}
+
+extern "C" void GameLoop()
+{
+  if( IsTimedOut ) {
+    IsTimedOut = 0;
+    TimerCreate(TimerQueue, Settings.Timeout);
+  }
+  
+  if( ActualGameplay ) {
+    if( IsInterior != IsPlayerInInterior() ) {
+      IsInterior = !IsInterior;
+      
+      if( IsInterior ) {
+        ProcessQueue(&InteriorPendingQueue, false);
+      } else {
+        ProcessQueue(&ExteriorPendingQueue, false);
+      }
+    }
+  
+    ProcessQueue(&BatchQueue, true);
+  }
 }
 
 internal void HookMainLoop()
@@ -130,13 +301,29 @@ internal void ShiftAddresses()
   TESScript_Execute = (_TESScript_Execute)(TESScriptExecuteAddress + baseAddress);
 }
 
-internal void Initialize()
+internal void Initialize(HMODULE module)
 {
   DefineAddresses();
   ShiftAddresses();
+  
+  SettingsInitialize(module);
+  InitilizeBatches(module);
+  
+  int batchesCount = InitilizeBatches(module);
+  if( batchesCount <= 0 ) {
+    MessageBox(0, "Batch files could not be located!", "Error", MB_OK | MB_ICONERROR);
+  }
+  
+  QueueInitialize(&BatchQueue);
+  QueueInitialize(&InteriorPendingQueue);
+  QueueInitialize(&ExteriorPendingQueue);
+  QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
+  
+  RandomGeneratorInitialize(batchesCount);
+  TimerQueue = CreateTimerQueue();
 }
 
-internal bool enabled = true;
+/*internal bool enabled = true;
 extern "C" void GameLoop()
 {
   if( IsActivated(VK_HOME, &enabled) ) {
@@ -145,7 +332,7 @@ extern "C" void GameLoop()
     ConsolePrint(GetConsoleObject(), "This is a test: %d", 10);
     //ConsolePrint(GetConsoleObject(), "This is a test");
   }
-}
+}*/
 
 internal DWORD WINAPI WaitForDecryption(LPVOID param)
 {
@@ -177,12 +364,12 @@ internal BOOL WINAPI DllMain(HMODULE instance, DWORD reason, LPVOID reserved)
   if(reason == DLL_PROCESS_ATTACH) {
     f4silver = instance;
     
-    Initialize();
+    Initialize(instance);
     //HookMainLoop();
     
     CreateThread(0, 0, WaitForDecryption, 0, 0, 0);
     
-    MessageBox(0, "This is f4silver.dll speaking!", "Yay!", 0);
+    //MessageBox(0, "This is f4silver.dll speaking!", "Yay!", 0);
   }
 
   return TRUE;

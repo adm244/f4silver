@@ -146,7 +146,7 @@ internal BOOL WINAPI DllMain(HANDLE procHandle, DWORD reason, LPVOID reserved)
       //MessageBox(0, "Plugin f4silver.dll was not found!", "Plugin dll not found", MB_OK | MB_ICONERROR);
       return FALSE;
     } else {
-      MessageBox(0, "f4silver.dll is loaded!", "Yay!", 0);
+      //MessageBox(0, "f4silver.dll is loaded!", "Yay!", 0);
     }
   }
 
