@@ -34,6 +34,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define BATCH_INTERIOR_ONLY "@interioronly"
 #define BATCH_EXTERIOR_ONLY "@exterioronly"
 
+//TODO(adm244): remove this
 //TODO(adm244): move outside
 #define BATCH_SAVEGAME "@savegame"
 
@@ -119,6 +120,8 @@ internal void ReadBatchDescriptions(BatchData *batches)
       if( fgets(line, sizeof(line), file) ) {
         strcpy(batches[i].description, line);
       }
+      
+      fclose(file);
     }
   }
 }

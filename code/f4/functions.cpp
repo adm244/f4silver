@@ -131,6 +131,16 @@ OTHER DEALINGS IN THE SOFTWARE.
   }; // sizeof(X) = 72
 */
 
+/*
+  Is current cell interior or exterior check:
+    1) Get ObjectReference pointer (rax)
+      player is an object reference
+      we have an address of player objectreference pointer (0x05AC26F8 for 1_10_26)
+    2) Get parent cell ([rax + 0xB8] = rax')
+    3) Check cell flags ([rax' + 0x40])
+      first bit is interior\exterior (set - interior)
+*/
+
 #ifndef _F4_FUNCTIONS_
 #define _F4_FUNCTIONS_
 
@@ -139,6 +149,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define MAX_SCRIPT_SIZE 16384
 #define MAX_SCRIPT_LINE 260
 #define VM_OPCODE_LENGTH 4
+
+internal const int DefaultCompiler = 0;
+internal const int SysWindowCompileAndRun = 1;
+internal const int DialogueCompileAndRun = 2;
 
 struct TESScript { // struct_a2
   uint64 vtable; // 0x00
@@ -219,7 +233,7 @@ internal bool ExecuteScriptLine(char *text)
   memcpy(scriptObject.scriptLineText, text, strlen(text));
   
   //TODO(adm244): check bytecodeLength (should be > 0)
-  if( TESScript_Compile((void *)GetGlobalScriptObject(), &scriptObject, 0, 1) ) {
+  if( TESScript_Compile((void *)GetGlobalScriptObject(), &scriptObject, 0, SysWindowCompileAndRun) ) {
     result = true;
     TESScript_Execute(&scriptObject, 0, 0, 0, 1);
   }
