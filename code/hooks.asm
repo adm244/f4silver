@@ -26,7 +26,8 @@
 extern ProcessWindowAddress: qword
 extern Unk3ObjectAddress: qword
 
-extern Unk2ObjectAddress: qword
+extern TESConsoleObjectAddress: qword
+
 extern mainloop_hook_return_address: qword
 
 extern GlobalScriptStateAddress: qword
@@ -62,7 +63,7 @@ extern GameLoop: proc
   GameLoop_Hook endp
   
   GetConsoleObject proc
-    mov rax, qword ptr [Unk2ObjectAddress]
+    mov rax, qword ptr [TESConsoleObjectAddress]
     mov rax, qword ptr [rax]
     
     ret

@@ -81,8 +81,8 @@ extern "C" {
   uint64 ProcessWindowAddress;
   uint64 Unk3ObjectAddress;
   
-  uint64 ConsolePrintAddress;
-  uint64 Unk2ObjectAddress;
+  uint64 TESConsolePrintAddress;
+  uint64 TESConsoleObjectAddress;
   
   uint64 TESScriptConstructorAddress;
   
@@ -90,12 +90,15 @@ extern "C" {
   uint64 GlobalScriptStateAddress;
   
   uint64 TESScriptExecuteAddress;
+  
+  uint64 TESDisplayMessageAddress;
 }
 
 internal void DisplayMessage(char *message)
 {
   //TODO(adm244): implement this!
-  ConsolePrint(GetConsoleObject(), message);
+  TESConsolePrint(GetConsoleObject(), message);
+  TESDisplayMessage(message, 0, 1, true);
 }
 
 internal void DisplaySuccessMessage(char *message)
@@ -250,8 +253,8 @@ internal void DefineAddresses()
     ProcessWindowAddress = 0x00D384E0;
     Unk3ObjectAddress = 0x05ADE288;
 
-    ConsolePrintAddress = 0x01262830;
-    Unk2ObjectAddress = 0x0591AB30;
+    TESConsolePrintAddress = 0x01262830;
+    TESConsoleObjectAddress = 0x0591AB30;
 
     TESScriptConstructorAddress = 0x00151E30;
 
@@ -259,6 +262,8 @@ internal void DefineAddresses()
     GlobalScriptStateAddress = 0x05B15420;
 
     TESScriptExecuteAddress = 0x004E2460;
+    
+    TESDisplayMessageAddress = 0x00AE1D10;
   } else if( F4_VERSION == F4_VERSION_1_10_26 ) {
     mainloop_hook_patch_address = 0x00D34DB7;
     mainloop_hook_return_address = 0x00D34DC3;
@@ -266,8 +271,8 @@ internal void DefineAddresses()
     ProcessWindowAddress = 0x00D36B90;
     Unk3ObjectAddress = 0x05AC25E8;
     
-    ConsolePrintAddress = 0x01260EE0;
-    Unk2ObjectAddress = 0x058FEEB0;
+    TESConsolePrintAddress = 0x01260EE0;
+    TESConsoleObjectAddress = 0x058FEEB0;
     
     TESScriptConstructorAddress = 0x00151E30;
     
@@ -275,6 +280,8 @@ internal void DefineAddresses()
     GlobalScriptStateAddress = 0x05AF9720;
     
     TESScriptExecuteAddress = 0x004E2440;
+    
+    TESDisplayMessageAddress = 0x00AE1D00;
   } else {
     //TODO(adm244): unsupported version
   }
@@ -290,8 +297,8 @@ internal void ShiftAddresses()
   ProcessWindowAddress += baseAddress;
   Unk3ObjectAddress += baseAddress;
   
-  ConsolePrint = (_ConsolePrint)(ConsolePrintAddress + baseAddress);
-  Unk2ObjectAddress += baseAddress;
+  TESConsolePrint = (_TESConsolePrint)(TESConsolePrintAddress + baseAddress);
+  TESConsoleObjectAddress += baseAddress;
   
   TESScript_Constructor = (_TESScript_Constructor)(TESScriptConstructorAddress + baseAddress);
   
@@ -299,6 +306,8 @@ internal void ShiftAddresses()
   GlobalScriptStateAddress += baseAddress;
   
   TESScript_Execute = (_TESScript_Execute)(TESScriptExecuteAddress + baseAddress);
+  
+  TESDisplayMessage = (_TESDisplayMessage)(TESDisplayMessageAddress + baseAddress);
 }
 
 internal void Initialize(HMODULE module)

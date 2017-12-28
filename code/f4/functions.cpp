@@ -27,14 +27,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 /*
   Compile as x64 code
-  
-  struct ArgsType {
-    char *type; // 8 bytes
-    int32 unk01; // 4 bytes
-    int8 unk02; // 1 byte
-      int8 pad[3]; // 3 bytes
-  }; // 16 bytes
-  
+
   StandardCompile:
     // Executes script function
     
@@ -45,13 +38,6 @@ OTHER DEALINGS IN THE SOFTWARE.
     // unk2 - some structure
     // unk3 - script line?
     int8 StandardCompile(int16 argsCount, ArgsType *argsType, Struct_4 *unk2, char *text);
-  
-  struct Struct_4 {
-    int32 unk0;
-    char string[512];
-    int32 length;
-    // ???
-  };
   
   //NOTE(adm244): this is NOT a compile and run!
   CompileAndRun_Prob:
@@ -65,13 +51,7 @@ OTHER DEALINGS IN THE SOFTWARE.
     (p.s. unk2 is allocated on stack and is probably a Script object)
     
     int64 CompileAndRun_Prob(void *unk0, TESScript *unk1, Struct_6 *unk2, Struct_4 *unk3);
-  
-  struct TESString {
-    char *string;
-    uint16 length;
-    uint16 length_zero_terminated;
-  };
-  
+
   CreateTESString:
     address: 0x00044040
     
@@ -107,31 +87,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 /*
-  ToggleSky command checks if player is in interior ???
-*/
-
-/*
-  struct X {
-    uint64 ptrCommandName; // 0
-    uint64 ptrCommandNameSynonym; // 8
-    uint32 opcode; // 12
-      uint8 pad[4]; // 16
-    uint64 ptrCommandDescription; // 24
-    
-    uint8 unk4; // 25
-      uint8 pad; // 26
-    uint16 unk5; // 28
-      uint8 pad[4]; // 32
-    
-    uint64 ptrArgumentType; // 40
-    uint64 ptrCommandFunction; // 48
-    uint64 ptrStandardCompileFunc; // 56
-    uint64 ptrOtherFunc; // 64
-      uint8 pad[8]; // 72
-  }; // sizeof(X) = 72
-*/
-
-/*
   Is current cell interior or exterior check:
     1) Get ObjectReference pointer (rax)
       player is an object reference
@@ -140,65 +95,6 @@ OTHER DEALINGS IN THE SOFTWARE.
     3) Check cell flags ([rax' + 0x40])
       first bit is interior\exterior (set - interior)
 */
-
-#ifndef _F4_FUNCTIONS_
-#define _F4_FUNCTIONS_
-
-#include <string.h>
-
-#define MAX_SCRIPT_SIZE 16384
-#define MAX_SCRIPT_LINE 260
-#define VM_OPCODE_LENGTH 4
-
-internal const int DefaultCompiler = 0;
-internal const int SysWindowCompileAndRun = 1;
-internal const int DialogueCompileAndRun = 2;
-
-struct TESScript { // struct_a2
-  uint64 vtable; // 0x00
-  uint64 unk08;
-  uint16 flags10;
-  uint16 unk12;
-  uint16 unk14;
-  uint16 unk16;
-  uint16 unk18;
-  uint8 byte1A;
-  uint8 byte1B;
-  uint32 unk1C;
-  uint32 unk20;
-  uint32 unk24;
-  uint32 bytecodeLength; // 0x28
-  uint32 unk2C;
-  uint8 unk30;
-  uint8 unk31;
-  uint8 unk32;
-    uint8 gap33;
-  uint32 unk34;
-  char *scriptText; // 0x38
-  char *scriptBytecode; // 0x40
-  uint64 unk48;
-  uint32 unk50;
-  uint32 unk54;
-  uint64 unk58;
-  uint64 reference01; // 0x60
-  uint64 reference02; // 0x68
-  uint64 unk70;
-  uint64 unk78;
-  char scriptLineText[260];
-}; // 388 bytes (0x184)
-
-//NOTE(adm244): prints out a c-style formated string into the game console
-typedef void (__fastcall *_ConsolePrint)(uint64 obj, char *format, ...);
-internal _ConsolePrint ConsolePrint;
-
-typedef void (__fastcall *_TESScript_Constructor)(TESScript *scriptObject);
-internal _TESScript_Constructor TESScript_Constructor;
-
-typedef bool (__fastcall *_TESScript_Compile)(void *globalObject, TESScript *scriptObject, int32 unk02, int32 compilerTypeIndex);
-internal _TESScript_Compile TESScript_Compile;
-
-typedef bool (__fastcall *_TESScript_Execute)(TESScript *scriptObject, uint64 unk01, uint64 unk02, uint64 unk03, bool unk04);
-internal _TESScript_Execute TESScript_Execute;
 
 /*
   Script compile and run process:
@@ -215,6 +111,42 @@ internal _TESScript_Execute TESScript_Execute;
     7) COMPILE: Pass globalObject, Script object, 0 and 1 into sub_004E7B10
     8) RUN: Pass Script object, 0, 0, 0 and 1 into sub_004E2440
 */
+
+#ifndef _F4_FUNCTIONS_
+#define _F4_FUNCTIONS_
+
+#include <string.h>
+
+#include "types.h"
+
+#define MAX_SCRIPT_SIZE 16384
+#define MAX_SCRIPT_LINE 260
+#define VM_OPCODE_LENGTH 4
+
+internal const int DefaultCompiler = 0;
+internal const int SysWindowCompileAndRun = 1;
+internal const int DialogueCompileAndRun = 2;
+
+//NOTE(adm244): prints out a c-style formated string into the game console
+typedef void (__fastcall *_TESConsolePrint)(uint64 consoleObject, char *format, ...);
+internal _TESConsolePrint TESConsolePrint;
+
+//NOTE(adm244): displays a message in the top-left corner of a screen
+// message - text to be displayed
+// unk1 - should be 0
+// unk2 - should be 1
+// unk3 - should be true (1)
+typedef void (__fastcall *_TESDisplayMessage)(char *message, int32 unk1, int32 unk2, bool unk3);
+internal _TESDisplayMessage TESDisplayMessage;
+
+typedef void (__fastcall *_TESScript_Constructor)(TESScript *scriptObject);
+internal _TESScript_Constructor TESScript_Constructor;
+
+typedef bool (__fastcall *_TESScript_Compile)(void *globalObject, TESScript *scriptObject, int32 unk02, int32 compilerTypeIndex);
+internal _TESScript_Compile TESScript_Compile;
+
+typedef bool (__fastcall *_TESScript_Execute)(TESScript *scriptObject, uint64 unk01, uint64 unk02, uint64 unk03, bool unk04);
+internal _TESScript_Execute TESScript_Execute;
 
 internal bool ExecuteScriptLine(char *text)
 {
