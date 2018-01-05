@@ -28,6 +28,23 @@ OTHER DEALINGS IN THE SOFTWARE.
 //IMPORTANT(adm244): patch only AFTER executable is decrypted!
 // (just wait a bit?)
 
+/*
+  IMPLEMENTED:
+    - Main game loop hook
+    - Load screen hook
+    - Print to console
+    - Print in-game message
+    - Execute console command
+    - Execute commands from *.txt file line by line (bat command)
+  TODO:
+    - Check if player is in interior or exterior
+    
+    - Get rid of C Runtime Library
+    - Code cleanup
+  DROPPED:
+    none yet
+*/
+
 #include <stdio.h>
 #include <string>
 #include <windows.h>
@@ -38,7 +55,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 extern "C" {
   void GameLoop_Hook();
-  //uint8 CompileAndRun(char *text);
+  void LoadGameBegin_Hook();
+  void LoadGameEnd_Hook();
+  
   uint64 GetConsoleObject();
   uint64 GetGlobalScriptObject();
 }
@@ -49,7 +68,7 @@ internal HMODULE f4silver = 0;
 internal HANDLE TimerQueue = 0;
 
 internal uint8 IsInterior = 0;
-internal uint8 ActualGameplay = 1;
+internal uint8 ActualGameplay = 0;
 
 #include "f4/version.h"
 #include "f4/functions.cpp"
@@ -77,6 +96,11 @@ internal uint8 IsTimedOut = 0;
 extern "C" {
   uint64 mainloop_hook_patch_address;
   uint64 mainloop_hook_return_address;
+  
+  uint64 loadgame_start_hook_patch_address;
+  uint64 loadgame_start_hook_return_address;
+  uint64 loadgame_end_hook_patch_address;
+  uint64 loadgame_end_hook_return_address;
 
   uint64 ProcessWindowAddress;
   uint64 Unk3ObjectAddress;
@@ -239,9 +263,25 @@ extern "C" void GameLoop()
   }
 }
 
+extern "C" void LoadGameBegin(char *filename)
+{
+  ActualGameplay = 0;
+}
+
+extern "C" void LoadGameEnd()
+{
+  ActualGameplay = 1;
+}
+
 internal void HookMainLoop()
 {
   WriteBranch(mainloop_hook_patch_address, (uint64)&GameLoop_Hook);
+}
+
+internal void HookLoadGame()
+{
+  WriteBranch(loadgame_start_hook_patch_address, (uint64)&LoadGameBegin_Hook);
+  WriteBranch(loadgame_end_hook_patch_address, (uint64)&LoadGameEnd_Hook);
 }
 
 internal void DefineAddresses()
@@ -249,6 +289,11 @@ internal void DefineAddresses()
   if( F4_VERSION == F4_VERSION_1_10_40 ) {
     mainloop_hook_patch_address = 0x00D36707;
     mainloop_hook_return_address = 0x00D36713;
+    
+    loadgame_start_hook_patch_address = 0x00CDE390;
+    loadgame_start_hook_return_address = 0x00CDE39D;
+    loadgame_end_hook_patch_address = 0x00CDEEE9;
+    loadgame_end_hook_return_address = 0x00CDEEF6;
 
     ProcessWindowAddress = 0x00D384E0;
     Unk3ObjectAddress = 0x05ADE288;
@@ -267,6 +312,11 @@ internal void DefineAddresses()
   } else if( F4_VERSION == F4_VERSION_1_10_26 ) {
     mainloop_hook_patch_address = 0x00D34DB7;
     mainloop_hook_return_address = 0x00D34DC3;
+    
+    loadgame_start_hook_patch_address = 0x00CDCA40;
+    loadgame_start_hook_return_address = 0x00CDCA4D;
+    loadgame_end_hook_patch_address = 0x00CDD599;
+    loadgame_end_hook_return_address = 0x00CDD5A6;
 
     ProcessWindowAddress = 0x00D36B90;
     Unk3ObjectAddress = 0x05AC25E8;
@@ -293,6 +343,11 @@ internal void ShiftAddresses()
   
   mainloop_hook_patch_address += baseAddress;
   mainloop_hook_return_address += baseAddress;
+  
+  loadgame_start_hook_patch_address += baseAddress;
+  loadgame_start_hook_return_address += baseAddress;
+  loadgame_end_hook_patch_address += baseAddress;
+  loadgame_end_hook_return_address += baseAddress;
   
   ProcessWindowAddress += baseAddress;
   Unk3ObjectAddress += baseAddress;
@@ -363,7 +418,9 @@ internal DWORD WINAPI WaitForDecryption(LPVOID param)
   HookMainLoop();*/
   
   Sleep(3000);
+  
   HookMainLoop();
+  HookLoadGame();
   
   return 0;
 }

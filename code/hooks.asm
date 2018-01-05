@@ -24,43 +24,86 @@
 ;IMPORTANT(adm244): SCRATCH VERSION JUST TO GET IT UP WORKING
 
 extern ProcessWindowAddress: qword
+
 extern Unk3ObjectAddress: qword
-
 extern TESConsoleObjectAddress: qword
-
-extern mainloop_hook_return_address: qword
-
 extern GlobalScriptStateAddress: qword
 
+extern mainloop_hook_return_address: qword
+extern loadgame_start_hook_return_address: qword
+extern loadgame_end_hook_return_address: qword
+
 extern GameLoop: proc
+extern LoadGameBegin: proc
+extern LoadGameEnd: proc
+
+pushregs MACRO
+  push rbx
+  push rbp
+  push rdi
+  push rsi
+  push r12
+  push r13
+  push r14
+  push r15
+ENDM
+
+popregs MACRO
+  pop r15
+  pop r14
+  pop r13
+  pop r12
+  pop rsi
+  pop rdi
+  pop rbp
+  pop rbx
+ENDM
 
 .code
   GameLoop_Hook proc
-    push rbx
-    push rbp
-    push rdi
-    push rsi
-    push r12
-    push r13
-    push r14
-    push r15
-    
+    pushregs
     call GameLoop
-    
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rsi
-    pop rdi
-    pop rbp
-    pop rbx
+    popregs
     
     mov rcx, Unk3ObjectAddress
     call ProcessWindowAddress
     
     jmp [mainloop_hook_return_address]
   GameLoop_Hook endp
+  
+  LoadGameBegin_Hook proc
+    pushregs
+    
+    push rcx
+    mov rcx, rdx
+    sub rsp, 8h
+    call LoadGameBegin
+    add rsp, 8h
+    pop rcx
+    
+    popregs
+    
+    mov qword ptr [rsp+18h], rbx
+    mov qword ptr [rsp+10h], rdx
+    push rbp
+    push rsi
+    push rdi
+    
+    jmp [loadgame_start_hook_return_address]
+  LoadGameBegin_Hook endp
+  
+  LoadGameEnd_Hook proc
+    pushregs
+    call LoadGameEnd
+    popregs
+    
+    add rsp, 400h
+    pop r15
+    pop r14
+    pop r13
+    
+    jmp [loadgame_end_hook_return_address]
+  LoadGameEnd_Hook endp
   
   GetConsoleObject proc
     mov rax, qword ptr [TESConsoleObjectAddress]

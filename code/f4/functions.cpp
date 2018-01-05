@@ -112,6 +112,21 @@ OTHER DEALINGS IN THE SOFTWARE.
     8) RUN: Pass Script object, 0, 0, 0 and 1 into sub_004E2440
 */
 
+/*
+  BGSSaveLoadGame:
+  
+    // BGSSaveLoadGame:
+    //  0x05A916D0 (1_10_26)
+    //  0x???????? (1_10_40)
+    // filename - save file name
+    // unk2 - ???
+    // unk3 - buffer?
+    // address:
+    //  0x00CDCA40 (1_10_26)
+    //  0x00CDE390 (1_10_40)
+    bool LoadGame(int64 BGSSaveLoadGame, char *filename, int32 unk2, int64 unk3);
+*/
+
 #ifndef _F4_FUNCTIONS_
 #define _F4_FUNCTIONS_
 
