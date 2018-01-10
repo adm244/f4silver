@@ -290,10 +290,10 @@ internal void DefineAddresses()
     mainloop_hook_patch_address = 0x00D36707;
     mainloop_hook_return_address = 0x00D36713;
     
-    loadgame_start_hook_patch_address = 0x00CDE390;
-    loadgame_start_hook_return_address = 0x00CDE39D;
-    loadgame_end_hook_patch_address = 0x00CDEEE9;
-    loadgame_end_hook_return_address = 0x00CDEEF6;
+    loadgame_start_hook_patch_address = 0x00CED090;
+    loadgame_start_hook_return_address = 0x00CED09F;
+    loadgame_end_hook_patch_address = 0x00CED898;
+    loadgame_end_hook_return_address = 0x00CED8A5;
 
     ProcessWindowAddress = 0x00D384E0;
     Unk3ObjectAddress = 0x05ADE288;
@@ -313,10 +313,10 @@ internal void DefineAddresses()
     mainloop_hook_patch_address = 0x00D34DB7;
     mainloop_hook_return_address = 0x00D34DC3;
     
-    loadgame_start_hook_patch_address = 0x00CDCA40;
-    loadgame_start_hook_return_address = 0x00CDCA4D;
-    loadgame_end_hook_patch_address = 0x00CDD599;
-    loadgame_end_hook_return_address = 0x00CDD5A6;
+    loadgame_start_hook_patch_address = 0x00CEB740;
+    loadgame_start_hook_return_address = 0x00CEB74F;
+    loadgame_end_hook_patch_address = 0x00CEBF48;
+    loadgame_end_hook_return_address = 0x00CEBF55;
 
     ProcessWindowAddress = 0x00D36B90;
     Unk3ObjectAddress = 0x05AC25E8;

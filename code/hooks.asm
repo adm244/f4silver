@@ -83,11 +83,9 @@ ENDM
     
     popregs
     
-    mov qword ptr [rsp+18h], rbx
+    mov dword ptr [rsp+20h], r9d
+    mov dword ptr [rsp+18h], r8d
     mov qword ptr [rsp+10h], rdx
-    push rbp
-    push rsi
-    push rdi
     
     jmp [loadgame_start_hook_return_address]
   LoadGameBegin_Hook endp
@@ -97,7 +95,7 @@ ENDM
     call LoadGameEnd
     popregs
     
-    add rsp, 400h
+    add rsp, 630h
     pop r15
     pop r14
     pop r13
