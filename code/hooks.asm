@@ -28,6 +28,7 @@ extern ProcessWindowAddress: qword
 extern Unk3ObjectAddress: qword
 extern TESConsoleObjectAddress: qword
 extern GlobalScriptStateAddress: qword
+extern PlayerReferenceAddress: qword
 
 extern mainloop_hook_return_address: qword
 extern loadgame_start_hook_return_address: qword
@@ -116,4 +117,11 @@ ENDM
     
     ret
   GetGlobalScriptObject endp
+  
+  GetPlayerReference proc
+    mov rax, qword ptr [PlayerReferenceAddress]
+    mov rax, qword ptr [rax]
+    
+    ret
+  GetPlayerReference endp
 end

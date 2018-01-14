@@ -132,8 +132,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include <string.h>
 
-#include "types.h"
-
 #define MAX_SCRIPT_SIZE 16384
 #define MAX_SCRIPT_LINE 260
 #define VM_OPCODE_LENGTH 4
@@ -141,6 +139,34 @@ OTHER DEALINGS IN THE SOFTWARE.
 internal const int DefaultCompiler = 0;
 internal const int SysWindowCompileAndRun = 1;
 internal const int DialogueCompileAndRun = 2;
+
+//NOTE(adm244): addresses for hooks
+extern "C" {
+  uint64 mainloop_hook_patch_address;
+  uint64 mainloop_hook_return_address;
+  
+  uint64 loadgame_start_hook_patch_address;
+  uint64 loadgame_start_hook_return_address;
+  uint64 loadgame_end_hook_patch_address;
+  uint64 loadgame_end_hook_return_address;
+
+  uint64 ProcessWindowAddress;
+  uint64 Unk3ObjectAddress;
+  
+  uint64 TESConsolePrintAddress;
+  uint64 TESConsoleObjectAddress;
+  
+  uint64 TESScriptConstructorAddress;
+  
+  uint64 TESScriptCompileAddress;
+  uint64 GlobalScriptStateAddress;
+  
+  uint64 TESScriptExecuteAddress;
+  
+  uint64 TESDisplayMessageAddress;
+  
+  uint64 PlayerReferenceAddress;
+}
 
 //NOTE(adm244): prints out a c-style formated string into the game console
 typedef void (__fastcall *_TESConsolePrint)(uint64 consoleObject, char *format, ...);
@@ -163,6 +189,93 @@ internal _TESScript_Compile TESScript_Compile;
 typedef bool (__fastcall *_TESScript_Execute)(TESScript *scriptObject, uint64 unk01, uint64 unk02, uint64 unk03, bool unk04);
 internal _TESScript_Execute TESScript_Execute;
 
+internal void DefineAddresses()
+{
+  if( F4_VERSION == F4_VERSION_1_10_40 ) {
+    mainloop_hook_patch_address = 0x00D36707;
+    mainloop_hook_return_address = 0x00D36713;
+    
+    loadgame_start_hook_patch_address = 0x00CED090;
+    loadgame_start_hook_return_address = 0x00CED09F;
+    loadgame_end_hook_patch_address = 0x00CED898;
+    loadgame_end_hook_return_address = 0x00CED8A5;
+
+    ProcessWindowAddress = 0x00D384E0;
+    Unk3ObjectAddress = 0x05ADE288;
+
+    TESConsolePrintAddress = 0x01262830;
+    TESConsoleObjectAddress = 0x0591AB30;
+
+    TESScriptConstructorAddress = 0x00151E30;
+
+    TESScriptCompileAddress = 0x004E7B30;
+    GlobalScriptStateAddress = 0x05B15420;
+
+    TESScriptExecuteAddress = 0x004E2460;
+    
+    TESDisplayMessageAddress = 0x00AE1D10;
+    
+    PlayerReferenceAddress = 0x05ADE398;
+  } else if( F4_VERSION == F4_VERSION_1_10_26 ) {
+    mainloop_hook_patch_address = 0x00D34DB7;
+    mainloop_hook_return_address = 0x00D34DC3;
+    
+    loadgame_start_hook_patch_address = 0x00CEB740;
+    loadgame_start_hook_return_address = 0x00CEB74F;
+    loadgame_end_hook_patch_address = 0x00CEBF48;
+    loadgame_end_hook_return_address = 0x00CEBF55;
+
+    ProcessWindowAddress = 0x00D36B90;
+    Unk3ObjectAddress = 0x05AC25E8;
+    
+    TESConsolePrintAddress = 0x01260EE0;
+    TESConsoleObjectAddress = 0x058FEEB0;
+    
+    TESScriptConstructorAddress = 0x00151E30;
+    
+    TESScriptCompileAddress = 0x004E7B10;
+    GlobalScriptStateAddress = 0x05AF9720;
+    
+    TESScriptExecuteAddress = 0x004E2440;
+    
+    TESDisplayMessageAddress = 0x00AE1D00;
+    
+    PlayerReferenceAddress = 0x05AC26F8;
+  } else {
+    //TODO(adm244): unsupported version
+  }
+}
+
+internal void ShiftAddresses()
+{
+  baseAddress = (uint64)GetModuleHandle(0);
+  
+  mainloop_hook_patch_address += baseAddress;
+  mainloop_hook_return_address += baseAddress;
+  
+  loadgame_start_hook_patch_address += baseAddress;
+  loadgame_start_hook_return_address += baseAddress;
+  loadgame_end_hook_patch_address += baseAddress;
+  loadgame_end_hook_return_address += baseAddress;
+  
+  ProcessWindowAddress += baseAddress;
+  Unk3ObjectAddress += baseAddress;
+  
+  TESConsolePrint = (_TESConsolePrint)(TESConsolePrintAddress + baseAddress);
+  TESConsoleObjectAddress += baseAddress;
+  
+  TESScript_Constructor = (_TESScript_Constructor)(TESScriptConstructorAddress + baseAddress);
+  
+  TESScript_Compile = (_TESScript_Compile)(TESScriptCompileAddress + baseAddress);
+  GlobalScriptStateAddress += baseAddress;
+  
+  TESScript_Execute = (_TESScript_Execute)(TESScriptExecuteAddress + baseAddress);
+  
+  TESDisplayMessage = (_TESDisplayMessage)(TESDisplayMessageAddress + baseAddress);
+  
+  PlayerReferenceAddress += baseAddress;
+}
+
 internal bool ExecuteScriptLine(char *text)
 {
   bool result = false;
@@ -183,6 +296,20 @@ internal bool ExecuteScriptLine(char *text)
   if( TESScript_Compile((void *)GetGlobalScriptObject(), &scriptObject, 0, SysWindowCompileAndRun) ) {
     result = true;
     TESScript_Execute(&scriptObject, 0, 0, 0, 1);
+  }
+  
+  return result;
+}
+
+internal bool IsInInterior(TESObjectReference *ref)
+{
+  bool result = false;
+
+  if( ref ) {
+    TESCell *parentCell = ref->parentCell;
+    if( parentCell ) {
+      if( parentCell->flags & 0x01 ) result = true;
+    }
   }
   
   return result;

@@ -29,6 +29,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 // (just wait a bit?)
 
 /*
+  //FIX(adm244): game crashes when command is triggered on loading screen
+  
   IMPLEMENTED:
     - Main game loop hook
     - Load screen hook
@@ -36,8 +38,11 @@ OTHER DEALINGS IN THE SOFTWARE.
     - Print in-game message
     - Execute console command
     - Execute commands from *.txt file line by line (bat command)
-  TODO:
     - Check if player is in interior or exterior
+  TODO:
+    - Save game function
+  
+    - Rewrite config file structure and implement new parser (read entire config data into a structure)
     
     - Get rid of C Runtime Library
     - Code cleanup
@@ -53,6 +58,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "common/utils.cpp"
 #include "common/queue.cpp"
 
+#include "f4/types.h"
+
 extern "C" {
   void GameLoop_Hook();
   void LoadGameBegin_Hook();
@@ -60,6 +67,7 @@ extern "C" {
   
   uint64 GetConsoleObject();
   uint64 GetGlobalScriptObject();
+  TESObjectReference * GetPlayerReference();
 }
 
 extern "C" uint64 baseAddress = 0;
@@ -67,8 +75,8 @@ internal HMODULE f4silver = 0;
 
 internal HANDLE TimerQueue = 0;
 
-internal uint8 IsInterior = 0;
-internal uint8 ActualGameplay = 0;
+internal bool IsInterior = 0;
+internal bool ActualGameplay = 0;
 
 #include "f4/version.h"
 #include "f4/functions.cpp"
@@ -92,49 +100,24 @@ internal Queue ExteriorPendingQueue;
 
 internal uint8 IsTimedOut = 0;
 
-//NOTE(adm244): addresses for hooks
-extern "C" {
-  uint64 mainloop_hook_patch_address;
-  uint64 mainloop_hook_return_address;
-  
-  uint64 loadgame_start_hook_patch_address;
-  uint64 loadgame_start_hook_return_address;
-  uint64 loadgame_end_hook_patch_address;
-  uint64 loadgame_end_hook_return_address;
-
-  uint64 ProcessWindowAddress;
-  uint64 Unk3ObjectAddress;
-  
-  uint64 TESConsolePrintAddress;
-  uint64 TESConsoleObjectAddress;
-  
-  uint64 TESScriptConstructorAddress;
-  
-  uint64 TESScriptCompileAddress;
-  uint64 GlobalScriptStateAddress;
-  
-  uint64 TESScriptExecuteAddress;
-  
-  uint64 TESDisplayMessageAddress;
-}
-
 internal void DisplayMessage(char *message)
 {
-  //TODO(adm244): implement this!
   TESConsolePrint(GetConsoleObject(), message);
   TESDisplayMessage(message, 0, 1, true);
 }
 
 internal void DisplaySuccessMessage(char *message)
 {
-  //TODO(adm244): implement this!
-  DisplayMessage(message);
+  if( Settings.ShowMessages ) {
+    DisplayMessage(message);
+  }
 }
 
 internal void DisplayRandomSuccessMessage(char *message)
 {
-  //TODO(adm244): implement this!
-  DisplayMessage(message);
+  if( Settings.ShowMessagesRandom ) {
+    DisplayMessage(message);
+  }
 }
 
 internal inline void MakePreSave()
@@ -226,19 +209,24 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
       }
       
       if( IsActivated(&CommandRandom) ) {
-        //int index = RandomInt(0, batches_count - 1);
         int index = GetNextBatchIndex(batches_count);
         QueuePut(&BatchQueue, (pointer)&batches[index]);
         DisplayRandomSuccessMessage(batches[index].description);
+        
+        /*TESObjectReference *player = GetPlayerReference();
+        if( IsInInterior(player) ) {
+          DisplayMessage("Interior");
+        } else {
+          DisplayMessage("Exterior");
+        }*/
       }
     }
   }
 }
 
-internal uint8 IsPlayerInInterior()
+internal bool IsPlayerInInterior()
 {
-  //TODO(adm244): implement this!
-  return 0;
+  return IsInInterior(GetPlayerReference());
 }
 
 extern "C" void GameLoop()
@@ -265,12 +253,12 @@ extern "C" void GameLoop()
 
 extern "C" void LoadGameBegin(char *filename)
 {
-  ActualGameplay = 0;
+  ActualGameplay = false;
 }
 
 extern "C" void LoadGameEnd()
 {
-  ActualGameplay = 1;
+  ActualGameplay = true;
 }
 
 internal void HookMainLoop()
@@ -282,87 +270,6 @@ internal void HookLoadGame()
 {
   WriteBranch(loadgame_start_hook_patch_address, (uint64)&LoadGameBegin_Hook);
   WriteBranch(loadgame_end_hook_patch_address, (uint64)&LoadGameEnd_Hook);
-}
-
-internal void DefineAddresses()
-{
-  if( F4_VERSION == F4_VERSION_1_10_40 ) {
-    mainloop_hook_patch_address = 0x00D36707;
-    mainloop_hook_return_address = 0x00D36713;
-    
-    loadgame_start_hook_patch_address = 0x00CED090;
-    loadgame_start_hook_return_address = 0x00CED09F;
-    loadgame_end_hook_patch_address = 0x00CED898;
-    loadgame_end_hook_return_address = 0x00CED8A5;
-
-    ProcessWindowAddress = 0x00D384E0;
-    Unk3ObjectAddress = 0x05ADE288;
-
-    TESConsolePrintAddress = 0x01262830;
-    TESConsoleObjectAddress = 0x0591AB30;
-
-    TESScriptConstructorAddress = 0x00151E30;
-
-    TESScriptCompileAddress = 0x004E7B30;
-    GlobalScriptStateAddress = 0x05B15420;
-
-    TESScriptExecuteAddress = 0x004E2460;
-    
-    TESDisplayMessageAddress = 0x00AE1D10;
-  } else if( F4_VERSION == F4_VERSION_1_10_26 ) {
-    mainloop_hook_patch_address = 0x00D34DB7;
-    mainloop_hook_return_address = 0x00D34DC3;
-    
-    loadgame_start_hook_patch_address = 0x00CEB740;
-    loadgame_start_hook_return_address = 0x00CEB74F;
-    loadgame_end_hook_patch_address = 0x00CEBF48;
-    loadgame_end_hook_return_address = 0x00CEBF55;
-
-    ProcessWindowAddress = 0x00D36B90;
-    Unk3ObjectAddress = 0x05AC25E8;
-    
-    TESConsolePrintAddress = 0x01260EE0;
-    TESConsoleObjectAddress = 0x058FEEB0;
-    
-    TESScriptConstructorAddress = 0x00151E30;
-    
-    TESScriptCompileAddress = 0x004E7B10;
-    GlobalScriptStateAddress = 0x05AF9720;
-    
-    TESScriptExecuteAddress = 0x004E2440;
-    
-    TESDisplayMessageAddress = 0x00AE1D00;
-  } else {
-    //TODO(adm244): unsupported version
-  }
-}
-
-internal void ShiftAddresses()
-{
-  baseAddress = (uint64)GetModuleHandle(0);
-  
-  mainloop_hook_patch_address += baseAddress;
-  mainloop_hook_return_address += baseAddress;
-  
-  loadgame_start_hook_patch_address += baseAddress;
-  loadgame_start_hook_return_address += baseAddress;
-  loadgame_end_hook_patch_address += baseAddress;
-  loadgame_end_hook_return_address += baseAddress;
-  
-  ProcessWindowAddress += baseAddress;
-  Unk3ObjectAddress += baseAddress;
-  
-  TESConsolePrint = (_TESConsolePrint)(TESConsolePrintAddress + baseAddress);
-  TESConsoleObjectAddress += baseAddress;
-  
-  TESScript_Constructor = (_TESScript_Constructor)(TESScriptConstructorAddress + baseAddress);
-  
-  TESScript_Compile = (_TESScript_Compile)(TESScriptCompileAddress + baseAddress);
-  GlobalScriptStateAddress += baseAddress;
-  
-  TESScript_Execute = (_TESScript_Execute)(TESScriptExecuteAddress + baseAddress);
-  
-  TESDisplayMessage = (_TESDisplayMessage)(TESDisplayMessageAddress + baseAddress);
 }
 
 internal void Initialize(HMODULE module)
@@ -386,17 +293,6 @@ internal void Initialize(HMODULE module)
   RandomGeneratorInitialize(batchesCount);
   TimerQueue = CreateTimerQueue();
 }
-
-/*internal bool enabled = true;
-extern "C" void GameLoop()
-{
-  if( IsActivated(VK_HOME, &enabled) ) {
-    ExecuteScriptLine("ToggleWireFrame");
-    //CompileAndRun("ToggleWireFrame");
-    ConsolePrint(GetConsoleObject(), "This is a test: %d", 10);
-    //ConsolePrint(GetConsoleObject(), "This is a test");
-  }
-}*/
 
 internal DWORD WINAPI WaitForDecryption(LPVOID param)
 {
@@ -434,8 +330,6 @@ internal BOOL WINAPI DllMain(HMODULE instance, DWORD reason, LPVOID reserved)
     //HookMainLoop();
     
     CreateThread(0, 0, WaitForDecryption, 0, 0, 0);
-    
-    //MessageBox(0, "This is f4silver.dll speaking!", "Yay!", 0);
   }
 
   return TRUE;

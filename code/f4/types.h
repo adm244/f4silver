@@ -48,6 +48,57 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #pragma pack(push, 1)
+struct TESCell {
+  void *vtable;
+  uint64 unk08;
+  uint64 unk10;
+  uint64 unk18;
+  uint64 unk20;
+  uint64 unk28;
+  uint64 unk30;
+  uint64 unk38;
+  uint16 flags;
+  //???
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct TESObjectReference {
+  void *vtable;
+  uint64 unk08;
+  uint64 unk10;
+  uint16 unk18;
+  uint16 unk1A;
+  uint32 unk1C;
+  uint64 unk20;
+  uint16 unk28;
+  uint16 unk2A;
+  uint16 unk2C;
+  uint16 unk2E;
+  uint64 unk30;
+  uint64 unk38;
+  uint64 unk40;
+  uint64 unk48;
+  uint64 unk50;
+  uint64 unk58;
+  uint64 unk60;
+  uint64 unk68;
+  uint32 unk70;
+  uint64 unk74;
+  uint32 unk7C;
+  uint64 unk80;
+  uint64 unk88;
+  uint64 unk90;
+  uint64 unk98;
+  uint64 unkA0;
+  uint64 unkA8;
+  uint64 unkB0;
+  TESCell *parentCell;
+  // ???
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
 struct TESFunction {
   char *name; // 0x00
   char *synonim; // 0x08
