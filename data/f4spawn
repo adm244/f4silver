@@ -1,2 +1,7 @@
-Bandits Raid
+Enemies Raid
+@exterior
 cgf "kwei.spawnmob" 0023D8CE 600 0
+@interior
+cgf "kwei.spawnmob" 00020BCC 300 0
+@default
+cgf "kwei.spawnmob" 0023D8CE 300 0

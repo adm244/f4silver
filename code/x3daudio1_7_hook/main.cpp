@@ -94,43 +94,6 @@ internal HMODULE HookLibrary(char *key)
   return library;
 }
 
-// ------------------------------------------------------------------------------
-#include <strsafe.h>
-
-void ErrorExit(LPTSTR lpszFunction) 
-{ 
-    // Retrieve the system error message for the last-error code
-
-    LPVOID lpMsgBuf;
-    LPVOID lpDisplayBuf;
-    DWORD dw = GetLastError(); 
-
-    FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-        FORMAT_MESSAGE_FROM_SYSTEM |
-        FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,
-        dw,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR) &lpMsgBuf,
-        0, NULL );
-
-    // Display the error message and exit the process
-
-    lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT, 
-        (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR)); 
-    StringCchPrintf((LPTSTR)lpDisplayBuf, 
-        LocalSize(lpDisplayBuf) / sizeof(TCHAR),
-        TEXT("%s failed with error %d: %s"), 
-        lpszFunction, dw, lpMsgBuf); 
-    MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK); 
-
-    LocalFree(lpMsgBuf);
-    LocalFree(lpDisplayBuf);
-    //ExitProcess(dw); 
-}
-// ------------------------------------------------------------------------------
-
 internal BOOL WINAPI DllMain(HANDLE procHandle, DWORD reason, LPVOID reserved)
 {
   if( reason == DLL_PROCESS_ATTACH )
@@ -142,8 +105,7 @@ internal BOOL WINAPI DllMain(HANDLE procHandle, DWORD reason, LPVOID reserved)
     
     f4silver = LoadLibrary("f4silver.dll");
     if( !f4silver ) {
-      ErrorExit(TEXT("GetProcessId"));
-      //MessageBox(0, "Plugin f4silver.dll was not found!", "Plugin dll not found", MB_OK | MB_ICONERROR);
+      MessageBox(0, "Plugin f4silver.dll was not found!", "Plugin dll not found", MB_OK | MB_ICONERROR);
       return FALSE;
     } else {
       //MessageBox(0, "f4silver.dll is loaded!", "Yay!", 0);
