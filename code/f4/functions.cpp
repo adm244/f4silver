@@ -167,7 +167,7 @@ typedef bool (__fastcall *_TESScript_Compile)
 (TESScript *tesScript, void *globalScript, int compilerTypeIndex, uint64 unk03);
 
 typedef bool (__fastcall *_TESScript_CompileAndRun)
-(TESScript *tesScript, void *globalScript, int compilerTypeIndex, uint64 unk03);
+(TESScript *tesScript, void *globalScript, int compilerTypeIndex, void *unk03);
 
 typedef void (__fastcall *_TESScript_SetText)
 (TESScript *tesScript, char *scriptText);
@@ -202,7 +202,6 @@ internal _TESDisplayMessage TESDisplayMessage;
 // ------ #Utils ------
 
 // ------ Addresses ------
-//NOTE(adm244): addresses for hooks
 extern "C" {
   uint64 mainloop_hook_patch_address;
   uint64 mainloop_hook_return_address;
@@ -228,6 +227,7 @@ extern "C" {
   uint64 TESScriptMarkAsTemporaryAddress;
   uint64 TESScriptCompileAddress;
   uint64 TESScriptExecuteAddress;
+  uint64 TESScriptCompileAndRunAddress;
   uint64 TESScriptSetTextAddress;
   
   uint64 TESDisplayMessageAddress;
@@ -262,6 +262,7 @@ internal void DefineAddresses()
     TESScriptMarkAsTemporaryAddress = 0x00153F00;
     TESScriptCompileAddress = 0x004E28E0;
     TESScriptExecuteAddress = 0x004E2460;
+    TESScriptCompileAndRunAddress = 0x004E2830;
     TESScriptSetTextAddress = 0x004E20D0;
     
     TESDisplayMessageAddress = 0x00AE1D10;
@@ -292,6 +293,7 @@ internal void DefineAddresses()
     TESScriptMarkAsTemporaryAddress = 0x00153F00;
     TESScriptCompileAddress = 0x004E28C0;
     TESScriptExecuteAddress = 0x004E2440;
+    TESScriptCompileAndRunAddress = 0x004E2810;
     TESScriptSetTextAddress = 0x004E20B0;
     
     TESDisplayMessageAddress = 0x00AE1D00;
@@ -330,6 +332,7 @@ internal void ShiftAddresses()
   TESScript_MarkAsTemporary = (_TESScript_MarkAsTemporary)(TESScriptMarkAsTemporaryAddress + baseAddress);
   TESScript_Compile = (_TESScript_Compile)(TESScriptCompileAddress + baseAddress);
   TESScript_Execute = (_TESScript_Execute)(TESScriptExecuteAddress + baseAddress);
+  TESScript_CompileAndRun = (_TESScript_CompileAndRun)(TESScriptCompileAndRunAddress + baseAddress);
   TESScript_SetText = (_TESScript_SetText)(TESScriptSetTextAddress + baseAddress);
   
   TESDisplayMessage = (_TESDisplayMessage)(TESDisplayMessageAddress + baseAddress);
@@ -348,25 +351,8 @@ internal bool ExecuteScriptLine(char *text)
   TESScript_Constructor(&scriptObject);
   TESScript_MarkAsTemporary(&scriptObject);
   TESScript_SetText(&scriptObject, text);
-  result = TESScript_CompileAndRun(&scriptObject, (void *)GetGlobalScriptObject(), SysWindowCompileAndRun, 1);
+  result = TESScript_CompileAndRun(&scriptObject, (void *)GetGlobalScriptObject(), SysWindowCompileAndRun, 0);
   TESScript_Destructor(&scriptObject);
-  
-  /*scriptObject.byte1A = 0x16;
-  scriptObject.flags10 |= 0x4000;
-  scriptObject.byte1B = 0x41;
-  scriptObject.unk1C = 1;
-  scriptObject.unk34 = 1;*/
-  
-  //scriptObject.scriptText = text;
-  //memcpy(scriptObject.scriptLineText, text, strlen(text));
-  
-  //TODO(adm244): check bytecodeLength (should be > 0)
-  /*if( TESGlobalScript_Compile((void *)GetGlobalScriptObject(), &scriptObject, 0, SysWindowCompileAndRun) ) {
-    result = true;
-    TESScript_Execute(&scriptObject, 0, 0, 0, 1);
-  }*/
-  
-  //FIX(adm244): call TESScript_Destructor
   
   return result;
 }
