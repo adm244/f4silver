@@ -194,6 +194,10 @@ internal bool ExecuteBatch(char *filename)
       } else if( strcmp(line, BATCH_SAVEGAME) == 0 ) {
         //TODO(adm244): implement SaveGame function
         //SaveGame(Strings.SaveDisplayName, Strings.SaveFileName);
+      } else if( strcmp(line, BATCH_INTERIOR_ONLY) == 0 ) {
+        //NOTE(adm244): should be empty
+      } else if( strcmp(line, BATCH_EXTERIOR_ONLY) == 0 ) {
+        //NOTE(adm244): should be empty
       } else {
         if( (IsInterior && (executionState == EXEC_INTERIOR))
          || (!IsInterior && (executionState == EXEC_EXTERIOR))
