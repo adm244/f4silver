@@ -127,6 +127,11 @@ OTHER DEALINGS IN THE SOFTWARE.
     bool LoadGame(int64 BGSSaveLoadGame, char *filename, int32 unk2, int64 unk3);
 */
 
+/*
+  Global form list(?)
+    
+*/
+
 #ifndef _F4_FUNCTIONS_
 #define _F4_FUNCTIONS_
 
@@ -140,6 +145,63 @@ internal const int DefaultCompiler = 0;
 internal const int SysWindowCompileAndRun = 1;
 internal const int DialogueCompileAndRun = 2;
 
+typedef void (__fastcall *_TESForm_Constructor)(TESForm *tesForm);
+internal _TESForm_Constructor TESForm_Constructor;
+
+//FIX(adm244): GlobalScript(-object) is a temporary name until we figure out the real one
+typedef bool (__fastcall *_TESGlobalScript_Compile)(void *globalObject, TESScript *scriptObject, int32 unk02, int32 compilerTypeIndex);
+internal _TESGlobalScript_Compile TESGlobalScript_Compile;
+
+// ------ TESScript ------
+//NOTE(adm244): TESScript object ctor
+typedef TESScript * (__fastcall *_TESScript_Constructor)
+(TESScript *tesScript);
+
+typedef bool (__fastcall *_TESScript_Execute)
+(TESScript *tesScript, uint64 unk01, uint64 unk02, uint64 unk03, bool unk04);
+
+typedef void (__fastcall *_TESScript_MarkAsTemporary)
+(TESScript *tesScript);
+
+typedef bool (__fastcall *_TESScript_Compile)
+(TESScript *tesScript, void *globalScript, int compilerTypeIndex, uint64 unk03);
+
+typedef bool (__fastcall *_TESScript_CompileAndRun)
+(TESScript *tesScript, void *globalScript, int compilerTypeIndex, uint64 unk03);
+
+typedef void (__fastcall *_TESScript_SetText)
+(TESScript *tesScript, char *scriptText);
+
+typedef void (__fastcall *_TESScript_Destructor)
+(TESScript *tesStript);
+
+internal _TESScript_Constructor TESScript_Constructor;
+internal _TESScript_Execute TESScript_Execute;
+internal _TESScript_MarkAsTemporary TESScript_MarkAsTemporary;
+internal _TESScript_Compile TESScript_Compile;
+internal _TESScript_CompileAndRun TESScript_CompileAndRun;
+internal _TESScript_SetText TESScript_SetText;
+internal _TESScript_Destructor TESScript_Destructor;
+// ------ #TESScript ------
+
+// ------ Utils ------
+//NOTE(adm244): prints out a c-style formated string into the game console
+typedef void (__fastcall *_TESConsolePrint)
+(uint64 consoleObject, char *format, ...);
+
+//NOTE(adm244): displays a message in the top-left corner of a screen
+// message - text to be displayed
+// unk1 - should be 0
+// unk2 - should be 1
+// unk3 - should be true (1)
+typedef void (__fastcall *_TESDisplayMessage)
+(char *message, int32 unk1, int32 unk2, bool unk3);
+
+internal _TESConsolePrint TESConsolePrint;
+internal _TESDisplayMessage TESDisplayMessage;
+// ------ #Utils ------
+
+// ------ Addresses ------
 //NOTE(adm244): addresses for hooks
 extern "C" {
   uint64 mainloop_hook_patch_address;
@@ -156,38 +218,22 @@ extern "C" {
   uint64 TESConsolePrintAddress;
   uint64 TESConsoleObjectAddress;
   
-  uint64 TESScriptConstructorAddress;
+  uint64 TESFormConstructorAddress;
   
-  uint64 TESScriptCompileAddress;
+  uint64 TESGlobalScriptCompileAddress;
   uint64 GlobalScriptStateAddress;
   
+  uint64 TESScriptConstructorAddress;
+  uint64 TESScriptDestructorAddress;
+  uint64 TESScriptMarkAsTemporaryAddress;
+  uint64 TESScriptCompileAddress;
   uint64 TESScriptExecuteAddress;
+  uint64 TESScriptSetTextAddress;
   
   uint64 TESDisplayMessageAddress;
   
   uint64 PlayerReferenceAddress;
 }
-
-//NOTE(adm244): prints out a c-style formated string into the game console
-typedef void (__fastcall *_TESConsolePrint)(uint64 consoleObject, char *format, ...);
-internal _TESConsolePrint TESConsolePrint;
-
-//NOTE(adm244): displays a message in the top-left corner of a screen
-// message - text to be displayed
-// unk1 - should be 0
-// unk2 - should be 1
-// unk3 - should be true (1)
-typedef void (__fastcall *_TESDisplayMessage)(char *message, int32 unk1, int32 unk2, bool unk3);
-internal _TESDisplayMessage TESDisplayMessage;
-
-typedef void (__fastcall *_TESScript_Constructor)(TESScript *scriptObject);
-internal _TESScript_Constructor TESScript_Constructor;
-
-typedef bool (__fastcall *_TESScript_Compile)(void *globalObject, TESScript *scriptObject, int32 unk02, int32 compilerTypeIndex);
-internal _TESScript_Compile TESScript_Compile;
-
-typedef bool (__fastcall *_TESScript_Execute)(TESScript *scriptObject, uint64 unk01, uint64 unk02, uint64 unk03, bool unk04);
-internal _TESScript_Execute TESScript_Execute;
 
 internal void DefineAddresses()
 {
@@ -206,12 +252,17 @@ internal void DefineAddresses()
     TESConsolePrintAddress = 0x01262830;
     TESConsoleObjectAddress = 0x0591AB30;
 
-    TESScriptConstructorAddress = 0x00151E30;
+    TESFormConstructorAddress = 0x00151E30;
 
-    TESScriptCompileAddress = 0x004E7B30;
+    TESGlobalScriptCompileAddress = 0x004E7B30;
     GlobalScriptStateAddress = 0x05B15420;
 
+    TESScriptConstructorAddress = 0x004E14F0;
+    TESScriptDestructorAddress = 0x004E1570;
+    TESScriptMarkAsTemporaryAddress = 0x00153F00;
+    TESScriptCompileAddress = 0x004E28E0;
     TESScriptExecuteAddress = 0x004E2460;
+    TESScriptSetTextAddress = 0x004E20D0;
     
     TESDisplayMessageAddress = 0x00AE1D10;
     
@@ -231,12 +282,17 @@ internal void DefineAddresses()
     TESConsolePrintAddress = 0x01260EE0;
     TESConsoleObjectAddress = 0x058FEEB0;
     
-    TESScriptConstructorAddress = 0x00151E30;
+    TESFormConstructorAddress = 0x00151E30;
     
-    TESScriptCompileAddress = 0x004E7B10;
+    TESGlobalScriptCompileAddress = 0x004E7B10;
     GlobalScriptStateAddress = 0x05AF9720;
     
+    TESScriptConstructorAddress = 0x004E14D0;
+    TESScriptDestructorAddress = 0x004E1550;
+    TESScriptMarkAsTemporaryAddress = 0x00153F00;
+    TESScriptCompileAddress = 0x004E28C0;
     TESScriptExecuteAddress = 0x004E2440;
+    TESScriptSetTextAddress = 0x004E20B0;
     
     TESDisplayMessageAddress = 0x00AE1D00;
     
@@ -264,39 +320,53 @@ internal void ShiftAddresses()
   TESConsolePrint = (_TESConsolePrint)(TESConsolePrintAddress + baseAddress);
   TESConsoleObjectAddress += baseAddress;
   
-  TESScript_Constructor = (_TESScript_Constructor)(TESScriptConstructorAddress + baseAddress);
+  TESForm_Constructor = (_TESForm_Constructor)(TESFormConstructorAddress + baseAddress);
   
-  TESScript_Compile = (_TESScript_Compile)(TESScriptCompileAddress + baseAddress);
+  TESGlobalScript_Compile = (_TESGlobalScript_Compile)(TESGlobalScriptCompileAddress + baseAddress);
   GlobalScriptStateAddress += baseAddress;
   
+  TESScript_Constructor = (_TESScript_Constructor)(TESScriptConstructorAddress + baseAddress);
+  TESScript_Destructor = (_TESScript_Destructor)(TESScriptDestructorAddress + baseAddress);
+  TESScript_MarkAsTemporary = (_TESScript_MarkAsTemporary)(TESScriptMarkAsTemporaryAddress + baseAddress);
+  TESScript_Compile = (_TESScript_Compile)(TESScriptCompileAddress + baseAddress);
   TESScript_Execute = (_TESScript_Execute)(TESScriptExecuteAddress + baseAddress);
+  TESScript_SetText = (_TESScript_SetText)(TESScriptSetTextAddress + baseAddress);
   
   TESDisplayMessage = (_TESDisplayMessage)(TESDisplayMessageAddress + baseAddress);
   
   PlayerReferenceAddress += baseAddress;
 }
+// ------ #Addresses ------
 
+// ------ Functions ------
 internal bool ExecuteScriptLine(char *text)
 {
   bool result = false;
   
   TESScript scriptObject = {0};
-  TESScript_Constructor(&scriptObject);
   
-  scriptObject.byte1A = 0x16;
+  TESScript_Constructor(&scriptObject);
+  TESScript_MarkAsTemporary(&scriptObject);
+  TESScript_SetText(&scriptObject, text);
+  result = TESScript_CompileAndRun(&scriptObject, (void *)GetGlobalScriptObject(), SysWindowCompileAndRun, 1);
+  TESScript_Destructor(&scriptObject);
+  
+  /*scriptObject.byte1A = 0x16;
   scriptObject.flags10 |= 0x4000;
   scriptObject.byte1B = 0x41;
   scriptObject.unk1C = 1;
-  scriptObject.unk34 = 1;
+  scriptObject.unk34 = 1;*/
   
-  scriptObject.scriptText = text;
-  memcpy(scriptObject.scriptLineText, text, strlen(text));
+  //scriptObject.scriptText = text;
+  //memcpy(scriptObject.scriptLineText, text, strlen(text));
   
   //TODO(adm244): check bytecodeLength (should be > 0)
-  if( TESScript_Compile((void *)GetGlobalScriptObject(), &scriptObject, 0, SysWindowCompileAndRun) ) {
+  /*if( TESGlobalScript_Compile((void *)GetGlobalScriptObject(), &scriptObject, 0, SysWindowCompileAndRun) ) {
     result = true;
     TESScript_Execute(&scriptObject, 0, 0, 0, 1);
-  }
+  }*/
+  
+  //FIX(adm244): call TESScript_Destructor
   
   return result;
 }
@@ -308,11 +378,12 @@ internal bool IsInInterior(TESObjectReference *ref)
   if( ref ) {
     TESCell *parentCell = ref->parentCell;
     if( parentCell ) {
-      if( parentCell->flags & 0x01 ) result = true;
+      if( parentCell->flags & TESCell_IsInterior ) result = true;
     }
   }
   
   return result;
 }
+// ------ #Functions ------
 
 #endif

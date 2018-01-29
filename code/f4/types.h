@@ -25,13 +25,20 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 //IMPORTANT(adm244): SCRATCH VERSION JUST TO GET IT UP WORKING
 
+//TODO(adm244): assert structure sizes
+
+/*
+  RE notes:
+    - TESScript_Compile function sets 0x02 bit for TESScript
+*/
+
 /*
   struct ArgsType {
     char *type; // 8 bytes
     int32 unk01; // 4 bytes
     int8 unk02; // 1 byte
       int8 pad[3]; // 3 bytes
-  }; // 16 bytes
+  // }; // 16 bytes
   
   struct Struct_4 {
     int32 unk0;
@@ -47,6 +54,37 @@ OTHER DEALINGS IN THE SOFTWARE.
   };
 */
 
+enum FormTypes {
+  FormType_Form = 0,
+  FormType_Script = 0x16,
+  FormType_ObjectReference = 0x40,
+};
+
+enum TESFlags {
+  TESForm_Default = (1 << 3),
+  TESForm_IsDeleted = (1 << 5),
+  TESForm_IsPersistent = (1 << 16),
+  TESForm_IsDisabled = (1 << 17),
+
+  TESCell_IsInterior = (1 << 0),
+  TESCell_HasWater = (1 << 1),
+  
+  TESScript_IsTemporary = (1 << 14),
+};
+
+#pragma pack(push, 1)
+struct TESForm {
+  void *vtable; // 0x00
+  uint64 unk08;
+  uint32 flags; // 0x10
+  uint32 formId; // 0x14
+  uint16 unk18;
+  uint8 formType; // 0x1A
+  uint8 byte1B;
+  uint32 unk1C;
+};
+#pragma pack(pop)
+
 #pragma pack(push, 1)
 struct TESCell {
   void *vtable;
@@ -57,34 +95,40 @@ struct TESCell {
   uint64 unk28;
   uint64 unk30;
   uint64 unk38;
-  uint16 flags;
+  uint16 flags; // 0x40
   //???
 };
 #pragma pack(pop)
 
 #pragma pack(push, 1)
 struct TESObjectReference {
-  void *vtable;
+  // TESForm
+  void *vtable; // 0x00
   uint64 unk08;
-  uint64 unk10;
+  uint32 flags; // 0x10
+  uint32 formId; // 0x14
   uint16 unk18;
-  uint16 unk1A;
+  uint8 formType; // 0x1A
+  uint8 byte1B;
   uint32 unk1C;
-  uint64 unk20;
-  uint16 unk28;
-  uint16 unk2A;
+  // #TESForm
+  
+  void *unk20;
+  uint32 unk28;
   uint16 unk2C;
   uint16 unk2E;
-  uint64 unk30;
-  uint64 unk38;
-  uint64 unk40;
-  uint64 unk48;
-  uint64 unk50;
-  uint64 unk58;
-  uint64 unk60;
+  void *unk30;
+  void *unk38;
+  void *unk40;
+  void *unk48;
+  void *unk50;
+  void *unk58;
+  uint32 unk60;
+  uint32 unk64;
   uint64 unk68;
   uint32 unk70;
-  uint64 unk74;
+  uint32 unk74;
+  uint32 unk78;
   uint32 unk7C;
   uint64 unk80;
   uint64 unk88;
@@ -92,60 +136,82 @@ struct TESObjectReference {
   uint64 unk98;
   uint64 unkA0;
   uint64 unkA8;
-  uint64 unkB0;
-  TESCell *parentCell;
-  // ???
+  uint8 unkB0;
+  uint8 padB1[7];
+  TESCell *parentCell; // 0xB8
+  uint64 unkC0;
+  uint64 unkC8;
+  uint64 unkD0;
+  uint64 unkD8;
+  uint64 unkE0;
+  uint64 unkE8;
+  uint64 unkF0;
+  uint64 unkF8;
+  void *unk100;
+  uint16 unk108;
+  uint16 unk10A;
+  uint32 pad10C;
+}; // 272 bytes (0x110)
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct ObScriptParam {
+  char *type; // 0x00
+  uint32 typeId; // 0x08
+  uint32 isOptional; // 0x10
 };
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-struct TESFunction {
+struct ObScriptCommand {
   char *name; // 0x00
   char *synonim; // 0x08
-  uint64 opcode; // 0x10
+  uint32 opcode; // 0x10
+  uint32 pad14;
   char *description; // 0x18
   uint16 unk20;
-  uint16 unk22;
+  uint16 paramsCount; // 0x22
   uint32 pad24;
-  char *argumentType;
+  ObScriptParam *params; // 0x28
   void *function; // 0x30
   void *standardCompileFunction; // 0x38
   void *unk40;
-  void *unk48;
+  uint32 flags; // 0x48
+  uint32 pad4C;
 }; // 80 bytes (0x50)
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-struct TESScript { // struct_a2
-  uint64 vtable; // 0x00
+struct TESScript {
+  // TESForm
+  void *vtable; // 0x00
   uint64 unk08;
-  uint16 flags10;
-  uint16 unk12;
-  uint16 unk14;
-  uint16 unk16;
+  uint32 flags; // 0x10
+  uint32 formId; // 0x14
   uint16 unk18;
-  uint8 byte1A;
+  uint8 formType; // 0x1A
   uint8 byte1B;
   uint32 unk1C;
+  // #TESForm
+  
   uint32 unk20;
   uint32 unk24;
+  //IMPORTANT(adm244): could be a scriptTextLength!
   uint32 bytecodeLength; // 0x28
   uint32 unk2C;
   uint8 unk30;
   uint8 unk31;
   uint8 unk32;
-    uint8 gap33;
+  uint8 gap33;
   uint32 unk34;
   char *scriptText; // 0x38
   char *scriptBytecode; // 0x40
   uint64 unk48;
-  uint32 unk50;
-  uint32 unk54;
+  uint64 unk50;
   uint64 unk58;
-  uint64 reference01; // 0x60
-  uint64 reference02; // 0x68
-  uint64 unk70;
-  uint64 unk78;
-  char scriptLineText[260];
-}; // 388 bytes (0x184)
+  uint64 unk60;
+  uint64 unk68;
+  char scriptLineText[260]; // 0x70
+  uint32 unk174;
+}; // 376 bytes (0x178)
 #pragma pack(pop)

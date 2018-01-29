@@ -111,7 +111,7 @@ internal void WriteBranch(uint64 source, uint64 dest)
 //NOTE(adm244): returns whenever key is pressed or not
 internal int GetKeyPressed(byte key)
 {
-  short keystate = (short)GetAsyncKeyState(key);
+  uint16 keystate = (uint16)GetAsyncKeyState(key);
   return( (keystate & 0x8000) > 0 );
 }
 

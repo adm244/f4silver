@@ -40,6 +40,7 @@ OTHER DEALINGS IN THE SOFTWARE.
     - Execute commands from *.txt file line by line (bat command)
     - Check if player is in interior or exterior
   TODO:
+    - Hook initialize function (clear DllMain)?
     - Save game function
   
     - Rewrite config file structure and implement new parser (read entire config data into a structure)
@@ -76,7 +77,7 @@ internal HMODULE f4silver = 0;
 internal HANDLE TimerQueue = 0;
 
 internal bool IsInterior = 0;
-internal bool ActualGameplay = 0;
+internal bool ActualGameplay = false;
 
 #include "f4/version.h"
 #include "f4/functions.cpp"
@@ -91,6 +92,7 @@ internal bool ActualGameplay = 0;
 #include "silverlib/batch_processor.cpp"
 #include "silverlib/random/functions.cpp"
 
+internal bool Initialized = false;
 internal HANDLE QueueHandle = 0;
 internal DWORD QueueThreadID = 0;
 
@@ -192,6 +194,8 @@ internal void ProcessQueue(Queue *queue, bool checkExecState)
 internal DWORD WINAPI QueueHandler(LPVOID data)
 {
   for(;;) {
+//internal void ProcessInput()
+//{
     if( IsActivated(&CommandToggle) ) {
       keys_active = !keys_active;
       
@@ -231,10 +235,17 @@ internal bool IsPlayerInInterior()
 
 extern "C" void GameLoop()
 {
-  if( IsTimedOut ) {
+  if( !Initialized ) {
+    QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
+    CloseHandle(QueueHandle);
+    
+    Initialized = true;
+  }
+
+  /*if( IsTimedOut ) {
     IsTimedOut = 0;
     TimerCreate(TimerQueue, Settings.Timeout);
-  }
+  }*/
   
   if( ActualGameplay ) {
     if( IsInterior != IsPlayerInInterior() ) {
@@ -288,10 +299,10 @@ internal void Initialize(HMODULE module)
   QueueInitialize(&BatchQueue);
   QueueInitialize(&InteriorPendingQueue);
   QueueInitialize(&ExteriorPendingQueue);
-  QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
+  //QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
   
   RandomGeneratorInitialize(batchesCount);
-  TimerQueue = CreateTimerQueue();
+  //TimerQueue = CreateTimerQueue();
 }
 
 internal DWORD WINAPI WaitForDecryption(LPVOID param)
@@ -316,7 +327,7 @@ internal DWORD WINAPI WaitForDecryption(LPVOID param)
   Sleep(3000);
   
   HookMainLoop();
-  HookLoadGame();
+  //HookLoadGame();
   
   return 0;
 }
@@ -327,9 +338,12 @@ internal BOOL WINAPI DllMain(HMODULE instance, DWORD reason, LPVOID reserved)
     f4silver = instance;
     
     Initialize(instance);
-    //HookMainLoop();
     
-    CreateThread(0, 0, WaitForDecryption, 0, 0, 0);
+    HookMainLoop();
+    HookLoadGame();
+    
+    //HANDLE decryptionThread = CreateThread(0, 0, WaitForDecryption, 0, 0, 0);
+    //CloseHandle(decryptionThread);
   }
 
   return TRUE;
