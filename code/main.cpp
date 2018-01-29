@@ -242,10 +242,10 @@ extern "C" void GameLoop()
     Initialized = true;
   }
 
-  /*if( IsTimedOut ) {
+  if( IsTimedOut ) {
     IsTimedOut = 0;
     TimerCreate(TimerQueue, Settings.Timeout);
-  }*/
+  }
   
   if( ActualGameplay ) {
     if( IsInterior != IsPlayerInInterior() ) {
@@ -302,7 +302,7 @@ internal void Initialize(HMODULE module)
   //QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
   
   RandomGeneratorInitialize(batchesCount);
-  //TimerQueue = CreateTimerQueue();
+  TimerQueue = CreateTimerQueue();
 }
 
 internal DWORD WINAPI WaitForDecryption(LPVOID param)

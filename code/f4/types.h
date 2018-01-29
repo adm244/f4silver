@@ -196,7 +196,6 @@ struct TESScript {
   
   uint32 unk20;
   uint32 unk24;
-  //IMPORTANT(adm244): could be a scriptTextLength!
   uint32 bytecodeLength; // 0x28
   uint32 unk2C;
   uint8 unk30;
