@@ -29,8 +29,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 // (just wait a bit?)
 
 /*
-  //FIX(adm244): game crashes when command is triggered on loading screen
-  
   IMPLEMENTED:
     - Main game loop hook
     - Load screen hook
