@@ -27,7 +27,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 /*
   TODO:
-    - add check for game exe! (creation kit also uses this library)
+    - add check for game exe! (creation kit also using this library)
     
     - get path to system32 folder from windows
     - optional warning message if f4silver.dll is not found
