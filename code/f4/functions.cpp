@@ -149,7 +149,8 @@ typedef void (__fastcall *_TESForm_Constructor)(TESForm *tesForm);
 internal _TESForm_Constructor TESForm_Constructor;
 
 //FIX(adm244): GlobalScript(-object) is a temporary name until we figure out the real one
-typedef bool (__fastcall *_TESGlobalScript_Compile)(void *globalObject, TESScript *scriptObject, int32 unk02, int32 compilerTypeIndex);
+typedef bool (__fastcall *_TESGlobalScript_Compile)
+(void *globalObject, TESScript *scriptObject, int32 unk02, int32 compilerTypeIndex);
 internal _TESGlobalScript_Compile TESGlobalScript_Compile;
 
 // ------ TESScript ------
@@ -184,6 +185,24 @@ internal _TESScript_SetText TESScript_SetText;
 internal _TESScript_Destructor TESScript_Destructor;
 // ------ #TESScript ------
 
+// ------ TESPlayer ------
+//NOTE(adm244): attempts to move player into tesCell or cell with cellName (performs searching)
+// tesPlayer - TESPlayer object to move
+// cellName - cell name to move to (if not null then searches for a cell)
+// tesCell - TESCell object to move to (null if cellName is specified)
+typedef bool (__fastcall *_TESPlayer_MoveToCell)
+(TESPlayer *tesPlayer, char *cellName, TESCell *tesCell);
+
+internal _TESPlayer_MoveToCell TESPlayer_MoveToCell;
+// ------ #TESPlayer ------
+
+// ------ TESWorldSpace ------
+typedef TESCell * (__fastcall _TESWorldSpace_FindExteriorCellByCoordinates)
+(TESWorldSpace *tesWorldSpace, unsigned int cellX, unsigned int cellY);
+
+internal _TESWorldSpace_FindExteriorCellByCoordinates TESWorldSpace_FindExteriorCellByCoordinates;
+// ------ #TESWorldSpace ------
+
 // ------ Utils ------
 //NOTE(adm244): prints out a c-style formated string into the game console
 typedef void (__fastcall *_TESConsolePrint)
@@ -197,8 +216,18 @@ typedef void (__fastcall *_TESConsolePrint)
 typedef void (__fastcall *_TESDisplayMessage)
 (char *message, int32 unk1, int32 unk2, bool unk3);
 
+//NOTE(adm244): searches for an interior cell with specified cell name
+// cellName - an interior cell name to be found
+typedef TESCell * (__fastcall *_TESFindInteriorCellByName)
+(char *cellName);
+
+typedef TESWorldSpace * (__fastcall _TESFindCellWorldSpaceByName)
+(void *unk0, char *cellName, unsigned int *cellX, unsigned int *cellY);
+
 internal _TESConsolePrint TESConsolePrint;
 internal _TESDisplayMessage TESDisplayMessage;
+internal _TESFindInteriorCellByName TESFindInteriorCellByName;
+internal _TESFindCellWorldSpaceByName TESFindCellWorldSpaceByName;
 // ------ #Utils ------
 
 // ------ Addresses ------
@@ -230,6 +259,12 @@ extern "C" {
   uint64 TESScriptCompileAndRunAddress;
   uint64 TESScriptSetTextAddress;
   
+  uint64 TESPlayerMoveToCellAddress;
+  
+  uint64 TESWorldSpaceFindExteriorCellByCoordinatesAddress;
+  
+  uint64 TESFindInteriorCellByNameAddress;
+  uint64 TESFindCellWorldSpaceByNameAddress;
   uint64 TESDisplayMessageAddress;
   
   uint64 PlayerReferenceAddress;
@@ -265,6 +300,12 @@ internal void DefineAddresses()
     TESScriptCompileAndRunAddress = 0x004E2830;
     TESScriptSetTextAddress = 0x004E20D0;
     
+    TESPlayerMoveToCellAddress = 0x00E9A330;
+    
+    TESWorldSpaceFindExteriorCellByCoordinatesAddress = 0x004923E0;
+    
+    TESFindInteriorCellByNameAddress = 0x00152EB0;
+    TESFindCellWorldSpaceByNameAddress = 0x00112FA0;
     TESDisplayMessageAddress = 0x00AE1D10;
     
     PlayerReferenceAddress = 0x05ADE398;
@@ -296,6 +337,12 @@ internal void DefineAddresses()
     TESScriptCompileAndRunAddress = 0x004E2810;
     TESScriptSetTextAddress = 0x004E20B0;
     
+    TESPlayerMoveToCellAddress = 0x00E989E0;
+    
+    TESWorldSpaceFindExteriorCellByCoordinatesAddress = 0x004923C0;
+    
+    TESFindInteriorCellByNameAddress = 0x00152EB0;
+    TESFindCellWorldSpaceByNameAddress = 0x00112FA0;
     TESDisplayMessageAddress = 0x00AE1D00;
     
     PlayerReferenceAddress = 0x05AC26F8;
@@ -335,6 +382,12 @@ internal void ShiftAddresses()
   TESScript_CompileAndRun = (_TESScript_CompileAndRun)(TESScriptCompileAndRunAddress + baseAddress);
   TESScript_SetText = (_TESScript_SetText)(TESScriptSetTextAddress + baseAddress);
   
+  TESPlayer_MoveToCell = (_TESPlayer_MoveToCell)(TESPlayerMoveToCellAddress + baseAddress);
+  
+  TESWorldSpace_FindExteriorCellByCoordinates = (_TESWorldSpace_FindExteriorCellByCoordinates)(TESWorldSpaceFindExteriorCellByCoordinatesAddress + baseAddress);
+  
+  TESFindInteriorCellByName = (_TESFindInteriorCellByName)(TESFindInteriorCellByNameAddress + baseAddress);
+  TESFindCellWorldSpaceByName = (_TESFindCellWorldSpaceByName)(TESFindCellWorldSpaceByNameAddress + baseAddress);
   TESDisplayMessage = (_TESDisplayMessage)(TESDisplayMessageAddress + baseAddress);
   
   PlayerReferenceAddress += baseAddress;

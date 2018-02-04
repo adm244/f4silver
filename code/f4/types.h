@@ -58,6 +58,7 @@ enum FormTypes {
   FormType_Form = 0,
   FormType_Script = 0x16,
   FormType_ObjectReference = 0x40,
+  FormType_WorldSpace = 0x4A,
 };
 
 enum TESFlags {
@@ -86,32 +87,33 @@ struct TESForm {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+struct TESWorldSpace {
+  TESForm tesForm;
+  
+  //???
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
 struct TESCell {
-  void *vtable;
-  uint64 unk08;
-  uint64 unk10;
-  uint64 unk18;
+  TESForm tesForm;
+  
   uint64 unk20;
   uint64 unk28;
   uint64 unk30;
   uint64 unk38;
-  uint16 flags; // 0x40
+  uint32 flags; // 0x40
+  
+  uint8 unk44[132];
+  
+  TESWorldSpace *worldSpace; // 0xC8
   //???
 };
 #pragma pack(pop)
 
 #pragma pack(push, 1)
 struct TESObjectReference {
-  // TESForm
-  void *vtable; // 0x00
-  uint64 unk08;
-  uint32 flags; // 0x10
-  uint32 formId; // 0x14
-  uint16 unk18;
-  uint8 formType; // 0x1A
-  uint8 byte1B;
-  uint32 unk1C;
-  // #TESForm
+  TESForm tesForm;
   
   void *unk20;
   uint32 unk28;
@@ -155,6 +157,38 @@ struct TESObjectReference {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+struct TESPlayer {
+  TESObjectReference objectRefenrece;
+  
+  uint8 unk110[2008];
+  
+  TESWorldSpace *currentWorldSpace; // 0x8E8
+  TESCell *currentCell; // 0x8F0
+  uint64 unk8F8;
+  uint32 unk900;
+  uint32 unk904;
+  uint32 unk908;
+  uint32 unk90C; 
+  uint32 unk910;
+  uint32 unk914;
+  uint64 unk918;
+  uint64 unk920;
+  uint64 unk928;
+  uint32 unk930;
+  uint32 unk934;
+  uint32 unk938;
+  uint8 unk93C;
+  uint8 unk93D;
+  uint8 unk93F;
+  uint8 unk940;
+  
+  uint8 unk941[7];
+  
+  //???
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
 struct ObScriptParam {
   char *type; // 0x00
   uint32 typeId; // 0x08
@@ -183,16 +217,7 @@ struct ObScriptCommand {
 
 #pragma pack(push, 1)
 struct TESScript {
-  // TESForm
-  void *vtable; // 0x00
-  uint64 unk08;
-  uint32 flags; // 0x10
-  uint32 formId; // 0x14
-  uint16 unk18;
-  uint8 formType; // 0x1A
-  uint8 byte1B;
-  uint32 unk1C;
-  // #TESForm
+  TESForm tesForm;
   
   uint32 unk20;
   uint32 unk24;
