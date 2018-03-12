@@ -393,10 +393,10 @@ struct TESWorldSpace {
   real32 unk1A8;
   uint32 unk1AC;
   uint32 unk1B0;
-  uint16 NWCellX; // 1B4
-  uint16 NWCellY; // 1B6
-  uint16 SECellX; // 1B8
-  uint16 SECellY; // 1BA
+  int16 NWCellX; // 1B4
+  int16 NWCellY; // 1B6
+  int16 SECellX; // 1B8
+  int16 SECellY; // 1BA
   real32 unk1BC;
   uint32 unk1C0;
   uint32 unk1C4;
