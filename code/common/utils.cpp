@@ -131,4 +131,14 @@ internal bool IsActivated(byte key, bool *enabled)
   return(false);
 }
 
+internal inline int Min(int a, int b)
+{
+  return (a > b) ? b : a;
+}
+
+internal inline int Max(int a, int b)
+{
+  return (a > b) ? a : b;
+}
+
 #endif

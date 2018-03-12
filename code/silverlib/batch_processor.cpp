@@ -81,10 +81,8 @@ internal void Teleport()
         worldSpace = worldSpace->parentWorldSpace;
       }
       
-      //FIX(adm244): correct the order!
-      int cellX = RandomInt(worldSpace->NWCellX, worldSpace->SECellX);
-      int cellY = RandomInt(worldSpace->NWCellY, worldSpace->SECellY);
-      
+      int cellX = RandomInt(Min(worldSpace->NWCellX, worldSpace->SECellX), Max(worldSpace->NWCellX, worldSpace->SECellX));
+      int cellY = RandomInt(Min(worldSpace->NWCellY, worldSpace->SECellY), Max(worldSpace->NWCellY, worldSpace->SECellY));
       TESCell *targetCell = TESWorldSpace_FindExteriorCellByCoordinates(worldSpace, cellX, cellY);
       
       if( targetCell ) {
