@@ -16,7 +16,7 @@ SET masm_args=/c /nologo %asmfiles%
 
 SET debug=/Od /Zi /Fe%project% /nologo /EHsc
 SET release=/W2 /Ot /Oi /O2 /WX /Fe%project% /nologo /EHsc
-SET args=%release% %files% /LD /link %objfiles% %libs%
+SET args=%debug% %files% /LD /link %objfiles% %libs%
 
 SET includepath=%ProgramFiles(x86)%\Microsoft DirectX SDK (June 2010)\Include
 SET hookargs=/I "%includepath%" /W2 /O2 /WX /nologo /EHsc /Fe%hookname% %hookfile% /LD /link /DEF:%deffile% %libs%

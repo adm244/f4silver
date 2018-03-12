@@ -37,6 +37,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 //TODO(adm244): remove this
 //TODO(adm244): move outside
 #define BATCH_SAVEGAME "@savegame"
+#define BATCH_TELEPORT "@teleport"
 
 #define EXEC_DEFAULT 0
 #define EXEC_INTERIOR 1
@@ -63,6 +64,35 @@ internal CustomCommand CommandRandom;
 internal bool keys_active = true;
 internal bool not_initialized = true;
 internal int batches_count = 0;
+
+internal void Teleport()
+{
+  TESObjectReference *playerRef = GetPlayerReference();
+  TESCell *playerCell = playerRef->parentCell;
+  
+  if( playerCell ) {
+    //IMPORTANT(adm244): interior cells doesn't have worldspace
+    //NOTE(adm244): not sure if there's a way to get worldspace from interior cell
+    // probably just have to remember the last worldspace player have been into
+    TESWorldSpace *worldSpace = playerCell->worldSpace;
+    
+    if( worldSpace ) {
+      while( worldSpace->parentWorldSpace ) {
+        worldSpace = worldSpace->parentWorldSpace;
+      }
+      
+      //FIX(adm244): correct the order!
+      int cellX = RandomInt(worldSpace->NWCellX, worldSpace->SECellX);
+      int cellY = RandomInt(worldSpace->NWCellY, worldSpace->SECellY);
+      
+      TESCell *targetCell = TESWorldSpace_FindExteriorCellByCoordinates(worldSpace, cellX, cellY);
+      
+      if( targetCell ) {
+        TESObjectReference_MoveToCell(playerRef, 0, targetCell);
+      }
+    }
+  }
+}
 
 //NOTE(adm244): overloaded version for CustomCommand structure
 internal bool IsActivated(CustomCommand *cmd)
@@ -183,8 +213,6 @@ internal bool ExecuteBatch(char *filename)
         line[lineLen - 1] = 0;
       }
       
-      //FIX(adm244): @interioronly and @exterioronly are executed by morrowind
-      
       if( strcmp(line, BATCH_EXTERIOR) == 0 ) {
         executionState = EXEC_EXTERIOR;
       } else if( strcmp(line, BATCH_INTERIOR) == 0 ) {
@@ -194,6 +222,8 @@ internal bool ExecuteBatch(char *filename)
       } else if( strcmp(line, BATCH_SAVEGAME) == 0 ) {
         //TODO(adm244): implement SaveGame function
         //SaveGame(Strings.SaveDisplayName, Strings.SaveFileName);
+      } else if( strcmp(line, BATCH_TELEPORT) == 0 ) {
+        Teleport();
       } else if( strcmp(line, BATCH_INTERIOR_ONLY) == 0 ) {
         //NOTE(adm244): should be empty
       } else if( strcmp(line, BATCH_EXTERIOR_ONLY) == 0 ) {

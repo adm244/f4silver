@@ -38,6 +38,8 @@ OTHER DEALINGS IN THE SOFTWARE.
     - Execute commands from *.txt file line by line (bat command)
     - Check if player is in interior or exterior
   TODO:
+    - Remove random counters clear timer?
+    
     - Hook initialize function (clear DllMain)?
     - Save game function
   
@@ -87,8 +89,8 @@ internal bool ActualGameplay = false;
 #define MAX_BATCHES 50
 
 #include "silverlib/config.cpp"
-#include "silverlib/batch_processor.cpp"
 #include "silverlib/random/functions.cpp"
+#include "silverlib/batch_processor.cpp"
 
 internal bool Initialized = false;
 internal HANDLE QueueHandle = 0;
