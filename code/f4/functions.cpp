@@ -27,63 +27,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 /*
   Compile as x64 code
-
-  StandardCompile:
-    // Executes script function
-    
-    address: 0x004E7C60
-    
-    // unk0 - some kind of value (seems to be number of arguments)
-    // unk1 - ArgsType struct array
-    // unk2 - some structure
-    // unk3 - script line?
-    int8 StandardCompile(int16 argsCount, ArgsType *argsType, Struct_4 *unk2, char *text);
-  
-  //NOTE(adm244): this is NOT a compile and run!
-  CompileAndRun_Prob:
-    address: 0x004EB830
-    
-    // unk0 - ???
-    // unk1 - some kind of script object with script text
-    // unk2 - some kind of structure that contains script text and reference,
-    //        also pointers to unk1 and unk3
-    // unk3 - structure with arguments or something ???
-    (p.s. unk2 is allocated on stack and is probably a Script object)
-    
-    int64 CompileAndRun_Prob(void *unk0, TESScript *unk1, Struct_6 *unk2, Struct_4 *unk3);
-
-  CreateTESString:
-    address: 0x00044040
-    
-    void __fastcall CreateTESString(TESString *tesString, char *string, __int64 length);
-  
-  TESScript::Compile(?):
-    address: 0x004E7B10
-    
-    // globalObject - *(0x05AF9720)
-    // scriptObject - scriptObject(?)
-    // unk02 - always 0
-    // compilerTypeIndex - 1 for "SysWindowCompileAndRun"
-    bool __fastcall TESScript::Compile(void *globalObject, TESScript *scriptObject, int32 unk02, int32 compilerTypeIndex);
-  
-  TESScript::Execute(?):
-    address: 0x004E2440
-    
-    // scriptObject - previously compiled TESScript object
-    // unk01 - should be 0
-    // unk02 - should be 0
-    // unk03 - should be 0
-    // unk04 - must be 1
-    bool __fastcall TESScript::Execute(TESScript *scriptObject, uint64 unk01, uint64 unk02, uint64 unk03, bool unk04);
-  
-  TESScript creation address: 0x004E2AC4
-  TESScript vtable address: 0x02CADC08
-  
-  TESScript::Constructor(?):
-    address: 0x00151E30
-    
-    // scriptObject - script object memory
-    void __fastcall TESScript::Constructor(TESScript *scriptObject);
 */
 
 /*
@@ -94,6 +37,7 @@ OTHER DEALINGS IN THE SOFTWARE.
     2) Get parent cell ([rax + 0xB8] = rax')
     3) Check cell flags ([rax' + 0x40])
       first bit is interior\exterior (set - interior)
+  END
 */
 
 /*
@@ -110,6 +54,7 @@ OTHER DEALINGS IN THE SOFTWARE.
     
     7) COMPILE: Pass globalObject, Script object, 0 and 1 into sub_004E7B10
     8) RUN: Pass Script object, 0, 0, 0 and 1 into sub_004E2440
+  END
 */
 
 /*
@@ -128,8 +73,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 /*
-  Global form list(?)
-    
+  Console command "CenterOnExterior" algorithm:
+    1) Takes first WorldSpace from list of all worldspaces (stored in array)
+    2) Searches for cell by given coordinates
+    3) Moves player to that cell
+  END
 */
 
 #ifndef _F4_FUNCTIONS_
@@ -185,19 +133,19 @@ internal _TESScript_SetText TESScript_SetText;
 internal _TESScript_Destructor TESScript_Destructor;
 // ------ #TESScript ------
 
-// ------ TESPlayer ------
+// ------ TESObjectReference ------
 //NOTE(adm244): attempts to move player into tesCell or cell with cellName (performs searching)
-// tesPlayer - TESPlayer object to move
+// objectRef - TESObjectReference object to move
 // cellName - cell name to move to (if not null then searches for a cell)
 // tesCell - TESCell object to move to (null if cellName is specified)
-typedef bool (__fastcall *_TESPlayer_MoveToCell)
-(TESPlayer *tesPlayer, char *cellName, TESCell *tesCell);
+typedef bool (__fastcall *_TESObjectReference_MoveToCell)
+(TESObjectReference *objectRef, char *cellName, TESCell *tesCell);
 
-internal _TESPlayer_MoveToCell TESPlayer_MoveToCell;
-// ------ #TESPlayer ------
+internal _TESObjectReference_MoveToCell TESObjectReference_MoveToCell;
+// ------ #TESObjectReference ------
 
 // ------ TESWorldSpace ------
-typedef TESCell * (__fastcall _TESWorldSpace_FindExteriorCellByCoordinates)
+typedef TESCell * (__fastcall *_TESWorldSpace_FindExteriorCellByCoordinates)
 (TESWorldSpace *tesWorldSpace, unsigned int cellX, unsigned int cellY);
 
 internal _TESWorldSpace_FindExteriorCellByCoordinates TESWorldSpace_FindExteriorCellByCoordinates;
@@ -221,7 +169,7 @@ typedef void (__fastcall *_TESDisplayMessage)
 typedef TESCell * (__fastcall *_TESFindInteriorCellByName)
 (char *cellName);
 
-typedef TESWorldSpace * (__fastcall _TESFindCellWorldSpaceByName)
+typedef TESWorldSpace * (__fastcall *_TESFindCellWorldSpaceByName)
 (void *unk0, char *cellName, unsigned int *cellX, unsigned int *cellY);
 
 internal _TESConsolePrint TESConsolePrint;
@@ -382,7 +330,7 @@ internal void ShiftAddresses()
   TESScript_CompileAndRun = (_TESScript_CompileAndRun)(TESScriptCompileAndRunAddress + baseAddress);
   TESScript_SetText = (_TESScript_SetText)(TESScriptSetTextAddress + baseAddress);
   
-  TESPlayer_MoveToCell = (_TESPlayer_MoveToCell)(TESPlayerMoveToCellAddress + baseAddress);
+  TESObjectReference_MoveToCell = (_TESObjectReference_MoveToCell)(TESPlayerMoveToCellAddress + baseAddress);
   
   TESWorldSpace_FindExteriorCellByCoordinates = (_TESWorldSpace_FindExteriorCellByCoordinates)(TESWorldSpaceFindExteriorCellByCoordinatesAddress + baseAddress);
   
