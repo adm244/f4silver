@@ -76,6 +76,7 @@ internal void Teleport()
     // probably just have to remember the last worldspace player have been into
     TESWorldSpace *worldSpace = playerCell->worldSpace;
     
+    //TODO(adm244): get cell's root location and compare with worldspace locations
     if( worldSpace ) {
       while( worldSpace->parentWorldSpace ) {
         worldSpace = worldSpace->parentWorldSpace;

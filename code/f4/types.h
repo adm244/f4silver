@@ -44,30 +44,30 @@ OTHER DEALINGS IN THE SOFTWARE.
   CMPO 0x08
   TXST 0x09
   MICN 0x0A
-  GLOB 0x0B GlobalObject
+  GLOB 0x0B TESGlobalObject
   DMGT 0x0C
   CLAS 0x0D
   FACT 0x0E
   HDPT 0x0F
   EYES 0x10
-  RACE 0x11 Race
-  SOUN 0x12 Sound
-  ASPC 0x13 AcousticSpace
+  RACE 0x11 TESRace
+  SOUN 0x12 TESSound
+  ASPC 0x13 TESAcousticSpace
   SKIL 0x14
   MGEF 0x15
-  SCPT 0x16 Script
+  SCPT 0x16 TESScript
   LTEX 0x17
   ENCH 0x18
   SPEL 0x19
   SCRL 0x1A
-  ACTI 0x1B
+  ACTI 0x1B TESActivator
   TACT 0x1C
-  ARMO 0x1D
+  ARMO 0x1D TESArmor
   BOOK 0x1E
   CONT 0x1F
   DOOR 0x20
   INGR 0x21
-  LIGH 0x22
+  LIGH 0x22 TESLight
   MISC 0x23
   STAT 0x24
   SCOL 0x25
@@ -76,20 +76,20 @@ OTHER DEALINGS IN THE SOFTWARE.
   TREE 0x28
   FLOR 0x29
   FURN 0x2A
-  WEAP 0x2B
+  WEAP 0x2B TESWeapon
   AMMO 0x2C TESAmmo
-  NPC_ 0x2D
+  NPC_ 0x2D TESActor
   LVLN 0x2E
   KEYM 0x2F
   ALCH 0x30
   IDLM 0x31
   NOTE 0x32
-  PROJ 0x33
-  HAZD 0x34
+  PROJ 0x33 TESProjectile
+  HAZD 0x34 TESHazard
   BNDS 0x35
   SLGM 0x36
   TERM 0x37
-  LVLI 0x38
+  LVLI 0x38 TESLeveledItem
   WTHR 0x39 TESWeather
   CLMT 0x3A TESClimate
   SPGD 0x3B
@@ -108,10 +108,10 @@ OTHER DEALINGS IN THE SOFTWARE.
   PBAR 0x48
   PHZD 0x49
   WRLD 0x4A TESWorldSpace
-  LAND 0x4B
-  NAVM 0x4C
+  LAND 0x4B TESLand
+  NAVM 0x4C TESNavMesh
   TLOD 0x4D
-  DIAL 0x4E
+  DIAL 0x4E TESDialog
   INFO 0x4F
   QUST 0x50 TESQuest
   IDLE 0x51
@@ -125,10 +125,10 @@ OTHER DEALINGS IN THE SOFTWARE.
   TOFT 0x59
   EXPL 0x5A
   DEBR 0x5B
-  IMGS 0x5C
+  IMGS 0x5C TESImageSpace(???)
   IMAD 0x5D
   FLST 0x5E
-  PERK 0x5F
+  PERK 0x5F TESPerk
   BPTD 0x60
   ADDN 0x61
   AVIF 0x62 TESActorValueInfo
@@ -140,7 +140,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   IPDS 0x68
   ARMA 0x69
   ECZN 0x6A
-  LCTN 0x6B
+  LCTN 0x6B TESLocation
   MESG 0x6C
   RGDL 0x6D
   DOBJ 0x6E
@@ -197,8 +197,15 @@ OTHER DEALINGS IN THE SOFTWARE.
 enum FormTypes {
   FormType_Form = 0,
   FormType_Script = 0x16,
+  FormType_Weather = 0x39,
+  FormType_Climate = 0x3A,
+  FormType_Cell = 0x3F,
   FormType_ObjectReference = 0x40,
   FormType_WorldSpace = 0x4A,
+  FormType_WaterType = 0x57,
+  FormType_ActorValueInfo = 0x62,
+  FormType_Location = 0x6B,
+  FormType_MusicType = 0x71,
 };
 
 enum TESFlags {
@@ -296,7 +303,6 @@ struct TESClimate {
   uint8 volatility; // 0x84
   uint8 unk85;
   uint16 unk86;
-  uint32 flags; //??? 0x88
   
   //???
 };
@@ -316,6 +322,46 @@ struct BGSMusicType {
   
   //???
 };
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct TESLocationRefType {
+  TESForm tesForm;
+  
+  
+}; // 80 bytes (0x50)
+
+struct TESReferenceList {
+  void *reference; // 0x00
+  uint32 editorID; // 0x08
+  uint32 size; // 0x0C
+  uint32 unk10;
+  uint32 unk14;
+}; // 24 bytes (0x18)
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct TESLocation {
+  TESForm tesForm;
+  
+  void *unk20;
+  void *unk28;
+  void *unk30;
+  void *unk38;
+  void *unk40; // keywords???
+  uint32 unk48;
+  uint32 unk4C;
+  uint64 unk50;
+  uint64 unk58;
+  uint64 unk60;
+  uint64 unk68;
+  uint64 unk70;
+  real32 unk78; // actorFadeMult???
+  uint32 unk7C;
+  TESReferenceList *locationRefsList; // 0x80
+  
+  //???
+}; // 320 bytes (0x140)
 #pragma pack(pop)
 
 struct TESCell;
@@ -420,12 +466,29 @@ struct TESWorldSpace {
   uint16 unk216;
   real32 landHeight; // 0x218
   real32 waterHeight; // 0x21C
+  real32 unk220;
+  uint32 unk224;
+  uint64 unk228;
+  TESLocation *location; // 0x230
   
   //???
 };
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+struct TESLand {
+  TESForm tesForm;
+  
+  //???
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct TESCellCoords {
+  int32 x;
+  int32 y;
+};
+
 struct TESCell {
   TESForm tesForm;
   
@@ -434,8 +497,22 @@ struct TESCell {
   uint64 unk30;
   uint64 unk38;
   uint32 flags; // 0x40
+  uint32 unk44;
+  void *unk48;
+  TESCellCoords *coordinates; // 0x50
+  TESLand *landData; // 0x58
+  uint32 unk60;
+  uint32 unk64;
+  void *unk68;
+  void *unk70; // ObjectReference array???
+  uint32 unk78; // array size???
+  uint32 unk7C;
+  uint32 unk80; // array size???
+  uint32 unk84;
+  uint64 unk88;
+  void *unk90;
   
-  uint8 unk44[132];
+  uint8 unk44[48];
   
   TESWorldSpace *worldSpace; // 0xC8
   //???
