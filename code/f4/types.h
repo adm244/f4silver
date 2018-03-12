@@ -32,26 +32,166 @@ OTHER DEALINGS IN THE SOFTWARE.
     - TESScript_Compile function sets 0x02 bit for TESScript
 */
 
-/*
-  struct ArgsType {
-    char *type; // 8 bytes
-    int32 unk01; // 4 bytes
-    int8 unk02; // 1 byte
-      int8 pad[3]; // 3 bytes
-  // }; // 16 bytes
-  
-  struct Struct_4 {
-    int32 unk0;
-    char string[512];
-    int32 length;
-    // ???
-  };
-  
-  struct TESString {
-    char *string;
-    uint16 length;
-    uint16 length_zero_terminated;
-  };
+/* Form types:
+  NONE 0x00
+  TES4 0x01
+  GRUP 0x02
+  GMST 0x03
+  KYWD 0x04
+  LCRT 0x05
+  AACT 0x06
+  TRNS 0x07
+  CMPO 0x08
+  TXST 0x09
+  MICN 0x0A
+  GLOB 0x0B GlobalObject
+  DMGT 0x0C
+  CLAS 0x0D
+  FACT 0x0E
+  HDPT 0x0F
+  EYES 0x10
+  RACE 0x11 Race
+  SOUN 0x12 Sound
+  ASPC 0x13 AcousticSpace
+  SKIL 0x14
+  MGEF 0x15
+  SCPT 0x16 Script
+  LTEX 0x17
+  ENCH 0x18
+  SPEL 0x19
+  SCRL 0x1A
+  ACTI 0x1B
+  TACT 0x1C
+  ARMO 0x1D
+  BOOK 0x1E
+  CONT 0x1F
+  DOOR 0x20
+  INGR 0x21
+  LIGH 0x22
+  MISC 0x23
+  STAT 0x24
+  SCOL 0x25
+  MSTT 0x26
+  GRAS 0x27
+  TREE 0x28
+  FLOR 0x29
+  FURN 0x2A
+  WEAP 0x2B
+  AMMO 0x2C TESAmmo
+  NPC_ 0x2D
+  LVLN 0x2E
+  KEYM 0x2F
+  ALCH 0x30
+  IDLM 0x31
+  NOTE 0x32
+  PROJ 0x33
+  HAZD 0x34
+  BNDS 0x35
+  SLGM 0x36
+  TERM 0x37
+  LVLI 0x38
+  WTHR 0x39 TESWeather
+  CLMT 0x3A TESClimate
+  SPGD 0x3B
+  RFCT 0x3C
+  REGN 0x3D
+  NAVI 0x3E
+  CELL 0x3F TESCell
+  REFR 0x40 TESObjectReference
+  ACHR 0x41 TESCharacter
+  PMIS 0x42
+  PARW 0x43
+  PGRE 0x44
+  PBEA 0x45
+  PFLA 0x46
+  PCON 0x47
+  PBAR 0x48
+  PHZD 0x49
+  WRLD 0x4A TESWorldSpace
+  LAND 0x4B
+  NAVM 0x4C
+  TLOD 0x4D
+  DIAL 0x4E
+  INFO 0x4F
+  QUST 0x50 TESQuest
+  IDLE 0x51
+  PACK 0x52
+  CSTY 0x53
+  LSCR 0x54
+  LVSP 0x55
+  ANIO 0x56
+  WATR 0x57 TESWaterType
+  EFSH 0x58
+  TOFT 0x59
+  EXPL 0x5A
+  DEBR 0x5B
+  IMGS 0x5C
+  IMAD 0x5D
+  FLST 0x5E
+  PERK 0x5F
+  BPTD 0x60
+  ADDN 0x61
+  AVIF 0x62 TESActorValueInfo
+  CAMS 0x63
+  CPTH 0x64
+  VTYP 0x65
+  MATT 0x66
+  IPCT 0x67
+  IPDS 0x68
+  ARMA 0x69
+  ECZN 0x6A
+  LCTN 0x6B
+  MESG 0x6C
+  RGDL 0x6D
+  DOBJ 0x6E
+  DFOB 0x6F
+  LGTM 0x70
+  MUSC 0x71 BGSMusicType
+  FSTP 0x72
+  FSTS 0x73
+  SMBN 0x74
+  SMQN 0x75
+  SMEN 0x76
+  DLBR 0x77
+  MUST 0x78
+  DLVW 0x79
+  WOOP 0x7A
+  SHOU 0x7B
+  EQUP 0x7C
+  RELA 0x7D
+  SCEN 0x7E
+  ASTP 0x7F
+  OTFT 0x80
+  ARTO 0x81
+  MATO 0x82
+  MOVT 0x83
+  SNDR 0x84
+  DUAL 0x85
+  SNCT 0x86
+  SOPM 0x87
+  COLL 0x88
+  CLFM 0x89
+  REVB 0x8A
+  PKIN 0x8B
+  RFGP 0x8C
+  AMDL 0x8D
+  LAYR 0x8E
+  COBJ 0x8F
+  OMOD 0x90
+  MSWP 0x91
+  ZOOM 0x92
+  INNR 0x93
+  KSSM 0x94
+  AECH 0x95
+  SCCO 0x96
+  AORU 0x97
+  SCSN 0x98
+  STAG 0x99
+  NOCM 0x9A
+  LENS 0x9B
+  LSPR 0x9C
+  GDRY 0x9D
+  OVIS 0x9E
 */
 
 enum FormTypes {
@@ -87,8 +227,199 @@ struct TESForm {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+struct TESActorValueInfo {
+  TESForm tesForm;
+  
+  //???
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct TESWeather {
+  TESForm tesForm;
+
+  //???
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+#pragma warning(push)
+#pragma warning(disable : 4200)
+struct TESTextureData {
+  void *unk00;
+  uint16 unk08;
+  uint16 unk0A;
+  uint32 unk0C;
+  uint64 strLength; // 0x10
+  char str[0]; // 0x18
+};
+#pragma warning(pop)
+
+struct TESTextureDataObject {
+  void *unk00;
+  TESTextureData *textureData;
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct TESWeatherType {
+  TESWeather *weather;
+  uint64 chance;
+  void *globalVariable; // named 'Global' in editor
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct LinkedListSingle {
+  void *item;
+  void *next;
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct TESClimate {
+  TESForm tesForm;
+  
+  TESTextureDataObject nightSky; // 0x20
+  uint64 unk30;
+  uint64 unk38;
+  uint64 unk40;
+  uint64 unk48;
+  TESWeatherType *defaultWeather; //??? 0x50
+  LinkedListSingle *weatherTypes; // 0x58
+  TESTextureDataObject sunTexture; // 0x60
+  TESTextureDataObject sunGlareTexture; // 0x70
+  uint8 sunriseBegin; // 0x80
+  uint8 sunriseEnd; // 0x81
+  uint8 sunsetBegin; // 0x82
+  uint8 sunsetEnd; // 0x83
+  uint8 volatility; // 0x84
+  uint8 unk85;
+  uint16 unk86;
+  uint32 flags; //??? 0x88
+  
+  //???
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct TESWaterType {
+  TESForm testForm;
+  
+  //???
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct BGSMusicType {
+  TESForm tesForm;
+  
+  //???
+};
+#pragma pack(pop)
+
+struct TESCell;
+
+#pragma pack(push, 1)
 struct TESWorldSpace {
   TESForm tesForm;
+  
+  void *unk20;
+  void *unk28;
+  void *unk30;
+  void *unk38;
+  TESActorValueInfo *unk40;
+  uint32 unk48;
+  uint32 unk4C;
+  uint32 unk50;
+  uint32 unk54;
+  void *unk58;
+  TESActorValueInfo *unk60;
+  void *unk68;
+  TESCell *unk70;
+  uint32 unk78;
+  uint32 unk7C;
+  TESClimate *climate; // 0x80
+  uint32 unk88;
+  uint32 unk8C;
+  uint32 unk90;
+  uint32 unk94;
+  uint32 unk98;
+  uint32 unk9C;
+  uint32 unkA0;
+  uint32 unkA4;
+  uint32 unkA8;
+  uint32 unkAC;
+  void *unkB0;
+  uint32 unkB8;
+  uint32 unkBC;
+  uint64 unkC0;
+  void *unkC8; // array of TESObjectReference, Character, ...
+  uint32 unkD0;
+  uint32 unkD4;
+  uint32 unkD8;
+  uint32 unkDC;
+  TESActorValueInfo *unkE0;
+  uint32 unkE8;
+  uint32 unkEC;
+  uint64 unkF0;
+  void *unkF8;
+  TESActorValueInfo *unk100;
+  uint64 unk108;
+  TESCell *unk110;
+  TESActorValueInfo *unk118;
+  uint32 unk120;
+  uint32 unk124;
+  uint32 unk128;
+  uint32 unk12C;
+  void *unk130;
+  uint32 unk138;
+  uint32 unk13C;
+  void *unk140;
+  void *unk148; // array of TESObjectReference
+  uint32 unk150;
+  uint32 unk154;
+  uint32 unk158;
+  uint32 unk15C;
+  void *unk160;
+  void *unk168;
+  void *unk170;
+  void *unk178;
+  void *unk180;
+  TESWorldSpace *parentWorldSpace; // 0x188
+  uint64 unk190;
+  TESWaterType *unk198;
+  TESWaterType *unk1A0;
+  real32 unk1A8;
+  uint32 unk1AC;
+  uint32 unk1B0;
+  uint16 NWCellX; // 1B4
+  uint16 NWCellY; // 1B6
+  uint16 SECellX; // 1B8
+  uint16 SECellY; // 1BA
+  real32 unk1BC;
+  uint32 unk1C0;
+  uint32 unk1C4;
+  uint32 unk1C8;
+  uint32 unk1CC;
+  BGSMusicType *musicType; // 0x1D0
+  real32 unk1D8;
+  real32 unk1DC;
+  real32 unk1E0;
+  real32 unk1E4;
+  void *unk1E8;
+  uint32 unk1F0;
+  uint32 unk1F4;
+  void *unk1F8;
+  uint32 unk200;
+  uint32 unk204;
+  char *editorID; // 0x208
+  uint16 unk210;
+  uint16 unk212;
+  uint16 unk214;
+  uint16 unk216;
+  real32 landHeight; // 0x218
+  real32 waterHeight; // 0x21C
   
   //???
 };
@@ -143,9 +474,11 @@ struct TESObjectReference {
   TESCell *parentCell; // 0xB8
   uint64 unkC0;
   uint64 unkC8;
-  uint64 unkD0;
-  uint64 unkD8;
-  uint64 unkE0;
+  uint32 posX; // D0
+  uint32 posY; // D4
+  uint32 posZ; // D8
+  uint32 unkDC;
+  TESForm *baseForm; // E0
   uint64 unkE8;
   uint64 unkF0;
   uint64 unkF8;
