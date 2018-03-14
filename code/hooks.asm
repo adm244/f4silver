@@ -29,6 +29,7 @@ extern Unk3ObjectAddress: qword
 extern TESConsoleObjectAddress: qword
 extern GlobalScriptStateAddress: qword
 extern PlayerReferenceAddress: qword
+extern GameDataAddress: qword
 
 extern mainloop_hook_return_address: qword
 extern loadgame_start_hook_return_address: qword
@@ -104,24 +105,52 @@ ENDM
     jmp [loadgame_end_hook_return_address]
   LoadGameEnd_Hook endp
   
-  GetConsoleObject proc
+  TES_GetConsoleObject proc
     mov rax, qword ptr [TESConsoleObjectAddress]
     mov rax, qword ptr [rax]
     
     ret
-  GetConsoleObject endp
+  TES_GetConsoleObject endp
   
-  GetGlobalScriptObject proc
+  TES_GetGlobalScriptObject proc
     mov rax, qword ptr [GlobalScriptStateAddress]
     mov rax, qword ptr [rax]
     
     ret
-  GetGlobalScriptObject endp
+  TES_GetGlobalScriptObject endp
   
-  GetPlayerReference proc
+  TES_GetPlayer proc
     mov rax, qword ptr [PlayerReferenceAddress]
     mov rax, qword ptr [rax]
     
     ret
-  GetPlayerReference endp
+  TES_GetPlayer endp
+  
+  ;rcx = 0x058ED480 (1_10_26)
+  ;dl = 0x4A (worldspace form type)
+  ;
+  ;rax = dl + dl*2 (= 0xDE)
+  ;  rcx + rax*8 + 0x68 (pointer to array of worldspaces)
+  ;  rcx + rax*8 + 0x78 (total worldspace count)
+  TES_GetWorldSpaceCount proc
+    mov rcx, qword ptr [GameDataAddress]
+    
+    mov r9, 4Ah
+    
+    lea rax, qword ptr [r9+r9*2]
+    mov rax, qword ptr [rcx+rax*8+78h]
+    
+    ret
+  TES_GetWorldSpaceCount endp
+  
+  TES_GetWorldSpaceArray proc
+    mov rcx, qword ptr [GameDataAddress]
+    
+    mov r9, 4Ah
+    
+    lea rax, qword ptr [r9+r9*2]
+    mov rax, qword ptr [rcx+rax*8+68h]
+    
+    ret
+  TES_GetWorldSpaceArray endp
 end

@@ -40,7 +40,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   END
 */
 
-/*
+/* DEPRECATED
   Script compile and run process:
     1) Allocate memory for Script object
     2) Initialize Script object
@@ -78,6 +78,18 @@ OTHER DEALINGS IN THE SOFTWARE.
     2) Searches for cell by given coordinates
     3) Moves player to that cell
   END
+*/
+
+/*
+  GetWorldSpaceArray,
+  GetWorldSpaceCount:
+  
+    rcx = 0x058ED480 (1_10_26)
+    dl = 0x4A
+    
+    rax = dl + dl*2 (= 0xDE)
+      rcx + rax*8 + 0x68 (pointer to array of worldspaces)
+      rcx + rax*8 + 0x78 (total worldspace count)  
 */
 
 #ifndef _F4_FUNCTIONS_
@@ -140,8 +152,11 @@ internal _TESScript_Destructor TESScript_Destructor;
 // tesCell - TESCell object to move to (null if cellName is specified)
 typedef bool (__fastcall *_TESObjectReference_MoveToCell)
 (TESObjectReference *objectRef, char *cellName, TESCell *tesCell);
+typedef TESLocation * (__fastcall *_TESObjectReference_GetCurrentLocation)
+(TESObjectReference *objectRef);
 
 internal _TESObjectReference_MoveToCell TESObjectReference_MoveToCell;
+internal _TESObjectReference_GetCurrentLocation TESObjectReference_GetCurrentLocation;
 // ------ #TESObjectReference ------
 
 // ------ TESWorldSpace ------
@@ -154,7 +169,7 @@ internal _TESWorldSpace_FindExteriorCellByCoordinates TESWorldSpace_FindExterior
 // ------ Utils ------
 //NOTE(adm244): prints out a c-style formated string into the game console
 typedef void (__fastcall *_TESConsolePrint)
-(uint64 consoleObject, char *format, ...);
+(void *consoleObject, char *format, ...);
 
 //NOTE(adm244): displays a message in the top-left corner of a screen
 // message - text to be displayed
@@ -179,6 +194,8 @@ internal _TESFindCellWorldSpaceByName TESFindCellWorldSpaceByName;
 // ------ #Utils ------
 
 // ------ Addresses ------
+//IMPORTANT(adm244): it's getting messy, simplify addresses definition (macro?)
+
 extern "C" {
   uint64 mainloop_hook_patch_address;
   uint64 mainloop_hook_return_address;
@@ -207,7 +224,8 @@ extern "C" {
   uint64 TESScriptCompileAndRunAddress;
   uint64 TESScriptSetTextAddress;
   
-  uint64 TESPlayerMoveToCellAddress;
+  uint64 TESObjectReferenceMoveToCellAddress;
+  uint64 TESObjectReferenceGetCurrentLocationAddress;
   
   uint64 TESWorldSpaceFindExteriorCellByCoordinatesAddress;
   
@@ -216,6 +234,8 @@ extern "C" {
   uint64 TESDisplayMessageAddress;
   
   uint64 PlayerReferenceAddress;
+  
+  uint64 GameDataAddress;
 }
 
 internal void DefineAddresses()
@@ -248,7 +268,8 @@ internal void DefineAddresses()
     TESScriptCompileAndRunAddress = 0x004E2830;
     TESScriptSetTextAddress = 0x004E20D0;
     
-    TESPlayerMoveToCellAddress = 0x00E9A330;
+    TESObjectReferenceMoveToCellAddress = 0x00E9A330;
+    TESObjectReferenceGetCurrentLocationAddress = 0x0040EE70;
     
     TESWorldSpaceFindExteriorCellByCoordinatesAddress = 0x004923E0;
     
@@ -257,6 +278,8 @@ internal void DefineAddresses()
     TESDisplayMessageAddress = 0x00AE1D10;
     
     PlayerReferenceAddress = 0x05ADE398;
+    
+    GameDataAddress = 0x0590AB80;
   } else if( F4_VERSION == F4_VERSION_1_10_26 ) {
     mainloop_hook_patch_address = 0x00D34DB7;
     mainloop_hook_return_address = 0x00D34DC3;
@@ -285,7 +308,8 @@ internal void DefineAddresses()
     TESScriptCompileAndRunAddress = 0x004E2810;
     TESScriptSetTextAddress = 0x004E20B0;
     
-    TESPlayerMoveToCellAddress = 0x00E989E0;
+    TESObjectReferenceMoveToCellAddress = 0x00E989E0;
+    TESObjectReferenceGetCurrentLocationAddress = 0x0040EE50;
     
     TESWorldSpaceFindExteriorCellByCoordinatesAddress = 0x004923C0;
     
@@ -294,6 +318,8 @@ internal void DefineAddresses()
     TESDisplayMessageAddress = 0x00AE1D00;
     
     PlayerReferenceAddress = 0x05AC26F8;
+    
+    GameDataAddress = 0x058ED480;
   } else {
     //TODO(adm244): unsupported version
   }
@@ -330,7 +356,8 @@ internal void ShiftAddresses()
   TESScript_CompileAndRun = (_TESScript_CompileAndRun)(TESScriptCompileAndRunAddress + baseAddress);
   TESScript_SetText = (_TESScript_SetText)(TESScriptSetTextAddress + baseAddress);
   
-  TESObjectReference_MoveToCell = (_TESObjectReference_MoveToCell)(TESPlayerMoveToCellAddress + baseAddress);
+  TESObjectReference_MoveToCell = (_TESObjectReference_MoveToCell)(TESObjectReferenceMoveToCellAddress + baseAddress);
+  TESObjectReference_GetCurrentLocation = (_TESObjectReference_GetCurrentLocation)(TESObjectReferenceGetCurrentLocationAddress + baseAddress);
   
   TESWorldSpace_FindExteriorCellByCoordinates = (_TESWorldSpace_FindExteriorCellByCoordinates)(TESWorldSpaceFindExteriorCellByCoordinatesAddress + baseAddress);
   
@@ -339,11 +366,13 @@ internal void ShiftAddresses()
   TESDisplayMessage = (_TESDisplayMessage)(TESDisplayMessageAddress + baseAddress);
   
   PlayerReferenceAddress += baseAddress;
+  
+  GameDataAddress += baseAddress;
 }
 // ------ #Addresses ------
 
 // ------ Functions ------
-internal bool ExecuteScriptLine(char *text)
+internal bool TES_ExecuteScriptLine(char *text)
 {
   bool result = false;
   
@@ -352,24 +381,81 @@ internal bool ExecuteScriptLine(char *text)
   TESScript_Constructor(&scriptObject);
   TESScript_MarkAsTemporary(&scriptObject);
   TESScript_SetText(&scriptObject, text);
-  result = TESScript_CompileAndRun(&scriptObject, (void *)GetGlobalScriptObject(), SysWindowCompileAndRun, 0);
+  result = TESScript_CompileAndRun(&scriptObject, TES_GetGlobalScriptObject(), SysWindowCompileAndRun, 0);
   TESScript_Destructor(&scriptObject);
   
   return result;
 }
 
-internal bool IsInInterior(TESObjectReference *ref)
+internal inline bool TES_IsInterior(TESCell *cell)
+{
+  return cell->flags & FLAG_TESCell_IsInterior;
+}
+
+internal bool TES_IsInInterior(TESObjectReference *ref)
 {
   bool result = false;
 
   if( ref ) {
     TESCell *parentCell = ref->parentCell;
-    if( parentCell ) {
-      if( parentCell->flags & TESCell_IsInterior ) result = true;
-    }
+    if( parentCell ) result = TES_IsInterior(parentCell);
   }
   
   return result;
+}
+
+internal inline TESLocation * TES_GetPlayerLocation()
+{
+  TESPlayer *player = TES_GetPlayer();
+  return player->location;
+}
+
+//FIX(adm244): spell worldspace in types.h with non-capital 's'
+internal TESWorldSpace * GetPlayerCurrentWorldSpace()
+{
+  TESWorldSpace *worldspace = 0;
+
+  TESPlayer *player = TES_GetPlayer();
+  TESCell *playerCell = player->objectReference.parentCell;
+  
+  if( playerCell ) {
+    worldspace = playerCell->worldSpace;
+    
+    if( worldspace ) {
+      while( worldspace->parentWorldSpace ) {
+        worldspace = worldspace->parentWorldSpace;
+      }
+    } else {
+      TESLocation *location = TES_GetPlayerLocation();
+      if( location ) {
+        while( location->parent ) {
+          location = location->parent;
+        }
+        
+        int worldSpaceCount = TES_GetWorldSpaceCount();
+        TESWorldSpace **worldspaceArray = TES_GetWorldSpaceArray();
+        
+        for( int i = 0; i < worldSpaceCount; ++i ) {
+          //NOTE(adm244): convert it to be syntacticly an array?
+          TESWorldSpace *p = *(worldspaceArray + i);
+          
+          if( p->location == location ) {
+            //NOTE(adm244): get root worldspace?
+            worldspace = p;
+            break;
+          }
+        }
+        
+        if( !worldspace ) {
+          //NOTE(adm244): location isn't attached to any of worldspaces, try encounter zone?
+        }
+      } else {
+        //NOTE(adm244): no location attached to player's cell, try encounter zone?
+      }
+    }
+  }
+  
+  return worldspace;
 }
 // ------ #Functions ------
 

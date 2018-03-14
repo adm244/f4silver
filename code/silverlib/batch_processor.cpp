@@ -67,29 +67,18 @@ internal int batches_count = 0;
 
 internal void Teleport()
 {
-  TESObjectReference *playerRef = GetPlayerReference();
-  TESCell *playerCell = playerRef->parentCell;
+  TESWorldSpace *worldspace = GetPlayerCurrentWorldSpace();
+  if( !worldspace ) {
+    //TODO(adm244): remember the last one?
+    worldspace = *TES_GetWorldSpaceArray();
+  }
   
-  if( playerCell ) {
-    //IMPORTANT(adm244): interior cells doesn't have worldspace
-    //NOTE(adm244): not sure if there's a way to get worldspace from interior cell
-    // probably just have to remember the last worldspace player have been into
-    TESWorldSpace *worldSpace = playerCell->worldSpace;
-    
-    //TODO(adm244): get cell's root location and compare with worldspace locations
-    if( worldSpace ) {
-      while( worldSpace->parentWorldSpace ) {
-        worldSpace = worldSpace->parentWorldSpace;
-      }
-      
-      int cellX = RandomInt(Min(worldSpace->NWCellX, worldSpace->SECellX), Max(worldSpace->NWCellX, worldSpace->SECellX));
-      int cellY = RandomInt(Min(worldSpace->NWCellY, worldSpace->SECellY), Max(worldSpace->NWCellY, worldSpace->SECellY));
-      TESCell *targetCell = TESWorldSpace_FindExteriorCellByCoordinates(worldSpace, cellX, cellY);
-      
-      if( targetCell ) {
-        TESObjectReference_MoveToCell(playerRef, 0, targetCell);
-      }
-    }
+  int cellX = RandomInt(Min(worldspace->NWCellX, worldspace->SECellX), Max(worldspace->NWCellX, worldspace->SECellX));
+  int cellY = RandomInt(Min(worldspace->NWCellY, worldspace->SECellY), Max(worldspace->NWCellY, worldspace->SECellY));
+  TESCell *targetCell = TESWorldSpace_FindExteriorCellByCoordinates(worldspace, cellX, cellY);
+  
+  if( targetCell ) {
+    TESObjectReference_MoveToCell((TESObjectReference *)TES_GetPlayer(), 0, targetCell);
   }
 }
 
@@ -231,7 +220,7 @@ internal bool ExecuteBatch(char *filename)
         if( (IsInterior && (executionState == EXEC_INTERIOR))
          || (!IsInterior && (executionState == EXEC_EXTERIOR))
          || (executionState == EXEC_DEFAULT) ) {
-          result = ExecuteScriptLine(line);
+          result = TES_ExecuteScriptLine(line);
           if( !result ) {
             break;
           }

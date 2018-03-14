@@ -37,6 +37,7 @@ OTHER DEALINGS IN THE SOFTWARE.
     - Execute console command
     - Execute commands from *.txt file line by line (bat command)
     - Check if player is in interior or exterior
+    - Teleport command
   TODO:
     - Remove random counters clear timer?
     
@@ -66,9 +67,12 @@ extern "C" {
   void LoadGameBegin_Hook();
   void LoadGameEnd_Hook();
   
-  uint64 GetConsoleObject();
-  uint64 GetGlobalScriptObject();
-  TESObjectReference * GetPlayerReference();
+  void * TES_GetConsoleObject();
+  void * TES_GetGlobalScriptObject();
+  TESPlayer * TES_GetPlayer();
+  
+  int TES_GetWorldSpaceCount();
+  TESWorldSpace ** TES_GetWorldSpaceArray();
 }
 
 extern "C" uint64 baseAddress = 0;
@@ -104,7 +108,7 @@ internal uint8 IsTimedOut = 0;
 
 internal void DisplayMessage(char *message)
 {
-  TESConsolePrint(GetConsoleObject(), message);
+  TESConsolePrint(TES_GetConsoleObject(), message);
   TESDisplayMessage(message, 0, 1, true);
 }
 
@@ -218,7 +222,7 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
         DisplayRandomSuccessMessage(batches[index].description);
         
         /*TESObjectReference *player = GetPlayerReference();
-        if( IsInInterior(player) ) {
+        if( TES_IsInterior(player) ) {
           DisplayMessage("Interior");
         } else {
           DisplayMessage("Exterior");
@@ -230,7 +234,7 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
 
 internal bool IsPlayerInInterior()
 {
-  return IsInInterior(GetPlayerReference());
+  return TES_IsInInterior((TESObjectReference *)TES_GetPlayer());
 }
 
 extern "C" void GameLoop()
