@@ -1,7 +1,7 @@
 Enemies Raid
 @exterior
-cgf "kwei.spawnmob" 0023D8CE 600 0
+cgf "kwei.spawn2d" 0023D8CE 600 900
 @interior
-cgf "kwei.spawnmob" 00020BCC 300 0
+cgf "kwei.spawn2d" 00020BCC 300 600
 @default
-cgf "kwei.spawnmob" 0023D8CE 300 0
+cgf "kwei.spawn2d" 0023D8CE 300 600
