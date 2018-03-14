@@ -98,7 +98,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   NAVI 0x3E
   CELL 0x3F TESCell
   REFR 0x40 TESObjectReference
-  ACHR 0x41 TESCharacter
+  ACHR 0x41 TESActor
   PMIS 0x42
   PARW 0x43
   PGRE 0x44
@@ -139,13 +139,13 @@ OTHER DEALINGS IN THE SOFTWARE.
   IPCT 0x67
   IPDS 0x68
   ARMA 0x69
-  ECZN 0x6A
+  ECZN 0x6A TESEncounterZone
   LCTN 0x6B TESLocation
   MESG 0x6C
   RGDL 0x6D
   DOBJ 0x6E
   DFOB 0x6F
-  LGTM 0x70
+  LGTM 0x70 TESLightingTemplate
   MUSC 0x71 BGSMusicType
   FSTP 0x72
   FSTS 0x73
@@ -201,6 +201,7 @@ enum FormTypes {
   FormType_Climate = 0x3A,
   FormType_Cell = 0x3F,
   FormType_ObjectReference = 0x40,
+  FormType_Actor = 0x41,
   FormType_WorldSpace = 0x4A,
   FormType_WaterType = 0x57,
   FormType_ActorValueInfo = 0x62,
@@ -209,15 +210,15 @@ enum FormTypes {
 };
 
 enum TESFlags {
-  TESForm_Default = (1 << 3),
-  TESForm_IsDeleted = (1 << 5),
-  TESForm_IsPersistent = (1 << 16),
-  TESForm_IsDisabled = (1 << 17),
+  FLAG_TESForm_Default = (1 << 3),
+  FLAG_TESForm_IsDeleted = (1 << 5),
+  FLAG_TESForm_IsPersistent = (1 << 16),
+  FLAG_TESForm_IsDisabled = (1 << 17),
 
-  TESCell_IsInterior = (1 << 0),
-  TESCell_HasWater = (1 << 1),
+  FLAG_TESCell_IsInterior = (1 << 0),
+  FLAG_TESCell_HasWater = (1 << 1),
   
-  TESScript_IsTemporary = (1 << 14),
+  FLAG_TESScript_IsTemporary = (1 << 14),
 };
 
 #pragma pack(push, 1)
@@ -341,6 +342,14 @@ struct TESReferenceList {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+struct TESEncounterZone {
+  TESForm tesForm;
+  
+  //???
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
 struct TESLocation {
   TESForm tesForm;
   
@@ -351,10 +360,10 @@ struct TESLocation {
   void *unk40; // keywords???
   uint32 unk48;
   uint32 unk4C;
-  uint64 unk50;
+  TESLocation *parent; // 0x50
   uint64 unk58;
   uint64 unk60;
-  uint64 unk68;
+  TESEncounterZone *encounterZone; // 0x68
   uint64 unk70;
   real32 unk78; // actorFadeMult???
   uint32 unk7C;
@@ -468,7 +477,7 @@ struct TESWorldSpace {
   real32 waterHeight; // 0x21C
   real32 unk220;
   uint32 unk224;
-  uint64 unk228;
+  TESEncounterZone *encounterZone; // 0x228
   TESLocation *location; // 0x230
   
   //???
@@ -477,6 +486,14 @@ struct TESWorldSpace {
 
 #pragma pack(push, 1)
 struct TESLand {
+  TESForm tesForm;
+  
+  //???
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct TESLightingTemplate {
   TESForm tesForm;
   
   //???
@@ -512,9 +529,11 @@ struct TESCell {
   uint64 unk88;
   void *unk90;
   
-  uint8 unk44[48];
+  uint8 unk98[48];
   
   TESWorldSpace *worldSpace; // 0xC8
+  void *unkD0;
+  TESLightingTemplate *lightningTemplate; // 0xD8
   //???
 };
 #pragma pack(pop)
@@ -568,7 +587,7 @@ struct TESObjectReference {
 
 #pragma pack(push, 1)
 struct TESPlayer {
-  TESObjectReference objectRefenrece;
+  TESObjectReference objectReference;
   
   uint8 unk110[2008];
   
@@ -589,10 +608,10 @@ struct TESPlayer {
   uint32 unk938;
   uint8 unk93C;
   uint8 unk93D;
+  uint8 unk93E;
   uint8 unk93F;
-  uint8 unk940;
-  
-  uint8 unk941[7];
+  uint8 unk940[0xCC8 - 0x940];
+  TESLocation *location; // 0xCC8
   
   //???
 };
