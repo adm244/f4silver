@@ -39,6 +39,9 @@ OTHER DEALINGS IN THE SOFTWARE.
     - Check if player is in interior or exterior
     - Teleport command
   TODO:
+    - Draw game overlay
+    - Reload configuration on demand
+    - Save game when it's minimized
     - Remove random counters clear timer?
     
     - Hook initialize function (clear DllMain)?

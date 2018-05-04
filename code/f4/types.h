@@ -37,7 +37,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   TES4 0x01
   GRUP 0x02
   GMST 0x03
-  KYWD 0x04
+  KYWD 0x04 TESKeyword???
   LCRT 0x05
   AACT 0x06
   TRNS 0x07
@@ -94,7 +94,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   CLMT 0x3A TESClimate
   SPGD 0x3B
   RFCT 0x3C
-  REGN 0x3D
+  REGN 0x3D TESRegion
   NAVI 0x3E
   CELL 0x3F TESCell
   REFR 0x40 TESObjectReference
@@ -210,10 +210,14 @@ enum FormTypes {
 };
 
 enum TESFlags {
+  // (1 << 0) = ???
   FLAG_TESForm_Default = (1 << 3),
   FLAG_TESForm_IsDeleted = (1 << 5),
+  // (1 << 13) = ???
+  // (1 << 15) = ???
   FLAG_TESForm_IsPersistent = (1 << 16),
   FLAG_TESForm_IsDisabled = (1 << 17),
+  // (1 << 18) = ???
 
   FLAG_TESCell_IsInterior = (1 << 0),
   FLAG_TESCell_HasWater = (1 << 1),
@@ -350,6 +354,38 @@ struct TESEncounterZone {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+struct TESRegion_Unk01 {
+  void *unk00;
+  uint64 unk08;
+  uint32 flag; // 0x10
+  uint32 pad14;
+}; // 24 bytes (0x18)
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct TESRegion_Unk02 {
+  uint64 unk00;
+  uint64 unk08;
+}; // 16 bytes (0x10)
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct TESRegion {
+  TESForm tesForm;
+  
+  TESRegion_Unk01 *unk20;
+  TESRegion_Unk02 *unk28;
+  TESWorldSpace *parentWorldSpace; // 0x30
+  TESWeather *unk38;
+  uint64 unk40;
+  uint32 unk48;
+  uint32 unk4C;
+  float unk50;
+  uint32 unk54;
+}; // 88 bytes (0x58)
+#pragma pack(pop)
+
+#pragma pack(push, 1)
 struct TESLocation {
   TESForm tesForm;
   
@@ -391,8 +427,8 @@ struct TESWorldSpace {
   void *unk58;
   TESActorValueInfo *unk60;
   void *unk68;
-  TESCell *unk70;
-  uint32 unk78;
+  TESCell *unk70; // center of worldspace???
+  uint32 unk78; // array of TESKeyworld??? (void **)
   uint32 unk7C;
   TESClimate *climate; // 0x80
   uint32 unk88;
@@ -479,6 +515,8 @@ struct TESWorldSpace {
   uint32 unk224;
   TESEncounterZone *encounterZone; // 0x228
   TESLocation *location; // 0x230
+  
+  //0x2C0 - array of "cells data" (which can be inported\exported in creation kit)
   
   //???
 };
@@ -612,6 +650,8 @@ struct TESPlayer {
   uint8 unk93F;
   uint8 unk940[0xCC8 - 0x940];
   TESLocation *location; // 0xCC8
+  
+  //0x0DFF, 0x0DFC - some kind of flags used in code since oblivion (deprecated?)
   
   //???
 };

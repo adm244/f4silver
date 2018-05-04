@@ -70,6 +70,10 @@ OTHER DEALINGS IN THE SOFTWARE.
     //  0x00CDCA40 (1_10_26)
     //  0x00CDE390 (1_10_40)
     bool LoadGame(int64 BGSSaveLoadGame, char *filename, int32 unk2, int64 unk3);
+    
+    // 0x00CDC540 (1_10_26)
+    // 0x00CDDE90 (1_10_40)
+    bool SaveGame(void *BGSSaveLoadGame, char *filename, uint32 unk2);
 */
 
 /*
@@ -82,10 +86,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 /*
   GetWorldSpaceArray,
-  GetWorldSpaceCount:
+  GetWorldSpaceCount,
+  GetFormArray,
+  GetFormCount:
   
     rcx = 0x058ED480 (1_10_26)
-    dl = 0x4A
+    dl = 0x4A (form type)
     
     rax = dl + dl*2 (= 0xDE)
       rcx + rax*8 + 0x68 (pointer to array of worldspaces)
