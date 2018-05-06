@@ -38,11 +38,14 @@ OTHER DEALINGS IN THE SOFTWARE.
     - Execute commands from *.txt file line by line (bat command)
     - Check if player is in interior or exterior
     - Teleport command
+    - Remove random counters clear timer
   TODO:
+    - Implement @timeout command to delay batch lines execution
+    - Rewrite batch file structure (meta data + actual commands)
+    
     - Draw game overlay
     - Reload configuration on demand
     - Save game when it's minimized
-    - Remove random counters clear timer?
     
     - Hook initialize function (clear DllMain)?
     - Save game function
@@ -81,8 +84,6 @@ extern "C" {
 extern "C" uint64 baseAddress = 0;
 internal HMODULE f4silver = 0;
 
-internal HANDLE TimerQueue = 0;
-
 internal bool IsInterior = 0;
 internal bool ActualGameplay = false;
 
@@ -106,8 +107,6 @@ internal DWORD QueueThreadID = 0;
 internal Queue BatchQueue;
 internal Queue InteriorPendingQueue;
 internal Queue ExteriorPendingQueue;
-
-internal uint8 IsTimedOut = 0;
 
 internal void DisplayMessage(char *message)
 {
@@ -142,24 +141,6 @@ internal inline void MakePostSave()
   if( Settings.SavePostActivation ) {
   //TODO(adm244): implement this!
     //SaveGame("PostActivation", "post");
-  }
-}
-
-internal VOID CALLBACK TimerQueueCallback(PVOID lpParam, BOOLEAN TimerOrWaitFired)
-{
-  RandomClearCounters();
-  
-  IsTimedOut = 1;
-}
-
-internal void TimerCreate(HANDLE timerQueue, uint timeout)
-{
-  HANDLE newTimerQueue;
-  if( !CreateTimerQueueTimer(&newTimerQueue, TimerQueue,
-                            (WAITORTIMERCALLBACK)TimerQueueCallback,
-                            0, timeout, 0, 0) ) {
-    DisplayMessage("Ooops... Timer is dead :'(");
-    DisplayMessage("We're sad pandas now :(");
   }
 }
 
@@ -198,6 +179,7 @@ internal void ProcessQueue(Queue *queue, bool checkExecState)
   }
 }
 
+//TODO(adm244): better name
 internal DWORD WINAPI QueueHandler(LPVOID data)
 {
   for(;;) {
@@ -220,7 +202,8 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
       }
       
       if( IsActivated(&CommandRandom) ) {
-        int index = GetNextBatchIndex(batches_count);
+        //int index = GetNextBatchIndex(batches_count);
+        int index = RandomInt(0, batches_count - 1);
         QueuePut(&BatchQueue, (pointer)&batches[index]);
         DisplayRandomSuccessMessage(batches[index].description);
         
@@ -248,11 +231,6 @@ extern "C" void GameLoop()
     
     Initialized = true;
   }
-
-  if( IsTimedOut ) {
-    IsTimedOut = 0;
-    TimerCreate(TimerQueue, Settings.Timeout);
-  }
   
   if( ActualGameplay ) {
     if( IsInterior != IsPlayerInInterior() ) {
@@ -264,7 +242,7 @@ extern "C" void GameLoop()
         ProcessQueue(&ExteriorPendingQueue, false);
       }
     }
-  
+    
     ProcessQueue(&BatchQueue, true);
   }
 }
@@ -309,7 +287,6 @@ internal void Initialize(HMODULE module)
   //QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
   
   RandomGeneratorInitialize(batchesCount);
-  TimerQueue = CreateTimerQueue();
 }
 
 internal DWORD WINAPI WaitForDecryption(LPVOID param)

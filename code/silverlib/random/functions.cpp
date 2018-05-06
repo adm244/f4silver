@@ -30,7 +30,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include "randomlib.c"
 
-internal int randomGenerated = 0;
+/*internal int randomGenerated = 0;
 internal uint8 randomCounters[MAX_BATCHES];
 
 internal void RandomClearCounters()
@@ -57,7 +57,7 @@ internal int GetNextBatchIndex(int batchesCount)
   randomCounters[value] = 1;
   
   return value;
-}
+}*/
 
 internal void RandomGeneratorInitialize(int batchesCount)
 {
@@ -67,7 +67,7 @@ internal void RandomGeneratorInitialize(int batchesCount)
   int kj = ticksPassed % 30081;
   
   RandomInitialize(ij, kj);
-  RandomClearCounters();
+  //RandomClearCounters();
 }
 
 #endif
