@@ -369,6 +369,8 @@ struct TESRegion_Unk02 {
 }; // 16 bytes (0x10)
 #pragma pack(pop)
 
+struct TESWorldSpace;
+
 #pragma pack(push, 1)
 struct TESRegion {
   TESForm tesForm;
