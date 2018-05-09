@@ -43,17 +43,36 @@ struct Queue {
   int end;
 };
 
+internal int QueueGetLength(Queue *queue)
+{
+  return queue->end - queue->start;
+}
+
+internal int QueueIsEmpty(Queue *queue)
+{
+  return QueueGetLength(queue) < 1;
+}
+
 internal void QueueInitialize(Queue *queue)
 {
   queue->start = 0;
   queue->end = 0;
 }
 
-internal void QueuePut(Queue *queue, pointer dataPointer)
+internal bool QueuePut(Queue *queue, pointer dataPointer)
 {
+  bool result = false;
+  
+  if( QueueIsEmpty(queue) ) {
+    QueueInitialize(queue);
+  }
+  
   if( queue->end < QUEUE_SIZE ) {
     queue->data[queue->end++] = dataPointer;
+    result = true;
   }
+  
+  return result;
 }
 
 internal pointer QueueGet(Queue *queue)
@@ -72,16 +91,6 @@ internal pointer QueueGet(Queue *queue)
 internal pointer QueuePeek(Queue *queue)
 {
   return queue->data[queue->start];
-}
-
-internal int QueueGetLength(Queue *queue)
-{
-  return queue->end - queue->start;
-}
-
-internal int QueueIsEmpty(Queue *queue)
-{
-  return QueueGetLength(queue) < 1;
 }
 
 #endif
