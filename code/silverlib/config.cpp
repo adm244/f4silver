@@ -37,10 +37,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define CONFIG_PRESAVE "bSaveGamePreActivation"
 #define CONFIG_POSTSAVE "bSaveGamePostActivation"
 #define CONFIG_SHOWMESSAGES "bShowMessages"
+#define CONFIG_SHOWMESSAGES_DEBUG "bShowMessagesDebug"
 #define CONFIG_SHOWMESSAGES_RANDOM "bShowMessagesRandom"
 #define CONFIG_SAVEFILE "sSaveFile"
 #define CONFIG_SAVENAME "sSaveName"
 #define CONFIG_MESSAGE "sMessage"
+#define CONFIG_MESSAGE_FAIL "sMessageFail"
 #define CONFIG_MESSAGE_RANDOM "sMessageRandom"
 #define CONFIG_MESSAGE_TOGGLE_ON "sMessageToggleOn"
 #define CONFIG_MESSAGE_TOGGLE_OFF "sMessageToggleOff"
@@ -50,6 +52,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define CONFIG_DEFAULT_SAVEFILE "f4silver_save"
 #define CONFIG_DEFAULT_SAVENAME "F4Silver Save"
 #define CONFIG_DEFAULT_MESSAGE "%s activated"
+#define CONFIG_DEFAULT_MESSAGE_FAIL "%s failed to activate"
 #define CONFIG_DEFAULT_MESSAGE_RANDOM "%s activated"
 #define CONFIG_DEFAULT_MESSAGE_TOGGLE_ON "Commands are ON"
 #define CONFIG_DEFAULT_MESSAGE_TOGGLE_OFF "Commands are OFF"
@@ -61,6 +64,7 @@ struct SilverStrings {
   char SaveFileName[STRING_SIZE];
   char SaveDisplayName[STRING_SIZE];
   char Message[STRING_SIZE];
+  char MessageFail[STRING_SIZE];
   char MessageRandom[STRING_SIZE];
   char MessageOn[STRING_SIZE];
   char MessageOff[STRING_SIZE];
@@ -68,6 +72,7 @@ struct SilverStrings {
 
 struct SilverSettings {
   bool ShowMessages;
+  bool ShowMessagesDebug;
   bool ShowMessagesRandom;
   bool SavePreActivation;
   bool SavePostActivation;
@@ -84,6 +89,7 @@ internal void SettingsInitialize(HMODULE module)
   Settings.SavePreActivation = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_PRESAVE, false);
   Settings.SavePostActivation = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_POSTSAVE, false);
   Settings.ShowMessages = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_SHOWMESSAGES, false);
+  Settings.ShowMessagesDebug = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_SHOWMESSAGES_DEBUG, true);
   Settings.ShowMessagesRandom = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_SHOWMESSAGES_RANDOM, true);
   Settings.AutoSaveEnabled = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_AUTOSAVE, true);
   
@@ -94,6 +100,8 @@ internal void SettingsInitialize(HMODULE module)
     
   IniReadString(module, CONFIG_FILE, CONFIG_MESSAGE_SECTION, CONFIG_MESSAGE,
     CONFIG_DEFAULT_MESSAGE, Strings.Message, STRING_SIZE);
+  IniReadString(module, CONFIG_FILE, CONFIG_MESSAGE_SECTION, CONFIG_MESSAGE_FAIL,
+    CONFIG_DEFAULT_MESSAGE_FAIL, Strings.MessageFail, STRING_SIZE);
   IniReadString(module, CONFIG_FILE, CONFIG_MESSAGE_SECTION, CONFIG_MESSAGE_RANDOM,
     CONFIG_DEFAULT_MESSAGE_RANDOM, Strings.MessageRandom, STRING_SIZE);
   IniReadString(module, CONFIG_FILE, CONFIG_MESSAGE_SECTION, CONFIG_MESSAGE_TOGGLE_ON,

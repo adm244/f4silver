@@ -38,6 +38,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 //TODO(adm244): move outside
 #define BATCH_SAVEGAME "@savegame"
 #define BATCH_TELEPORT "@teleport"
+#define BATCH_TIMEOUT "@timeout"
 
 #define EXEC_DEFAULT 0
 #define EXEC_INTERIOR 1
@@ -48,6 +49,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 struct BatchData{
   char filename[MAX_FILENAME];
   char description[MAX_DESCRIPTION];
+  
+  uint64 offset;
+  int timerIndex;
+  
   int key;
   bool enabled;
 };
@@ -110,6 +115,8 @@ internal bool InitBatchFiles(HMODULE module, BatchData *batches, int *num)
       
       strcpy(batches[index].filename, str);
       strcpy(batches[index].description, str);
+      batches[index].timerIndex = -1;
+      batches[index].offset = 0;
       batches[index].key = (int)strtol(p, &endptr, 0);
       batches[index].enabled = true;
       
@@ -136,6 +143,11 @@ internal void ReadBatchDescriptions(BatchData *batches)
     
     if( file ) {
       if( fgets(line, sizeof(line), file) ) {
+        uint32 lineLen = strlen(line);
+        if(line[lineLen - 1] == '\n'){
+          line[lineLen - 1] = 0;
+        }
+        
         strcpy(batches[i].description, line);
       }
       
@@ -144,7 +156,7 @@ internal void ReadBatchDescriptions(BatchData *batches)
   }
 }
 
-//IMPORTANT(adm244): get rid off duplicated file reading!
+//IMPORTANT(adm244): get rid off duplicated file readings!
 internal uint8 GetBatchExecState(char *filename)
 {
   uint8 result = EXEC_DEFAULT;
@@ -180,19 +192,30 @@ internal uint8 GetBatchExecState(char *filename)
   return result;
 }
 
-internal bool ExecuteBatch(char *filename)
+enum ExecuteBatch_ResultCodes {
+  ExecuteBatch_Fail = -1,
+  ExecuteBatch_Success = 0,
+  ExecuteBatch_OnDelay,
+};
+
+internal int ExecuteBatch(BatchData *batch, uint64 offset)
 {
-  bool result = false;
+  int result = ExecuteBatch_Success;
   
   FILE *src = NULL;
-  fopen_s(&src, filename, "r");
+  fopen_s(&src, batch->filename, "r");
+  if( offset > 0 ) {
+    fsetpos(src, (fpos_t *)&offset);
+  }
 
   if( src ){
     char line[4096];
     uint8 executionState = EXEC_DEFAULT;
     
     //FIX(adm244): hack
-    fgets(line, sizeof(line), src);
+    if( offset == 0 ) {
+      fgets(line, sizeof(line), src);
+    }
     
     while( fgets(line, sizeof(line), src) ){
       uint32 lineLen = strlen(line);
@@ -212,6 +235,20 @@ internal bool ExecuteBatch(char *filename)
         //SaveGame(Strings.SaveDisplayName, Strings.SaveFileName);
       } else if( strcmp(line, BATCH_TELEPORT) == 0 ) {
         Teleport();
+      } else if( strncmp(line, BATCH_TIMEOUT, strlen(BATCH_TIMEOUT)) == 0 ) {
+        char timeoutBuffer[8];
+        strncpy_s(timeoutBuffer, 8, line + strlen(BATCH_TIMEOUT), 8);
+        
+        int timeoutValue = atoi(timeoutBuffer);
+        if( timeoutValue > 0 ) {
+          if( !fgetpos(src, (fpos_t *)&batch->offset) ) {
+            batch->timerIndex = StartTimer(timeoutValue * 1000);
+            //TODO(adm244): implement assert
+            //assert(batch->timerIndex >= 0);
+            result = ExecuteBatch_OnDelay;
+            break;
+          }
+        }
       } else if( strcmp(line, BATCH_INTERIOR_ONLY) == 0 ) {
         //NOTE(adm244): should be empty
       } else if( strcmp(line, BATCH_EXTERIOR_ONLY) == 0 ) {
@@ -220,8 +257,8 @@ internal bool ExecuteBatch(char *filename)
         if( (IsInterior && (executionState == EXEC_INTERIOR))
          || (!IsInterior && (executionState == EXEC_EXTERIOR))
          || (executionState == EXEC_DEFAULT) ) {
-          result = TES_ExecuteScriptLine(line);
-          if( !result ) {
+          if( !TES_ExecuteScriptLine(line) ) {
+            result = ExecuteBatch_Fail;
             break;
           }
         }
