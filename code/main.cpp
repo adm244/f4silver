@@ -39,10 +39,10 @@ OTHER DEALINGS IN THE SOFTWARE.
     - Check if player is in interior or exterior
     - Teleport command
     - Remove random counters clear timer
-  TODO:
     - Implement @timeout command to delay batch lines execution
+  TODO:
+    - Rewrite hooking mechanism (detours)
     - Rewrite batch file structure (meta data + actual commands)
-    
     - Draw game overlay
     - Reload configuration on demand
     - Save game when it's minimized
@@ -65,6 +65,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "common/types.h"
 #include "common/utils.cpp"
 #include "common/queue.cpp"
+#include "common/win32_timer.cpp"
 
 #include "f4/types.h"
 
@@ -108,23 +109,45 @@ internal Queue BatchQueue;
 internal Queue InteriorPendingQueue;
 internal Queue ExteriorPendingQueue;
 
-internal void DisplayMessage(char *message)
+internal inline void DisplayMessageDebug(char *message)
 {
-  TESConsolePrint(TES_GetConsoleObject(), message);
-  TESDisplayMessage(message, 0, 1, true);
-}
-
-internal void DisplaySuccessMessage(char *message)
-{
-  if( Settings.ShowMessages ) {
-    DisplayMessage(message);
+  if( Settings.ShowMessagesDebug ) {
+    TESConsolePrint(TES_GetConsoleObject(), message);
   }
 }
 
-internal void DisplayRandomSuccessMessage(char *message)
+internal inline void DisplayMessage(char *message)
+{
+  TESDisplayMessage(message, 0, 1, true);
+}
+
+internal void DisplayMessage(char *message, char *commandName)
+{
+  char buffer[256];
+  sprintf_s(buffer, 256, message, commandName);
+
+  DisplayMessageDebug(buffer);
+  TESDisplayMessage(buffer, 0, 1, true);
+}
+
+internal inline void DisplaySuccessMessage(char *commandName)
+{
+  if( Settings.ShowMessages ) {
+    DisplayMessage(Strings.Message, commandName);
+  }
+}
+
+internal inline void DisplayFailMessage(char *commandName)
+{
+  if( Settings.ShowMessages ) {
+    DisplayMessage(Strings.MessageFail, commandName);
+  }
+}
+
+internal inline void DisplayRandomSuccessMessage(char *commandName)
 {
   if( Settings.ShowMessagesRandom ) {
-    DisplayMessage(message);
+    DisplayMessage(Strings.MessageRandom, commandName);
   }
 }
 
@@ -150,7 +173,20 @@ internal void ProcessQueue(Queue *queue, bool checkExecState)
   
   while( dataPointer = QueueGet(queue) ) {
     BatchData *batch = (BatchData *)dataPointer;
+    uint64 offset = batch->offset;
     bool isQueueEmpty = QueueIsEmpty(queue);
+    
+    if( batch->timerIndex >= 0 ) {
+      if( IsTimerStoped(batch->timerIndex) ) {
+        FreeTimer(batch->timerIndex);
+        
+        batch->timerIndex = -1;
+        batch->offset = 0;
+      } else {
+        QueuePut(queue, dataPointer);
+        return;
+      }
+    }
     
     if( checkExecState ) {
       uint8 executionState = GetBatchExecState(batch->filename);
@@ -172,8 +208,22 @@ internal void ProcessQueue(Queue *queue, bool checkExecState)
     
     if( isQueueEmpty ) MakePreSave();
   
-    ExecuteBatch(batch->filename);
-    DisplaySuccessMessage(batch->description);
+    switch( ExecuteBatch(batch, offset) ) {
+      case ExecuteBatch_Fail: {
+        DisplayFailMessage(batch->description);
+      } break;
+      
+      case ExecuteBatch_OnDelay: {
+        DisplaySuccessMessage(batch->description);
+        QueuePut(queue, dataPointer);
+      } break;
+      
+      case ExecuteBatch_Success: {
+        if( offset == 0 ) {
+          DisplaySuccessMessage(batch->description);
+        }
+      } break;
+    }
     
     if( isQueueEmpty ) MakePostSave();
   }
@@ -280,6 +330,8 @@ internal void Initialize(HMODULE module)
   if( batchesCount <= 0 ) {
     MessageBox(0, "Batch files could not be located!", "Error", MB_OK | MB_ICONERROR);
   }
+  
+  InitializeTimers();
   
   QueueInitialize(&BatchQueue);
   QueueInitialize(&InteriorPendingQueue);
