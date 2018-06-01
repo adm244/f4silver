@@ -213,6 +213,7 @@ enum TESFlags {
   // (1 << 0) = ???
   FLAG_TESForm_Default = (1 << 3),
   FLAG_TESForm_IsDeleted = (1 << 5),
+  FLAG_TESForm_IsBorderRegion = (1 << 6),
   // (1 << 13) = ???
   // (1 << 15) = ???
   FLAG_TESForm_IsPersistent = (1 << 16),
@@ -226,6 +227,7 @@ enum TESFlags {
 };
 
 #pragma pack(push, 1)
+
 struct TESForm {
   void *vtable; // 0x00
   uint64 unk08;
@@ -236,25 +238,19 @@ struct TESForm {
   uint8 byte1B;
   uint32 unk1C;
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct TESActorValueInfo {
   TESForm tesForm;
   
   //???
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct TESWeather {
   TESForm tesForm;
 
   //???
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 #pragma warning(push)
 #pragma warning(disable : 4200)
 struct TESTextureData {
@@ -271,24 +267,18 @@ struct TESTextureDataObject {
   void *unk00;
   TESTextureData *textureData;
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct TESWeatherType {
   TESWeather *weather;
   uint64 chance;
   void *globalVariable; // named 'Global' in editor
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct LinkedListSingle {
   void *item;
   void *next;
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct TESClimate {
   TESForm tesForm;
   
@@ -311,25 +301,19 @@ struct TESClimate {
   
   //???
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct TESWaterType {
   TESForm testForm;
   
   //???
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct BGSMusicType {
   TESForm tesForm;
   
   //???
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct TESLocationRefType {
   TESForm tesForm;
   
@@ -343,35 +327,27 @@ struct TESReferenceList {
   uint32 unk10;
   uint32 unk14;
 }; // 24 bytes (0x18)
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct TESEncounterZone {
   TESForm tesForm;
   
   //???
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct TESRegion_Unk01 {
   void *unk00;
   uint64 unk08;
   uint32 flag; // 0x10
   uint32 pad14;
 }; // 24 bytes (0x18)
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct TESRegion_Unk02 {
   uint64 unk00;
   uint64 unk08;
 }; // 16 bytes (0x10)
-#pragma pack(pop)
 
 struct TESWorldSpace;
 
-#pragma pack(push, 1)
 struct TESRegion {
   TESForm tesForm;
   
@@ -385,9 +361,22 @@ struct TESRegion {
   float unk50;
   uint32 unk54;
 }; // 88 bytes (0x58)
-#pragma pack(pop)
 
-#pragma pack(push, 1)
+struct RegionUnk {
+  TESRegion *region;
+  RegionUnk *nextRegionUnk;
+  
+  // ???
+};
+
+struct TESCellUnk {
+  void *unk00;
+  TESRegion *region;
+  RegionUnk *regionUnk;
+  
+  // ???
+};
+
 struct TESLocation {
   TESForm tesForm;
   
@@ -409,11 +398,9 @@ struct TESLocation {
   
   //???
 }; // 320 bytes (0x140)
-#pragma pack(pop)
 
 struct TESCell;
 
-#pragma pack(push, 1)
 struct TESWorldSpace {
   TESForm tesForm;
   
@@ -433,7 +420,7 @@ struct TESWorldSpace {
   uint32 unk78; // array of TESKeyworld??? (void **)
   uint32 unk7C;
   TESClimate *climate; // 0x80
-  uint32 unk88;
+  uint32 flags; // 0x88
   uint32 unk8C;
   uint32 unk90;
   uint32 unk94;
@@ -518,29 +505,23 @@ struct TESWorldSpace {
   TESEncounterZone *encounterZone; // 0x228
   TESLocation *location; // 0x230
   
-  //0x2C0 - array of "cells data" (which can be inported\exported in creation kit)
+  //0x2C0 - array of "cells data" (which can be imported\exported in creation kit)
   
   //???
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct TESLand {
   TESForm tesForm;
   
   //???
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct TESLightingTemplate {
   TESForm tesForm;
   
   //???
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct TESCellCoords {
   int32 x;
   int32 y;
@@ -576,9 +557,13 @@ struct TESCell {
   TESLightingTemplate *lightningTemplate; // 0xD8
   //???
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
+struct Vector3 {
+  float x; // 0x0
+  float y; // 0x4
+  float z; // 0x8
+};
+
 struct TESObjectReference {
   TESForm tesForm;
   
@@ -608,12 +593,10 @@ struct TESObjectReference {
   uint8 unkB0;
   uint8 padB1[7];
   TESCell *parentCell; // 0xB8
-  uint64 unkC0;
-  uint64 unkC8;
-  uint32 posX; // D0
-  uint32 posY; // D4
-  uint32 posZ; // D8
-  uint32 unkDC;
+  Vector3 rotation; // 0xC0
+  uint8 padCC[4];
+  Vector3 position; // 0xD0
+  uint8 padDC[4];
   TESForm *baseForm; // E0
   uint64 unkE8;
   uint64 unkF0;
@@ -623,21 +606,30 @@ struct TESObjectReference {
   uint16 unk10A;
   uint32 pad10C;
 }; // 272 bytes (0x110)
-#pragma pack(pop)
 
-#pragma pack(push, 1)
-struct TESPlayer {
+struct TESActor {
   TESObjectReference objectReference;
   
-  uint8 unk110[2008];
+  uint8 unk110[32];
+  uint32 flags; // 0x130
+  uint8 unk134[0x300 - 0x134];
+  uint64 unk300;
+  uint8 unk308[0x43C - 0x308];
+  uint32 flags_2; // 0x43C
+  uint8 unk440[0x490 - 0x440];
+}; // 1168 bytes (0x490)
+
+struct TESPlayer {
+  TESActor tesActor;
   
+  uint8 unk490[0x700 - 0x490];
+  Vector3 previousPosition; // 0x700
+  uint8 unk70C[0x8E8 - 0x70C];
   TESWorldSpace *currentWorldSpace; // 0x8E8
   TESCell *currentCell; // 0x8F0
   uint64 unk8F8;
-  uint32 unk900;
-  uint32 unk904;
-  uint32 unk908;
-  uint32 unk90C; 
+  Vector3 newPosition; // 0x900
+  Vector3 newRotation; // 0x90C
   uint32 unk910;
   uint32 unk914;
   uint64 unk918;
@@ -656,18 +648,14 @@ struct TESPlayer {
   //0x0DFF, 0x0DFC - some kind of flags used in code since oblivion (deprecated?)
   
   //???
-};
-#pragma pack(pop)
+}; // 3600 bytes (0xE10)
 
-#pragma pack(push, 1)
 struct ObScriptParam {
   char *type; // 0x00
   uint32 typeId; // 0x08
   uint32 isOptional; // 0x10
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct ObScriptCommand {
   char *name; // 0x00
   char *synonim; // 0x08
@@ -684,9 +672,7 @@ struct ObScriptCommand {
   uint32 flags; // 0x48
   uint32 pad4C;
 }; // 80 bytes (0x50)
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct TESScript {
   TESForm tesForm;
   
@@ -709,4 +695,5 @@ struct TESScript {
   char scriptLineText[260]; // 0x70
   uint32 unk174;
 }; // 376 bytes (0x178)
+
 #pragma pack(pop)

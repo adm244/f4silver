@@ -25,7 +25,7 @@ In fact it already won't work with current version (see supported versions secti
 
 ### Supported versions
 * 1.10.40
-* 1.10.26
+* 1.10.26 (broken)
 
 ### How it works
 There are two dll files:

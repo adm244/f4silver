@@ -252,16 +252,16 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
       }
       
       if( IsActivated(&CommandRandom) ) {
-        //int index = GetNextBatchIndex(batches_count);
         int index = RandomInt(0, batches_count - 1);
         QueuePut(&BatchQueue, (pointer)&batches[index]);
         DisplayRandomSuccessMessage(batches[index].description);
         
-        /*TESObjectReference *player = GetPlayerReference();
-        if( TES_IsInterior(player) ) {
-          DisplayMessage("Interior");
+        /*TESObjectReference *playerRef = (TESObjectReference *)TES_GetPlayer();
+        TESCell *playerCell = playerRef->parentCell;
+        if( IsCellWithinBorderRegion(playerCell) ) {
+          DisplayMessage("Cell is WITHIN border region.");
         } else {
-          DisplayMessage("Exterior");
+          DisplayMessage("Cell is OUTSIDE border region.");
         }*/
       }
     }

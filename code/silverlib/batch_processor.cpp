@@ -78,9 +78,12 @@ internal void Teleport()
     worldspace = *TES_GetWorldSpaceArray();
   }
   
-  int cellX = RandomInt(Min(worldspace->NWCellX, worldspace->SECellX), Max(worldspace->NWCellX, worldspace->SECellX));
-  int cellY = RandomInt(Min(worldspace->NWCellY, worldspace->SECellY), Max(worldspace->NWCellY, worldspace->SECellY));
-  TESCell *targetCell = TESWorldSpace_FindExteriorCellByCoordinates(worldspace, cellX, cellY);
+  TESCell *targetCell;
+  do {
+    int cellX = RandomInt(Min(worldspace->NWCellX, worldspace->SECellX), Max(worldspace->NWCellX, worldspace->SECellX));
+    int cellY = RandomInt(Min(worldspace->NWCellY, worldspace->SECellY), Max(worldspace->NWCellY, worldspace->SECellY));
+    targetCell = TESWorldSpace_FindExteriorCellByCoordinates(worldspace, cellX, cellY);
+  } while( !IsCellWithinBorderRegion(targetCell) );
   
   if( targetCell ) {
     TESObjectReference_MoveToCell((TESObjectReference *)TES_GetPlayer(), 0, targetCell);

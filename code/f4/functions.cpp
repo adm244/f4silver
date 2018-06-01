@@ -30,6 +30,25 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 /*
+  Get cell regions:
+    1) Call TESCell__sub_1403B4A10
+    2) [eax + 0x8] - first region
+    3) [eax + 0x10] - pointer to RegionUnk struct
+    
+      struct RegionUnk {
+        TESRegion *region;
+        RegionUnk *nextRegionUnk;
+      };
+*/
+
+/*
+  Check if cell is within region border:
+    1) Get cell regions
+    2) If there's border region the cell is within border region,
+      otherwise it is outside.
+*/
+
+/*
   Is current cell interior or exterior check:
     1) Get ObjectReference pointer (rax)
       player is an object reference
@@ -165,6 +184,13 @@ internal _TESObjectReference_MoveToCell TESObjectReference_MoveToCell;
 internal _TESObjectReference_GetCurrentLocation TESObjectReference_GetCurrentLocation;
 // ------ #TESObjectReference ------
 
+// ------ TESCell ------
+typedef TESCellUnk * (__fastcall *_TESCell_GetUnk)
+(TESCell *cell, bool flag);
+
+internal _TESCell_GetUnk TESCell_GetUnk;
+// ------ #TESCell ------
+
 // ------ TESWorldSpace ------
 typedef TESCell * (__fastcall *_TESWorldSpace_FindExteriorCellByCoordinates)
 (TESWorldSpace *tesWorldSpace, unsigned int cellX, unsigned int cellY);
@@ -233,6 +259,8 @@ extern "C" {
   uint64 TESObjectReferenceMoveToCellAddress;
   uint64 TESObjectReferenceGetCurrentLocationAddress;
   
+  uint64 TESCellGetUnkAddress;
+  
   uint64 TESWorldSpaceFindExteriorCellByCoordinatesAddress;
   
   uint64 TESFindInteriorCellByNameAddress;
@@ -277,6 +305,8 @@ internal void DefineAddresses()
     TESObjectReferenceMoveToCellAddress = 0x00E9A330;
     TESObjectReferenceGetCurrentLocationAddress = 0x0040EE70;
     
+    TESCellGetUnkAddress = 0x003B4A30;
+    
     TESWorldSpaceFindExteriorCellByCoordinatesAddress = 0x004923E0;
     
     TESFindInteriorCellByNameAddress = 0x00152EB0;
@@ -316,6 +346,8 @@ internal void DefineAddresses()
     
     TESObjectReferenceMoveToCellAddress = 0x00E989E0;
     TESObjectReferenceGetCurrentLocationAddress = 0x0040EE50;
+    
+    TESCellGetUnkAddress = 0x003B4A10;
     
     TESWorldSpaceFindExteriorCellByCoordinatesAddress = 0x004923C0;
     
@@ -364,6 +396,8 @@ internal void ShiftAddresses()
   
   TESObjectReference_MoveToCell = (_TESObjectReference_MoveToCell)(TESObjectReferenceMoveToCellAddress + baseAddress);
   TESObjectReference_GetCurrentLocation = (_TESObjectReference_GetCurrentLocation)(TESObjectReferenceGetCurrentLocationAddress + baseAddress);
+  
+  TESCell_GetUnk = (_TESCell_GetUnk)(TESCellGetUnkAddress + baseAddress);
   
   TESWorldSpace_FindExteriorCellByCoordinates = (_TESWorldSpace_FindExteriorCellByCoordinates)(TESWorldSpaceFindExteriorCellByCoordinatesAddress + baseAddress);
   
@@ -422,7 +456,7 @@ internal TESWorldSpace * GetPlayerCurrentWorldSpace()
   TESWorldSpace *worldspace = 0;
 
   TESPlayer *player = TES_GetPlayer();
-  TESCell *playerCell = player->objectReference.parentCell;
+  TESCell *playerCell = player->tesActor.objectReference.parentCell;
   
   if( playerCell ) {
     worldspace = playerCell->worldSpace;
@@ -462,6 +496,30 @@ internal TESWorldSpace * GetPlayerCurrentWorldSpace()
   }
   
   return worldspace;
+}
+
+internal bool IsCellWithinBorderRegion(TESCell *cell)
+{
+  bool result = false;
+
+  TESCellUnk *cellUnk = TESCell_GetUnk(cell, 1);
+  
+  if( cellUnk ) {
+    RegionUnk *regionUnk = (RegionUnk *)(&cellUnk->region);
+    if( regionUnk ) {
+      while( regionUnk ) {
+        TESRegion *region = regionUnk->region;
+        if( !region ) break;
+        
+        result = ((region->tesForm.flags) >> 6) && 1;
+        if( result ) break;
+        
+        regionUnk = regionUnk->nextRegionUnk;
+      }
+    }
+  }
+  
+  return result;
 }
 // ------ #Functions ------
 
