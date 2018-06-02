@@ -562,7 +562,7 @@ struct Vector3 {
   float x; // 0x0
   float y; // 0x4
   float z; // 0x8
-};
+}; // 13 bytes (0xC)
 
 struct TESObjectReference {
   TESForm tesForm;
@@ -630,8 +630,11 @@ struct TESPlayer {
   uint64 unk8F8;
   Vector3 newPosition; // 0x900
   Vector3 newRotation; // 0x90C
-  uint32 unk910;
-  uint32 unk914;
+  
+  //TODO(adm244): double check that...
+  //uint32 unk910;
+  //uint32 unk914;
+  
   uint64 unk918;
   uint64 unk920;
   uint64 unk928;
