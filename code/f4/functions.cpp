@@ -521,6 +521,17 @@ internal bool IsCellWithinBorderRegion(TESCell *cell)
   
   return result;
 }
+
+internal bool IsInDialogueWithPlayer(TESActor *actor)
+{
+  //NOTE(adm244): has potential problems with some dialogues
+  return actor->flags_3 & FLAG_TESActor_IsInDialogue;
+}
+
+//internal bool TES_IsTalking(TESActor *actor)
+//{
+  // call 0x270 member function
+//}
 // ------ #Functions ------
 
 #endif

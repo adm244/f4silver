@@ -40,6 +40,7 @@ OTHER DEALINGS IN THE SOFTWARE.
     - Teleport command
     - Remove random counters clear timer
     - Implement @timeout command to delay batch lines execution
+    - Check if player is in dialogue
   TODO:
     - Rewrite hooking mechanism (detours)
     - Rewrite batch file structure (meta data + actual commands)
@@ -256,6 +257,12 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
         QueuePut(&BatchQueue, (pointer)&batches[index]);
         DisplayRandomSuccessMessage(batches[index].description);
         
+        /*if( IsInDialogueWithPlayer((TESActor *)TES_GetPlayer()) ) {
+          DisplayMessage("Player IS in dialogue.");
+        } else {
+          DisplayMessage("Player is NOT in dialogue.");
+        }*/
+        
         /*TESObjectReference *playerRef = (TESObjectReference *)TES_GetPlayer();
         TESCell *playerCell = playerRef->parentCell;
         if( IsCellWithinBorderRegion(playerCell) ) {
@@ -282,7 +289,7 @@ extern "C" void GameLoop()
     Initialized = true;
   }
   
-  if( ActualGameplay ) {
+  if( ActualGameplay && (!IsInDialogueWithPlayer((TESActor *)TES_GetPlayer())) ) {
     if( IsInterior != IsPlayerInInterior() ) {
       IsInterior = !IsInterior;
       

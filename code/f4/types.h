@@ -224,6 +224,8 @@ enum TESFlags {
   FLAG_TESCell_HasWater = (1 << 1),
   
   FLAG_TESScript_IsTemporary = (1 << 14),
+  
+  FLAG_TESActor_IsInDialogue = (1 << 3),
 };
 
 #pragma pack(push, 1)
@@ -616,7 +618,8 @@ struct TESActor {
   uint64 unk300;
   uint8 unk308[0x43C - 0x308];
   uint32 flags_2; // 0x43C
-  uint8 unk440[0x490 - 0x440];
+  uint32 flags_3; // 0x440
+  uint8 unk444[0x490 - 0x444];
 }; // 1168 bytes (0x490)
 
 struct TESPlayer {
