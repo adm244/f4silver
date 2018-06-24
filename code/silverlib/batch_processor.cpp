@@ -78,12 +78,40 @@ internal void Teleport()
     worldspace = *TES_GetWorldSpaceArray();
   }
   
+  FILE *file = 0;
+  fopen_s(&file, "f4silver.log", "a");
+  
+  fprintf_s(file, "Teleport function started.\n");
+  
   TESCell *targetCell;
+  int minX = Min(worldspace->NWCellX, worldspace->SECellX);
+  int maxX = Max(worldspace->NWCellX, worldspace->SECellX);
+  int minY = Min(worldspace->NWCellY, worldspace->SECellY);
+  int maxY = Max(worldspace->NWCellY, worldspace->SECellY);
+  
+  uint64 cells_count = (maxX - minX) * (maxY - minY);
+  uint64 loop_count = 0;
+  
   do {
-    int cellX = RandomInt(Min(worldspace->NWCellX, worldspace->SECellX), Max(worldspace->NWCellX, worldspace->SECellX));
-    int cellY = RandomInt(Min(worldspace->NWCellY, worldspace->SECellY), Max(worldspace->NWCellY, worldspace->SECellY));
+    if( loop_count++ > cells_count ) {
+      fprintf_s(file, "Loop limit reached.\n");
+      break;
+    }
+  
+    int cellX = RandomInt(minX, maxX);
+    int cellY = RandomInt(minY, maxY);
     targetCell = TESWorldSpace_FindExteriorCellByCoordinates(worldspace, cellX, cellY);
+    
+    if( IsCellWithinBorderRegion(targetCell) ) {
+      fprintf_s(file, "Success [%d, %d]\n", cellX, cellY);
+    } else {
+      fprintf_s(file, "Failure [%d, %d]\n", cellX, cellY);
+    }
   } while( !IsCellWithinBorderRegion(targetCell) );
+  
+  fprintf_s(file, "Teleport function ended.\n");
+  
+  fclose(file);
   
   if( targetCell ) {
     TESObjectReference_MoveToCell((TESObjectReference *)TES_GetPlayer(), 0, targetCell);
