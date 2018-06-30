@@ -270,6 +270,8 @@ extern "C" {
   uint64 PlayerReferenceAddress;
   
   uint64 GameDataAddress;
+  
+  uint64 UnknownObject01Address;
 }
 
 internal void DefineAddresses()
@@ -316,6 +318,8 @@ internal void DefineAddresses()
     PlayerReferenceAddress = 0x05ADE398;
     
     GameDataAddress = 0x0590AB80;
+    
+    UnknownObject01Address = 0x05ADE288;
   } else if( F4_VERSION == F4_VERSION_1_10_26 ) {
     mainloop_hook_patch_address = 0x00D34DB7;
     mainloop_hook_return_address = 0x00D34DC3;
@@ -358,6 +362,8 @@ internal void DefineAddresses()
     PlayerReferenceAddress = 0x05AC26F8;
     
     GameDataAddress = 0x058ED480;
+    
+    UnknownObject01Address = 0x05AC25E8;
   } else {
     //TODO(adm244): unsupported version
   }
@@ -408,6 +414,8 @@ internal void ShiftAddresses()
   PlayerReferenceAddress += baseAddress;
   
   GameDataAddress += baseAddress;
+  
+  UnknownObject01Address += baseAddress;
 }
 // ------ #Addresses ------
 
@@ -532,6 +540,22 @@ internal bool IsInDialogueWithPlayer(TESActor *actor)
 //{
   // call 0x270 member function
 //}
+
+internal bool IsInMenuMode()
+{
+  uint64 unkObject01 = *((uint64 *)UnknownObject01Address);
+  return *((uint8 *)(unkObject01 + 0x1D0)) == 1;
+}
+
+internal inline bool IsPlayerInInterior()
+{
+  return TES_IsInInterior((TESObjectReference *)TES_GetPlayer());
+}
+
+internal inline bool IsPlayerInDialogue()
+{
+  return IsInDialogueWithPlayer((TESActor *)TES_GetPlayer());
+}
 // ------ #Functions ------
 
 #endif

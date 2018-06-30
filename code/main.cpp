@@ -257,6 +257,12 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
         QueuePut(&BatchQueue, (pointer)&batches[index]);
         DisplayRandomSuccessMessage(batches[index].description);
         
+        /*if (IsInMenuMode()) {
+          DisplayMessage("IS menu mode.");
+        } else {
+          DisplayMessage("Is NOT menu mode.");
+        }*/
+        
         /*if( IsInDialogueWithPlayer((TESActor *)TES_GetPlayer()) ) {
           DisplayMessage("Player IS in dialogue.");
         } else {
@@ -275,9 +281,9 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
   }
 }
 
-internal bool IsPlayerInInterior()
+internal bool IsActivationPaused()
 {
-  return TES_IsInInterior((TESObjectReference *)TES_GetPlayer());
+  return IsPlayerInDialogue() || IsInMenuMode();
 }
 
 extern "C" void GameLoop()
@@ -289,7 +295,7 @@ extern "C" void GameLoop()
     Initialized = true;
   }
   
-  if( ActualGameplay && (!IsInDialogueWithPlayer((TESActor *)TES_GetPlayer())) ) {
+  if( ActualGameplay && !IsActivationPaused() ) {
     if( IsInterior != IsPlayerInInterior() ) {
       IsInterior = !IsInterior;
       
