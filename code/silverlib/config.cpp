@@ -48,6 +48,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define CONFIG_MESSAGE_TOGGLE_OFF "sMessageToggleOff"
 #define CONFIG_TIMER "iTimeout"
 #define CONFIG_AUTOSAVE "bAutoSave"
+#define CONFIG_CHECK_MENU "bIgnoreInMenu"
+#define CONFIG_CHECK_VATS "bIgnoreInVATS"
+#define CONFIG_CHECK_DIALOGUE "bIgnoreInDialogue"
 
 #define CONFIG_DEFAULT_SAVEFILE "f4silver_save"
 #define CONFIG_DEFAULT_SAVENAME "F4Silver Save"
@@ -77,6 +80,9 @@ struct SilverSettings {
   bool SavePreActivation;
   bool SavePostActivation;
   bool AutoSaveEnabled;
+  bool IgnoreInMenu;
+  bool IgnoreInVATS;
+  bool IgnoreInDialogue;
   uint Timeout;
 };
 
@@ -92,6 +98,9 @@ internal void SettingsInitialize(HMODULE module)
   Settings.ShowMessagesDebug = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_SHOWMESSAGES_DEBUG, true);
   Settings.ShowMessagesRandom = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_SHOWMESSAGES_RANDOM, true);
   Settings.AutoSaveEnabled = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_AUTOSAVE, true);
+  Settings.IgnoreInMenu = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_CHECK_MENU, true);
+  Settings.IgnoreInVATS = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_CHECK_VATS, true);
+  Settings.IgnoreInDialogue = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_CHECK_DIALOGUE, true);
   
   IniReadString(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_SAVEFILE,
     CONFIG_DEFAULT_SAVEFILE, Strings.SaveFileName, STRING_SIZE);

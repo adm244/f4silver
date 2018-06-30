@@ -256,9 +256,9 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
       }
       
       if( IsActivated(&CommandRandom) ) {
-        /*int index = RandomInt(0, batches_count - 1);
+        int index = RandomInt(0, batches_count - 1);
         QueuePut(&BatchQueue, (pointer)&batches[index]);
-        DisplayRandomSuccessMessage(batches[index].description);*/
+        DisplayRandomSuccessMessage(batches[index].description);
         
         /*if (IsMenuOpen("VATSMenu")) {
           DisplayMessage("Menu IS opened.");
@@ -292,7 +292,9 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
 
 internal bool IsActivationPaused()
 {
-  return IsPlayerInDialogue() || IsInMenuMode() || IsMenuOpen("VATSMenu");
+  return (Settings.IgnoreInDialogue && IsPlayerInDialogue())
+      || (Settings.IgnoreInMenu && IsInMenuMode())
+      || (Settings.IgnoreInVATS && IsMenuOpen("VATSMenu"));
 }
 
 extern "C" void GameLoop()
