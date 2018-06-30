@@ -198,6 +198,26 @@ typedef TESCell * (__fastcall *_TESWorldSpace_FindExteriorCellByCoordinates)
 internal _TESWorldSpace_FindExteriorCellByCoordinates TESWorldSpace_FindExteriorCellByCoordinates;
 // ------ #TESWorldSpace ------
 
+// ------ BSFixedString ------
+typedef BSFixedString * (__fastcall *_BSFixedString_Constructor)
+(BSFixedString *ptr, char *str);
+
+typedef BSFixedString * (__fastcall *_BSFixedString_Set)
+(BSFixedString *ptr, char *str);
+
+typedef void (__fastcall *_BSFixedString_Release)(BSFixedString *ptr);
+
+internal _BSFixedString_Constructor BSFixedString_Constructor;
+internal _BSFixedString_Set BSFixedString_Set;
+internal _BSFixedString_Release BSFixedString_Release;
+// ------ #BSFixedString ------
+
+// ------ TESUI ------
+typedef bool (__fastcall *_TESUI_IsMenuOpen)(void *TESUIObject, BSFixedString *str);
+
+internal _TESUI_IsMenuOpen TESUI_IsMenuOpen;
+// ------ #TESUI ------
+
 // ------ Utils ------
 //NOTE(adm244): prints out a c-style formated string into the game console
 typedef void (__fastcall *_TESConsolePrint)
@@ -242,6 +262,13 @@ extern "C" {
   
   uint64 TESConsolePrintAddress;
   uint64 TESConsoleObjectAddress;
+  
+  uint64 TESUIObjectAddress;
+  uint64 TESUIIsMenuOpenAddress;
+  
+  uint64 BSFixedStringConstructorAddress;
+  uint64 BSFixedStringSetAddress;
+  uint64 BSFixedStringReleaseAddress;
   
   uint64 TESFormConstructorAddress;
   
@@ -291,6 +318,13 @@ internal void DefineAddresses()
     TESConsolePrintAddress = 0x01262830;
     TESConsoleObjectAddress = 0x0591AB30;
 
+    TESUIObjectAddress = 0x0590A918;
+    TESUIIsMenuOpenAddress = 0x020420E0;
+    
+    BSFixedStringConstructorAddress = 0x01B416E0;
+    BSFixedStringSetAddress = 0x01B41810;
+    BSFixedStringReleaseAddress = 0x01B42970;
+    
     TESFormConstructorAddress = 0x00151E30;
 
     TESGlobalScriptCompileAddress = 0x004E7B30;
@@ -334,6 +368,13 @@ internal void DefineAddresses()
     
     TESConsolePrintAddress = 0x01260EE0;
     TESConsoleObjectAddress = 0x058FEEB0;
+    
+    TESUIObjectAddress = 0x058EEC98;
+    TESUIIsMenuOpenAddress = 0x02040780;
+    
+    BSFixedStringConstructorAddress = 0x01B3FD80;
+    BSFixedStringSetAddress = 0x01B3FEB0;
+    BSFixedStringReleaseAddress = 0x01B41010;
     
     TESFormConstructorAddress = 0x00151E30;
     
@@ -386,6 +427,13 @@ internal void ShiftAddresses()
   
   TESConsolePrint = (_TESConsolePrint)(TESConsolePrintAddress + baseAddress);
   TESConsoleObjectAddress += baseAddress;
+  
+  TESUIObjectAddress += baseAddress;
+  TESUI_IsMenuOpen = (_TESUI_IsMenuOpen)(TESUIIsMenuOpenAddress + baseAddress);
+  
+  BSFixedString_Constructor = (_BSFixedString_Constructor)(BSFixedStringConstructorAddress + baseAddress);
+  BSFixedString_Set = (_BSFixedString_Set)(BSFixedStringSetAddress + baseAddress);
+  BSFixedString_Release = (_BSFixedString_Release)(BSFixedStringReleaseAddress + baseAddress);
   
   TESForm_Constructor = (_TESForm_Constructor)(TESFormConstructorAddress + baseAddress);
   
@@ -555,6 +603,18 @@ internal inline bool IsPlayerInInterior()
 internal inline bool IsPlayerInDialogue()
 {
   return IsInDialogueWithPlayer((TESActor *)TES_GetPlayer());
+}
+
+internal inline bool IsMenuOpen(char *str)
+{
+  bool result = false;
+
+  BSFixedString bsString = {0};
+  BSFixedString_Constructor(&bsString, str);
+  result = TESUI_IsMenuOpen(*((void **)TESUIObjectAddress), &bsString);
+  BSFixedString_Release(&bsString);
+  
+  return result;
 }
 // ------ #Functions ------
 

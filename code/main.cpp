@@ -41,7 +41,10 @@ OTHER DEALINGS IN THE SOFTWARE.
     - Remove random counters clear timer
     - Implement @timeout command to delay batch lines execution
     - Check if player is in dialogue
+    - Check if menu is opened
+    - Check if vats is active
   TODO:
+    - Add comments support to batch files
     - Rewrite hooking mechanism (detours)
     - Rewrite batch file structure (meta data + actual commands)
     - Draw game overlay
@@ -253,9 +256,15 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
       }
       
       if( IsActivated(&CommandRandom) ) {
-        int index = RandomInt(0, batches_count - 1);
+        /*int index = RandomInt(0, batches_count - 1);
         QueuePut(&BatchQueue, (pointer)&batches[index]);
-        DisplayRandomSuccessMessage(batches[index].description);
+        DisplayRandomSuccessMessage(batches[index].description);*/
+        
+        /*if (IsMenuOpen("VATSMenu")) {
+          DisplayMessage("Menu IS opened.");
+        } else {
+          DisplayMessage("Menu is NOT opened.");
+        }*/
         
         /*if (IsInMenuMode()) {
           DisplayMessage("IS menu mode.");
@@ -283,7 +292,7 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
 
 internal bool IsActivationPaused()
 {
-  return IsPlayerInDialogue() || IsInMenuMode();
+  return IsPlayerInDialogue() || IsInMenuMode() || IsMenuOpen("VATSMenu");
 }
 
 extern "C" void GameLoop()
