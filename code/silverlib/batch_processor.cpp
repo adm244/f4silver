@@ -33,6 +33,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define BATCH_EXTERIOR "@exterior"
 #define BATCH_INTERIOR_ONLY "@interioronly"
 #define BATCH_EXTERIOR_ONLY "@exterioronly"
+#define BATCH_RANDOM_EXCLUDE "@randomexclude"
 
 //TODO(adm244): remove this
 //TODO(adm244): move outside
@@ -46,7 +47,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define EXEC_INTERIOR_ONLY 3
 #define EXEC_EXTERIOR_ONLY 4
 
-struct BatchData{
+struct BatchData {
   char filename[MAX_FILENAME];
   char description[MAX_DESCRIPTION];
   
@@ -54,21 +55,42 @@ struct BatchData{
   int timerIndex;
   
   int key;
+  uint executionState;
+  bool excludeRandom;
+  
   bool enabled;
 };
 
-struct CustomCommand{
+struct CustomCommand {
   int key;
   bool enabled;
 };
 
+/*struct BatchGroup {
+  uint length;
+  uint batches[MAX_BATCHES];
+};*/
+
 internal BatchData batches[MAX_BATCHES];
+//internal BatchGroup randomBatchGroup;
 internal CustomCommand CommandToggle;
 internal CustomCommand CommandRandom;
 
 internal bool keys_active = true;
 internal bool not_initialized = true;
 internal int batches_count = 0;
+
+/*internal BatchData * GetRandomBatch(BatchGroup *group)
+{
+  BatchData *result = 0;
+  
+  if( group && group->length > 0 ) {
+    int index = RandomInt(0, group->length - 1);
+    result = &(group->batches[index]);
+  }
+  
+  return result;
+}*/
 
 internal void Teleport()
 {
@@ -129,6 +151,44 @@ internal bool IsActivated(CustomCommand *cmd)
   return(IsActivated(cmd->key, &cmd->enabled));
 }
 
+internal void ReadBatchFile(BatchData *batch)
+{
+  FILE *src = NULL;
+  fopen_s(&src, batch->filename, "r");
+  
+  if( src ){
+    char line[4096];
+    
+    fgets(line, sizeof(line), src);
+    
+    uint32 lineLen = strlen(line);
+    if(line[lineLen - 1] == '\n'){
+      line[lineLen - 1] = 0;
+    }
+    strcpy(batch->description, line);
+    
+    while( fgets(line, sizeof(line), src) ){
+      uint32 lineLen = strlen(line);
+      
+      if(line[lineLen - 1] == '\n'){
+        line[lineLen - 1] = 0;
+      }
+    
+      if( strcmp(line, BATCH_EXTERIOR_ONLY) == 0 ) {
+        batch->executionState = EXEC_EXTERIOR_ONLY;
+      } else if( strcmp(line, BATCH_INTERIOR_ONLY) == 0 ) {
+        batch->executionState = EXEC_INTERIOR_ONLY;
+      } else if (strcmp(line, BATCH_RANDOM_EXCLUDE) == 0 ) {
+        batch->excludeRandom = true;
+      }
+    }
+
+    fclose(src);
+  } else {
+    //NOTE(adm244): couldn't read a file
+  }
+}
+
 //NOTE(adm244): loads a list of batch files and keys that activate them
 // filename and associated keycode stored in a BatchData structure pointed to by 'batches'
 //
@@ -154,7 +214,10 @@ internal bool InitBatchFiles(HMODULE module, BatchData *batches, int *num)
       batches[index].timerIndex = -1;
       batches[index].offset = 0;
       batches[index].key = (int)strtol(p, &endptr, 0);
+      batches[index].excludeRandom = false;
       batches[index].enabled = true;
+      
+      ReadBatchFile(&batches[index]);
       
       str = strchr(p, '\0');
       str++;
@@ -169,7 +232,7 @@ internal bool InitBatchFiles(HMODULE module, BatchData *batches, int *num)
   return(index > 0);
 }
 
-internal void ReadBatchDescriptions(BatchData *batches)
+/*internal void ReadBatchDescriptions(BatchData *batches)
 {
   FILE *file = NULL;
   char line[MAX_DESCRIPTION];
@@ -226,7 +289,7 @@ internal uint8 GetBatchExecState(char *filename)
   }
 
   return result;
-}
+}*/
 
 enum ExecuteBatch_ResultCodes {
   ExecuteBatch_Fail = -1,
@@ -289,6 +352,8 @@ internal int ExecuteBatch(BatchData *batch, uint64 offset)
         //NOTE(adm244): should be empty
       } else if( strcmp(line, BATCH_EXTERIOR_ONLY) == 0 ) {
         //NOTE(adm244): should be empty
+      } else if (strcmp(line, BATCH_RANDOM_EXCLUDE) == 0 ) {
+        //NOTE(adm244): should be empty
       } else {
         if( (IsInterior && (executionState == EXEC_INTERIOR))
          || (!IsInterior && (executionState == EXEC_EXTERIOR))
@@ -314,7 +379,7 @@ internal int InitilizeBatches(HMODULE module)
 {
   keys_active = true;
   InitBatchFiles(module, batches, &batches_count);
-  ReadBatchDescriptions(batches);
+  //ReadBatchDescriptions(batches);
   
   //TODO(adm244): rewrite IniRead* functions so they accept full path to config file folder
   CommandToggle.key = IniReadInt(module, CONFIG_FILE, CONFIG_KEYS_SECTION, "iKeyToggle", VK_HOME);

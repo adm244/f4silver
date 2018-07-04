@@ -43,6 +43,7 @@ OTHER DEALINGS IN THE SOFTWARE.
     - Check if player is in dialogue
     - Check if menu is opened
     - Check if vats is active
+    - @excluderandom command to exclude batch from random
   TODO:
     - Add comments support to batch files
     - Rewrite hooking mechanism (detours)
@@ -193,14 +194,14 @@ internal void ProcessQueue(Queue *queue, bool checkExecState)
     }
     
     if( checkExecState ) {
-      uint8 executionState = GetBatchExecState(batch->filename);
+      //uint8 executionState = GetBatchExecState(batch->filename);
     
-      bool executionStateValid = ((executionState == EXEC_EXTERIOR_ONLY) && !IsInterior)
-        || ((executionState == EXEC_INTERIOR_ONLY) && IsInterior)
-        || (executionState == EXEC_DEFAULT);
+      bool executionStateValid = ((batch->executionState == EXEC_EXTERIOR_ONLY) && !IsInterior)
+        || ((batch->executionState == EXEC_INTERIOR_ONLY) && IsInterior)
+        || (batch->executionState == EXEC_DEFAULT);
       
       if( !executionStateValid ) {
-        if( executionState == EXEC_EXTERIOR_ONLY ) {
+        if( batch->executionState == EXEC_EXTERIOR_ONLY ) {
           QueuePut(&ExteriorPendingQueue, dataPointer);
         } else {
           QueuePut(&InteriorPendingQueue, dataPointer);
@@ -256,35 +257,22 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
       }
       
       if( IsActivated(&CommandRandom) ) {
-        int index = RandomInt(0, batches_count - 1);
+        /*BatchData *batch = GetRandomBatch(&randomBatchGroup);
+        if( batch ) {
+          QueuePut(&BatchQueue, (pointer)batch);
+          DisplayRandomSuccessMessage(batch->description);
+        } else {
+          DisplayRandomFailureMessage();
+        }*/
+        
+        int index = -1;
+        //NOTE(adm244): temporary solution...
+        do {
+          index = RandomInt(0, batches_count - 1);
+        } while( batches[index].excludeRandom );
+        
         QueuePut(&BatchQueue, (pointer)&batches[index]);
         DisplayRandomSuccessMessage(batches[index].description);
-        
-        /*if (IsMenuOpen("VATSMenu")) {
-          DisplayMessage("Menu IS opened.");
-        } else {
-          DisplayMessage("Menu is NOT opened.");
-        }*/
-        
-        /*if (IsInMenuMode()) {
-          DisplayMessage("IS menu mode.");
-        } else {
-          DisplayMessage("Is NOT menu mode.");
-        }*/
-        
-        /*if( IsInDialogueWithPlayer((TESActor *)TES_GetPlayer()) ) {
-          DisplayMessage("Player IS in dialogue.");
-        } else {
-          DisplayMessage("Player is NOT in dialogue.");
-        }*/
-        
-        /*TESObjectReference *playerRef = (TESObjectReference *)TES_GetPlayer();
-        TESCell *playerCell = playerRef->parentCell;
-        if( IsCellWithinBorderRegion(playerCell) ) {
-          DisplayMessage("Cell is WITHIN border region.");
-        } else {
-          DisplayMessage("Cell is OUTSIDE border region.");
-        }*/
       }
     }
   }
