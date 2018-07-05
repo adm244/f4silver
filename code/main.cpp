@@ -336,7 +336,8 @@ internal void Initialize(HMODULE module)
   ShiftAddresses();
   
   SettingsInitialize(module);
-  InitilizeBatches(module);
+  //NOTE(adm244): why are we initializing batches twice???
+  //InitilizeBatches(module);
   
   int batchesCount = InitilizeBatches(module);
   if( batchesCount <= 0 ) {
