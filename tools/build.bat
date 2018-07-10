@@ -14,21 +14,35 @@ SET asmfiles=%source%\hooks.asm
 SET objfiles=hooks.obj
 SET masm_args=/c /nologo %asmfiles%
 
-SET debug=/Od /Zi /Fe%project% /nologo /EHsc
-SET release=/W2 /Ot /Oi /O2 /WX /Fe%project% /nologo /EHsc
-SET args=%debug% %files% /LD /link %objfiles% %libs%
+SET debug=/Od /Zi /nologo /EHsc
+SET release=/W2 /Ot /Oi /O2 /WX /nologo /EHsc
+SET args=%debug% /Fe%project% %files% /LD /link %objfiles% %libs%
+
+SET libargs=%release% /c
 
 SET includepath=%ProgramFiles(x86)%\Microsoft DirectX SDK (June 2010)\Include
-SET hookargs=/I "%includepath%" /W2 /O2 /WX /nologo /EHsc /Fe%hookname% %hookfile% /LD /link /DEF:%deffile% %libs%
+REM SET hookargs=/I "%includepath%" %release% /Fe%hookname% %hookfile% /LD /link /DEF:%deffile% %libs%
+SET hookargs=/I "%includepath%" %release% /Fe%hookname% %hookfile% /LD /link %libs%
+
+SET injector=tools\injector
+SET injectorfile=..\..\%source%\%injector%\main.c
+SET injectorlibs=%libs%
+SET injectorname=injector
+SET injectorargs=%debug% /Fe%injectorname% %injectorfile% /link %injectorlibs%
 
 SET compiler=CL
 SET masm=ML64
+SET libmng=LIB
 REM ###########################
 
 SET edit=edit
 SET setprjname=setname
 SET hook=hook
+SET arglib=lib
+SET arginjector=injector
 
+IF [%1]==[%arginjector%] GOTO BuildInjector
+IF [%1]==[%arglib%] GOTO BuildLib
 IF [%1]==[%hook%] GOTO BuildHook
 IF [%1]==[%setprjname%] GOTO SetProjectName
 IF [%1]==[%edit%] GOTO EditBuildFile
@@ -46,6 +60,41 @@ POPD
 
 COPY "f4silver.ini" "%bin%"
 ECHO: Build finished.
+GOTO:EOF
+
+:BuildInjector
+SET injector_path=%source%\%injector%
+IF NOT EXIST "%injector_path%" ECHO: Injector tool not found in %injector_path% && GOTO:EOF
+
+ECHO: Building dll injector...
+IF NOT EXIST "%bin%" MKDIR "%bin%"
+IF NOT EXIST "%bin%\%injector%" MKDIR "%bin%\%injector%"
+
+PUSHD "%bin%\%injector%"
+"%compiler%" %injectorargs%
+POPD
+
+ECHO: Done!
+GOTO:EOF
+
+:BuildLib
+IF [%2]==[] ECHO: ERROR: Library name was NOT specified! && GOTO:EOF
+
+SET libsfolder=%source%\libs
+IF NOT EXIST "%libsfolder%\%2" ECHO: ERROR: Library %2 was NOT found in %libsfolder% folder! && GOTO:EOF
+
+ECHO: Building %2 library...
+
+IF NOT EXIST "%bin%" MKDIR "%bin%"
+IF NOT EXIST "%bin%\%2" MKDIR "%bin%\%2"
+
+PUSHD "%bin%\%2"
+"%compiler%" %libargs% ..\%libsfolder%\%2\main.c
+"%libmng%" /NOLOGO /OUT:%2.lib main.obj
+COPY %2.lib "..\"
+POPD
+
+ECHO: Done!
 GOTO:EOF
 
 :BuildHook

@@ -291,6 +291,7 @@ extern "C" void GameLoop()
     QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
     CloseHandle(QueueHandle);
     
+    MessageBoxA(0, "Injection is successfull!", "InjectDLL", MB_OK);
     Initialized = true;
   }
   
