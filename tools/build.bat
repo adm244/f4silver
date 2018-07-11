@@ -14,15 +14,15 @@ SET asmfiles=%source%\hooks.asm
 SET objfiles=hooks.obj
 SET masm_args=/c /nologo %asmfiles%
 
-SET debug=/Od /Zi /nologo /EHsc
+SET debug=/Od /Zi /nologo /EHsc /DDEBUG
 SET release=/W2 /Ot /Oi /O2 /WX /nologo /EHsc
-SET args=%debug% /Fe%project% %files% /LD /link %objfiles% %libs%
+SET args=%release% /Fe%project% %files% /LD /link %objfiles% %libs%
 
 SET libargs=%release% /c
 
 SET includepath=%ProgramFiles(x86)%\Microsoft DirectX SDK (June 2010)\Include
-REM SET hookargs=/I "%includepath%" %release% /Fe%hookname% %hookfile% /LD /link /DEF:%deffile% %libs%
-SET hookargs=/I "%includepath%" %release% /Fe%hookname% %hookfile% /LD /link %libs%
+SET hookargs=/I "%includepath%" %release% /Fe%hookname% %hookfile% /LD /link /DEF:%deffile% %libs%
+REM SET hookargs=/I "%includepath%" %release% /Fe%hookname% %hookfile% /LD /link %libs%
 
 SET injector=tools\injector
 SET injectorfile=..\..\%source%\%injector%\main.c
