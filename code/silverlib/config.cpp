@@ -51,6 +51,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define CONFIG_CHECK_MENU "bIgnoreInMenu"
 #define CONFIG_CHECK_VATS "bIgnoreInVATS"
 #define CONFIG_CHECK_DIALOGUE "bIgnoreInDialogue"
+#define CONFIG_CHECK_PLAYER_DEAD "bIgnoreIfPlayerIsDead"
+#define CONFIG_KEY_DEATH_EVENT "iKeyDeathEvent"
 
 #define CONFIG_DEFAULT_SAVEFILE "f4silver_save"
 #define CONFIG_DEFAULT_SAVENAME "F4Silver Save"
@@ -83,11 +85,17 @@ struct SilverSettings {
   bool IgnoreInMenu;
   bool IgnoreInVATS;
   bool IgnoreInDialogue;
+  bool IgnoreIfPlayerIsDead;
   uint Timeout;
+};
+
+struct SilverKeys {
+  uint32 DeathEvent;
 };
 
 internal SilverStrings Strings;
 internal SilverSettings Settings;
+internal SilverKeys Keys;
 
 internal void SettingsInitialize(HMODULE module)
 {
@@ -101,6 +109,9 @@ internal void SettingsInitialize(HMODULE module)
   Settings.IgnoreInMenu = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_CHECK_MENU, true);
   Settings.IgnoreInVATS = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_CHECK_VATS, true);
   Settings.IgnoreInDialogue = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_CHECK_DIALOGUE, true);
+  Settings.IgnoreIfPlayerIsDead = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_CHECK_PLAYER_DEAD, true);
+  
+  Keys.DeathEvent = IniReadInt(module, CONFIG_FILE, CONFIG_KEYS_SECTION, CONFIG_KEY_DEATH_EVENT, VK_UP);
   
   IniReadString(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_SAVEFILE,
     CONFIG_DEFAULT_SAVEFILE, Strings.SaveFileName, STRING_SIZE);

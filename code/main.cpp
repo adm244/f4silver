@@ -103,7 +103,7 @@ internal bool ActualGameplay = false;
 #define MAX_BATCHES 50
 
 #include "silverlib/config.cpp"
-#include "silverlib/random/functions.cpp"
+#include "silverlib/random/functions.c"
 #include "silverlib/batch_processor.cpp"
 
 internal bool Initialized = false;
@@ -113,6 +113,11 @@ internal DWORD QueueThreadID = 0;
 internal Queue BatchQueue;
 internal Queue InteriorPendingQueue;
 internal Queue ExteriorPendingQueue;
+
+//#define FILE_DEADCOUNT "_deathcount.txt"
+//TODO(adm244): store game state in a struct?
+internal bool gIsPlayerDead = false;
+//internal uint gDeathCount = 0;
 
 internal inline void DisplayMessageDebug(char *message)
 {
@@ -273,6 +278,12 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
         
         QueuePut(&BatchQueue, (pointer)&batches[index]);
         DisplayRandomSuccessMessage(batches[index].description);
+        
+        /*if (IsActorDead((TESActor *)TES_GetPlayer())) {
+          MessageBox(0, "Player is dead", "Info", MB_OK);
+        } else {
+          DisplayMessage("Player is NOT dead");
+        }*/
       }
     }
   }
@@ -282,7 +293,8 @@ internal bool IsActivationPaused()
 {
   return (Settings.IgnoreInDialogue && IsPlayerInDialogue())
       || (Settings.IgnoreInMenu && IsInMenuMode())
-      || (Settings.IgnoreInVATS && IsMenuOpen("VATSMenu"));
+      || (Settings.IgnoreInVATS && IsMenuOpen("VATSMenu")
+      || (Settings.IgnoreIfPlayerIsDead && IsActorDead((TESActor *)TES_GetPlayer())));
 }
 
 extern "C" void GameLoop()
@@ -291,22 +303,47 @@ extern "C" void GameLoop()
     QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
     CloseHandle(QueueHandle);
     
+#ifdef DEBUG
     MessageBoxA(0, "Injection is successfull!", "InjectDLL", MB_OK);
+#endif
     Initialized = true;
   }
   
-  if( ActualGameplay && !IsActivationPaused() ) {
-    if( IsInterior != IsPlayerInInterior() ) {
-      IsInterior = !IsInterior;
+  if( ActualGameplay ) {
+    if (gIsPlayerDead != IsActorDead((TESActor *)TES_GetPlayer())) {
+      gIsPlayerDead = !gIsPlayerDead;
       
-      if( IsInterior ) {
-        ProcessQueue(&InteriorPendingQueue, false);
-      } else {
-        ProcessQueue(&ExteriorPendingQueue, false);
+      if (gIsPlayerDead) {
+        //gDeathCount += 1;
+        
+        //FILE *deadCountFile = fopen(FILE_DEADCOUNT, "w");
+        //if (deadCountFile) {
+        //  fprintf(deadCountFile, "%d", gDeathCount);
+        //  fclose(deadCountFile);
+        //}
+        
+        INPUT input = {0};
+        input.type = INPUT_KEYBOARD;
+        input.ki.wVk = Keys.DeathEvent;
+        input.ki.dwExtraInfo = GetMessageExtraInfo();
+        
+        SendInput(1, &input, sizeof(INPUT));
       }
     }
     
-    ProcessQueue(&BatchQueue, true);
+    if (!IsActivationPaused()) {
+      if( IsInterior != IsPlayerInInterior() ) {
+        IsInterior = !IsInterior;
+        
+        if( IsInterior ) {
+          ProcessQueue(&InteriorPendingQueue, false);
+        } else {
+          ProcessQueue(&ExteriorPendingQueue, false);
+        }
+      }
+      
+      ProcessQueue(&BatchQueue, true);
+    }
   }
 }
 
@@ -352,7 +389,14 @@ internal void Initialize(HMODULE module)
   QueueInitialize(&ExteriorPendingQueue);
   //QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
   
-  RandomGeneratorInitialize(batchesCount);
+  //RandomGeneratorInitialize(batchesCount);
+  RandomInitializeSeed(GetTickCount64());
+  
+  //FILE *deadCountFile = fopen(FILE_DEADCOUNT, "r");
+  //if (deadCountFile) {
+  //  fscanf(deadCountFile, "%d", &gDeathCount);
+  //  fclose(deadCountFile);
+  //}
 }
 
 internal DWORD WINAPI WaitForDecryption(LPVOID param)

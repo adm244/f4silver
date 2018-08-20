@@ -184,6 +184,13 @@ internal _TESObjectReference_MoveToCell TESObjectReference_MoveToCell;
 internal _TESObjectReference_GetCurrentLocation TESObjectReference_GetCurrentLocation;
 // ------ #TESObjectReference ------
 
+// ------ TESActor ------
+typedef bool (__fastcall *_TESActor_IsDead)
+(TESActor *actor, bool unk02);
+
+//internal _TESActor_IsDead TESActor_IsDead;
+// ------ #TESActor ------
+
 // ------ TESCell ------
 typedef TESCellUnk * (__fastcall *_TESCell_GetUnk)
 (TESCell *cell, bool flag);
@@ -615,6 +622,12 @@ internal inline bool IsMenuOpen(char *str)
   BSFixedString_Release(&bsString);
   
   return result;
+}
+
+internal inline bool IsActorDead(TESActor *actor)
+{
+  _TESActor_IsDead funcPtr = (_TESActor_IsDead)( *(((uint64 *)((TESForm *)actor)->vtable) + 192) );
+  return funcPtr(actor, 1);
 }
 // ------ #Functions ------
 
