@@ -111,8 +111,25 @@ internal void Teleport()
   int minY = Min(worldspace->NWCellY, worldspace->SECellY);
   int maxY = Max(worldspace->NWCellY, worldspace->SECellY);
   
-  uint64 cells_count = (maxX - minX) * (maxY - minY);
-  uint64 loop_count = 0;
+  uint grid_width = (maxX - minX + 1);
+  uint grid_height = (maxY - minY + 1);
+  uint cells_count = grid_width * grid_height;
+  
+  uint loop_count = 0;
+  
+  TESPlayer *playerRef = TES_GetPlayer();
+  TESCell *player_cell = ((TESObjectReference *)playerRef)->parentCell;
+  
+  int player_cell_x = -999;
+  int player_cell_y = -999;
+  
+  if (player_cell && player_cell->coordinates) {
+    player_cell_x = player_cell->coordinates->x;
+    player_cell_y = player_cell->coordinates->y;
+  }
+  
+  //uint64 old_seed = random_seed;
+  RandomInitializeSeed(GetTickCount64());
   
   do {
     if( loop_count++ > cells_count ) {
@@ -120,13 +137,19 @@ internal void Teleport()
       break;
     }
   
+    /*uint index = RandomInt(0, cells_count - 1);
+    int cellY = (int)(index / grid_width);
+    int cellX = (index - (cellY * grid_width));
+    cellY += minY;
+    cellX += minX;*/
+    
     int cellX = RandomInt(minX, maxX);
     int cellY = RandomInt(minY, maxY);
     
-    /*int index = RandomInt(0, cells_count - 1);
-    int n = (maxX - minY);
-    int cellX = (int)(index / n);
-    int cellY = (index - (cellX * n));*/
+    uint cell_distance_sqr = Sqr(cellX - player_cell_x) + Sqr(cellY - player_cell_y);
+    if (cell_distance_sqr < 144) {
+      continue;
+    }
     
     targetCell = TESWorldSpace_FindExteriorCellByCoordinates(worldspace, cellX, cellY);
     
@@ -136,6 +159,8 @@ internal void Teleport()
       fprintf_s(file, "Failure [%d, %d]\n", cellX, cellY);
     }*/
   } while( !IsCellWithinBorderRegion(targetCell) );
+  
+  //RandomInitializeSeed(old_seed);
   
   /*fprintf_s(file, "Teleport function ended.\n");
   fclose(file);*/

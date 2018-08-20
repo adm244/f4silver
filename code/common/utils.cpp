@@ -141,4 +141,9 @@ internal inline int Max(int a, int b)
   return (a > b) ? a : b;
 }
 
+internal inline int Sqr(int a)
+{
+  return a * a;
+}
+
 #endif

@@ -25,10 +25,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 //IMPORTANT(adm244): SCRATCH VERSION JUST TO GET IT UP WORKING
 
-#ifndef RANDOM_FUNCTIONS_CPP
-#define RANDOM_FUNCTIONS_CPP
+#ifndef RANDOM_FUNCTIONS_C
+#define RANDOM_FUNCTIONS_C
 
 #include "randomlib.c"
+
+internal uint64 random_seed = 0;
 
 /*internal int randomGenerated = 0;
 internal uint8 randomCounters[MAX_BATCHES];
@@ -59,15 +61,13 @@ internal int GetNextBatchIndex(int batchesCount)
   return value;
 }*/
 
-internal void RandomGeneratorInitialize(int batchesCount)
+internal void RandomInitializeSeed(uint64 seed)
 {
-  int ticksPassed = GetTickCount();
+  uint64 ij = seed % 31328;
+  uint64 kj = ((seed >> 3) ^ seed) % 30081;
   
-  int ij = ticksPassed % 31328;
-  int kj = ticksPassed % 30081;
-  
+  random_seed = seed;
   RandomInitialize(ij, kj);
-  //RandomClearCounters();
 }
 
 #endif
