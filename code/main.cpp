@@ -322,6 +322,7 @@ extern "C" void GameLoop()
         //  fclose(deadCountFile);
         //}
         
+        //TODO(adm244): place into a separate function call?
         INPUT input = {0};
         input.type = INPUT_KEYBOARD;
         input.ki.wVk = Keys.DeathEvent;
@@ -370,8 +371,9 @@ internal void HookLoadGame()
 
 internal void Initialize(HMODULE module)
 {
-  DefineAddresses();
-  ShiftAddresses();
+  //DefineAddresses();
+  //ShiftAddresses();
+  InitSignatures();
   
   SettingsInitialize(module);
   //NOTE(adm244): why are we initializing batches twice???

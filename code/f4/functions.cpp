@@ -258,7 +258,7 @@ internal _TESFindCellWorldSpaceByName TESFindCellWorldSpaceByName;
 extern "C" {
   uint64 mainloop_hook_patch_address;
   uint64 mainloop_hook_return_address;
-  
+
   uint64 loadgame_start_hook_patch_address;
   uint64 loadgame_start_hook_return_address;
   uint64 loadgame_end_hook_patch_address;
@@ -266,22 +266,22 @@ extern "C" {
 
   uint64 ProcessWindowAddress;
   uint64 Unk3ObjectAddress;
-  
+
   uint64 TESConsolePrintAddress;
   uint64 TESConsoleObjectAddress;
-  
+
   uint64 TESUIObjectAddress;
   uint64 TESUIIsMenuOpenAddress;
-  
+
   uint64 BSFixedStringConstructorAddress;
   uint64 BSFixedStringSetAddress;
   uint64 BSFixedStringReleaseAddress;
-  
+
   uint64 TESFormConstructorAddress;
-  
+
   uint64 TESGlobalScriptCompileAddress;
   uint64 GlobalScriptStateAddress;
-  
+
   uint64 TESScriptConstructorAddress;
   uint64 TESScriptDestructorAddress;
   uint64 TESScriptMarkAsTemporaryAddress;
@@ -289,26 +289,92 @@ extern "C" {
   uint64 TESScriptExecuteAddress;
   uint64 TESScriptCompileAndRunAddress;
   uint64 TESScriptSetTextAddress;
-  
+
   uint64 TESObjectReferenceMoveToCellAddress;
   uint64 TESObjectReferenceGetCurrentLocationAddress;
-  
+
   uint64 TESCellGetUnkAddress;
-  
+
   uint64 TESWorldSpaceFindExteriorCellByCoordinatesAddress;
-  
+
   uint64 TESFindInteriorCellByNameAddress;
   uint64 TESFindCellWorldSpaceByNameAddress;
   uint64 TESDisplayMessageAddress;
-  
+
   uint64 PlayerReferenceAddress;
-  
+
   uint64 GameDataAddress;
-  
+
   uint64 UnknownObject01Address;
 }
 
-internal void DefineAddresses()
+#include <assert.h>
+
+#define PSAPI_VERSION 1
+#include <psapi.h>
+
+internal MODULEINFO gMainModuleInfo = {0};
+
+//TODO(adm244): switch to multiple patterns search (Aho-Corasick?)
+internal uint64 FindSignature(MODULEINFO *moduleInfo, char *pattern, uint64 offset)
+{
+  uint64 startAddress = (uint64)moduleInfo->lpBaseOfDll;
+  uint64 blockSize = moduleInfo->SizeOfImage;
+  uint64 patternSize = strlen(pattern);
+  uint64 endAddress = startAddress + blockSize - patternSize;
+
+  for (uint64 i = startAddress; i < endAddress; ++i) {
+    bool matched = true;
+    for (uint64 j = 0; j < patternSize; ++j) {
+      if (pattern[j] == '?') continue;
+      if (pattern[j] != *((char *)(i + j))) {
+        matched = false;
+        break;
+      }
+    }
+    
+    if (matched) return (i + offset);
+  }
+  
+  return 0;
+}
+
+internal void InitSignatures()
+{
+  //NOTE(adm244): https://docs.microsoft.com/en-us/windows/desktop/api/processthreadsapi/nf-processthreadsapi-getcurrentprocess#remarks
+  HANDLE currentProcess = GetCurrentProcess();
+  HMODULE mainModule = GetModuleHandle(0);
+  BOOL result;
+  
+  //FIX(adm244): https://docs.microsoft.com/en-us/windows/desktop/api/psapi/nf-psapi-getmoduleinformation#remarks
+  result = GetModuleInformation(currentProcess, mainModule, &gMainModuleInfo, sizeof(gMainModuleInfo));
+  assert(result != 0);
+
+  mainloop_hook_patch_address = FindSignature(&gMainModuleInfo,
+    "\x48\x8B\x0D\x7A\x7B\xDA\x04\xE8????\x48\x8B\x05\x6E\x7B\xDA\x04\x48\x8B\x58\x30", 0);
+  assert(mainloop_hook_patch_address - (uint64)mainModule == 0x00D36707); //1_10_40
+  
+  mainloop_hook_return_address = mainloop_hook_patch_address + 12;
+  assert(mainloop_hook_return_address - (uint64)mainModule == 0x00D36713); //1_10_40
+  
+  loadgame_start_hook_patch_address = FindSignature(&gMainModuleInfo,
+    "\x44\x8B\x15\x34\xFD\xA7\x05?????????\x48\x8B\xF1\x4A\x8B\x04\xD0", -0x29);
+  assert(loadgame_start_hook_patch_address - (uint64)mainModule == 0x00CED090); //1_10_40
+  
+  loadgame_start_hook_return_address = loadgame_start_hook_patch_address + 15;
+  assert(loadgame_start_hook_return_address - (uint64)mainModule == 0x00CED09F); //1_10_40
+  
+  loadgame_end_hook_patch_address = FindSignature(&gMainModuleInfo,
+    "\x89\x38\x41\x0F\xB6\xC5\x48", 6);
+  assert(loadgame_end_hook_patch_address - (uint64)mainModule == 0x00CED898); //1_10_40
+  
+  loadgame_end_hook_return_address = loadgame_end_hook_patch_address + 13;
+  assert(loadgame_end_hook_return_address - (uint64)mainModule == 0x00CED8A5); //1_10_40
+  
+  //TODO(adm244): convert all addresses
+}
+
+/*internal void DefineAddresses()
 {
   if( F4_VERSION == F4_VERSION_1_10_40 ) {
     mainloop_hook_patch_address = 0x00D36707;
@@ -471,7 +537,7 @@ internal void ShiftAddresses()
   GameDataAddress += baseAddress;
   
   UnknownObject01Address += baseAddress;
-}
+}*/
 // ------ #Addresses ------
 
 // ------ Functions ------
@@ -495,7 +561,7 @@ internal inline bool TES_IsInterior(TESCell *cell)
   return cell->flags & FLAG_TESCell_IsInterior;
 }
 
-internal bool TES_IsInInterior(TESObjectReference *ref)
+internal inline bool TES_IsInInterior(TESObjectReference *ref)
 {
   bool result = false;
 
@@ -563,6 +629,7 @@ internal TESWorldSpace * GetPlayerCurrentWorldSpace()
 
 internal bool IsCellWithinBorderRegion(TESCell *cell)
 {
+  //FIX(adm244): doesn't work for every cell (editor bug)
   bool result = false;
 
   TESCellUnk *cellUnk = TESCell_GetUnk(cell, 1);
@@ -598,6 +665,7 @@ internal bool IsInDialogueWithPlayer(TESActor *actor)
 
 internal bool IsInMenuMode()
 {
+  //TODO(adm244): get class member macro?
   uint64 unkObject01 = *((uint64 *)UnknownObject01Address);
   return *((uint8 *)(unkObject01 + 0x1D0)) == 1;
 }
@@ -626,6 +694,7 @@ internal inline bool IsMenuOpen(char *str)
 
 internal inline bool IsActorDead(TESActor *actor)
 {
+  //TODO(adm244): member function call macro?
   _TESActor_IsDead funcPtr = (_TESActor_IsDead)( *(((uint64 *)((TESForm *)actor)->vtable) + 192) );
   return funcPtr(actor, 1);
 }
