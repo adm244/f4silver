@@ -16,7 +16,7 @@ SET masm_args=/c /nologo %asmfiles%
 
 SET debug=/Od /Zi /nologo /EHsc /DDEBUG
 SET release=/W2 /Ot /Oi /O2 /WX /nologo /EHsc
-SET args=%release% /Fe%project% %files% /LD /link %objfiles% %libs%
+SET args=%debug% /Fe%project% %files% /LD /link %objfiles% %libs% Psapi.lib
 
 SET libargs=%release% /c
 

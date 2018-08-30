@@ -316,6 +316,7 @@ extern "C" {
 internal MODULEINFO gMainModuleInfo = {0};
 
 //TODO(adm244): switch to multiple patterns search (Aho-Corasick?)
+//FIX(adm244): use separate string for mask (byte for '?' might be in use)!
 internal uint64 FindSignature(MODULEINFO *moduleInfo, char *pattern, uint64 offset)
 {
   uint64 startAddress = (uint64)moduleInfo->lpBaseOfDll;
