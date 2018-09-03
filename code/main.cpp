@@ -122,7 +122,8 @@ internal bool gIsPlayerDead = false;
 internal inline void DisplayMessageDebug(char *message)
 {
   if( Settings.ShowMessagesDebug ) {
-    TESConsolePrint(TES_GetConsoleObject(), message);
+    //TESConsolePrint(TES_GetConsoleObject(), message);
+    TESConsolePrint(message);
   }
 }
 
