@@ -310,13 +310,15 @@ extern "C" void GameLoop()
   }
   
   if (IsActivated(&CommandRandom)) {
-    bool isPlayerDead = IsActorDead((TESActor *)TES_GetPlayer());
+    /*bool isPlayerDead = IsActorDead((TESActor *)TES_GetPlayer());
     TESConsolePrint("Player is %s\n", isPlayerDead ? "dead" : "NOT dead");
     
     bool isVATSOpen = IsMenuOpen("VATSMenu");
     TESConsolePrint("VATS menu is %s\n", isVATSOpen ? "opened" : "closed");
     
-    TES_ExecuteScriptLine("tgm");
+    TES_ExecuteScriptLine("tgm");*/
+    
+    TESConsolePrint("This is a test message.");
   }
 #else
   if( !Initialized ) {

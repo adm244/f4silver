@@ -343,6 +343,14 @@ internal uint64 FindSignature(MODULEINFO *moduleInfo, char *pattern, char *mask,
   return 0;
 }
 
+internal uint64 ParseMemoryAddress(uint64 address, uint8 skipCount)
+{
+  uint32 offset = *((uint32 *)(address + skipCount));
+  uint64 rip = (address + skipCount + sizeof(offset));
+  
+  return (rip + offset);
+}
+
 internal void InitSignatures()
 {
   //NOTE(adm244): https://docs.microsoft.com/en-us/windows/desktop/api/processthreadsapi/nf-processthreadsapi-getcurrentprocess#remarks
@@ -392,10 +400,19 @@ internal void InitSignatures()
   // because there's two (or more) identical wrapper functions that calls
   // different ones...
   
+  //TODO(adm244): search for object constructor, get object and vtable addresses
+  
   TESConsolePrintVA = (_TESConsolePrintVA)FindSignature(&gMainModuleInfo,
     "\xB9\xC0\x09\x00\x00\x48\x03\xF9\x48\x8D\x4C\x24\x20",
     "xxxxxxxxxxxxx", -0x2F);
   //assert((uint64)TESConsolePrintVA - (uint64)mainModule == 0x01262860); //1_10_40
+  
+  //TODO(adm244): put into a separate function?
+  uint64 temp = FindSignature(&gMainModuleInfo,
+    "\x48\x0F\x45\xD0\x8B\x41\x28\x25\x8F",
+    "xxxxxxxxx", -0x38);
+  TESConsoleObjectAddress = ParseMemoryAddress(temp, 3);
+  assert(TESConsoleObjectAddress != 0);
   
   TESUI_IsMenuOpen = (_TESUI_IsMenuOpen)FindSignature(&gMainModuleInfo,
     "\x4C\x8B\x74\x24\x40\x48\x8B\x74\x24\x38\x48\x85\xFF\x74\x0A",
@@ -859,10 +876,14 @@ internal inline bool IsActorDead(TESActor *actor)
   return funcPtr(actor, 1);
 }
 
+//FIX(adm244): it's actually more like FillConsoleBackbuffer,
+// because it fills a buffer and adds some meta data to it (like text length, etc.)
+// which then gets copied into real console buffer
 internal inline void TESConsolePrint(char *format, ...)
 {
   va_list args;
   va_start(args, format);
+  //FIX(adm244): TES_GetConsoleObject is actually not an object, it's a structure
   TESConsolePrintVA(TES_GetConsoleObject(), format, args);
   va_end(args);
 }
