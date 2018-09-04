@@ -298,8 +298,27 @@ internal bool IsActivationPaused()
       || (Settings.IgnoreIfPlayerIsDead && IsActorDead((TESActor *)TES_GetPlayer())));
 }
 
+#define SIGTEST
+
 extern "C" void GameLoop()
 {
+#ifdef SIGTEST
+  if (!Initialized) {
+    MessageBoxA(0, "Injection is successfull!", "InjectDLL", MB_OK);
+    
+    Initialized = true;
+  }
+  
+  if (IsActivated(&CommandRandom)) {
+    bool isPlayerDead = IsActorDead((TESActor *)TES_GetPlayer());
+    TESConsolePrint("Player is %s\n", isPlayerDead ? "dead" : "NOT dead");
+    
+    bool isVATSOpen = IsMenuOpen("VATSMenu");
+    TESConsolePrint("VATS menu is %s\n", isVATSOpen ? "opened" : "closed");
+    
+    TES_ExecuteScriptLine("tgm");
+  }
+#else
   if( !Initialized ) {
     QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
     CloseHandle(QueueHandle);
@@ -347,6 +366,7 @@ extern "C" void GameLoop()
       ProcessQueue(&BatchQueue, true);
     }
   }
+#endif
 }
 
 extern "C" void LoadGameBegin(char *filename)

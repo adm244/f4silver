@@ -275,7 +275,7 @@ extern "C" {
   uint64 TESConsoleObjectAddress;
 
   uint64 TESUIObjectAddress;
-  uint64 TESUIIsMenuOpenAddress;
+  //uint64 TESUIIsMenuOpenAddress;
 
   uint64 BSFixedStringConstructorAddress;
   uint64 BSFixedStringSetAddress;
@@ -392,21 +392,17 @@ internal void InitSignatures()
   // because there's two (or more) identical wrapper functions that calls
   // different ones...
   
-  //FIX(adm244): wrapper function
-  /*TESConsolePrintAddress = FindSignature(&gMainModuleInfo,
-    "\x4C\x89\x4C\x24\x20\x48\x83\xEC\x28\x4C\x8D\x44\x24\x40\xE8\x00\x00\x00\x00\x48\x83\xC4\x28\xC3",
-    "xxxxxxxxxxxxxxx????xxxxx", -0xA);
-  assert(TESConsolePrintAddress - (uint64)mainModule == 0x01262830); //1_10_40*/
-  
   TESConsolePrintVA = (_TESConsolePrintVA)FindSignature(&gMainModuleInfo,
     "\xB9\xC0\x09\x00\x00\x48\x03\xF9\x48\x8D\x4C\x24\x20",
     "xxxxxxxxxxxxx", -0x2F);
   //assert((uint64)TESConsolePrintVA - (uint64)mainModule == 0x01262860); //1_10_40
   
-  TESUIIsMenuOpenAddress = FindSignature(&gMainModuleInfo,
+  TESUI_IsMenuOpen = (_TESUI_IsMenuOpen)FindSignature(&gMainModuleInfo,
     "\x4C\x8B\x74\x24\x40\x48\x8B\x74\x24\x38\x48\x85\xFF\x74\x0A",
     "xxxxxxxxxxxxxxx", -0xAC);
   //assert(TESUIIsMenuOpenAddress - (uint64)mainModule == 0x020420E0); //1_10_40
+  
+  //TODO(adm244): get function pointers from vtable?
   
   //FIX(adm244): wrapper function
   /*BSFixedStringConstructorAddress = FindSignature(&gMainModuleInfo,
@@ -420,74 +416,73 @@ internal void InitSignatures()
     "xxxxxxxxx????xxxxxx", -0x11);*/
   //assert(BSFixedStringSetAddress - (uint64)mainModule == 0x01B41810); //1_10_40
   
-  //FIX(adm244): correct signatures
-  
-  BSFixedStringReleaseAddress = FindSignature(&gMainModuleInfo,
+  BSFixedString_Release = (_BSFixedString_Release)FindSignature(&gMainModuleInfo,
     "\x48\x8B\x16\x48\x89\x5C\x24\x38\x48\x89\x6C\x24\x30",
     "xxxxxxxxxxxxx", -0x2D);
   //assert(BSFixedStringReleaseAddress - (uint64)mainModule == 0x01B42970); //1_10_40
   
-  TESFormConstructorAddress = FindSignature(&gMainModuleInfo,
+  //FIX(adm244): are those ever used?
+  /*TESForm_Constructor = (_TESForm_Constructor)FindSignature(&gMainModuleInfo,
     "\x41\xBC\xC0\x09\x00\x00\x43\x8B\x1C\x3C\x48\x8B\xF9",
     "xxxxxxxxxxxxx", -0x36);
   //assert(TESFormConstructorAddress - (uint64)mainModule == 0x00151E30); //1_10_40
   
-  TESGlobalScriptCompileAddress = FindSignature(&gMainModuleInfo,
+  TESGlobalScript_Compile = (_TESGlobalScript_Compile)FindSignature(&gMainModuleInfo,
     "\x48\x8B\xF1\x48\x8D\x4C\x24\x20\x41\x8B\xF9",
     "xxxxxxxxxxx", -0x12);
-  //assert(TESGlobalScriptCompileAddress - (uint64)mainModule == 0x004E7B30); //1_10_40
+  //assert(TESGlobalScriptCompileAddress - (uint64)mainModule == 0x004E7B30); //1_10_40*/
   
-  TESScriptConstructorAddress = FindSignature(&gMainModuleInfo,
+  TESScript_Constructor = (_TESScript_Constructor)FindSignature(&gMainModuleInfo,
     "\x48\x8B\x04\xC8\x44\x88\x04\x02\x4C\x89\x43\x58",
     "xxxxxxxxxxxx", -0x54);
   //assert(TESScriptConstructorAddress - (uint64)mainModule == 0x004E14F0); //1_10_40
   
-  TESScriptDestructorAddress = FindSignature(&gMainModuleInfo,
+  TESScript_Destructor = (_TESScript_Destructor)FindSignature(&gMainModuleInfo,
     "\x48\x89\x01\xE8\x00\x00\x00\x00\x48\x8D\x4B\x70\xE8\x00\x00\x00\x00\x48\x8D\x4B\x60",
     "xxxx????xxxxx????xxxx", -0x10);
   //assert(TESScriptDestructorAddress - (uint64)mainModule == 0x004E1570); //1_10_40
   
-  TESScriptMarkAsTemporaryAddress = FindSignature(&gMainModuleInfo,
+  TESScript_MarkAsTemporary = (_TESScript_MarkAsTemporary)FindSignature(&gMainModuleInfo,
     "\x81\x4B\x10\x00\x40\x00\x00\x48\x83\xC4\x20",
     "xxxxxxxxxxx", -0x22);
   //assert(TESScriptMarkAsTemporaryAddress - (uint64)mainModule == 0x00153F00); //1_10_40
   
-  TESScriptCompileAddress = FindSignature(&gMainModuleInfo,
+  TESScript_Compile = (_TESScript_Compile)FindSignature(&gMainModuleInfo,
     "\x8B\x1E\xC7\x06\x12\x00\x00\x00\xC6\x44\x24\x20\x00",
     "xxxxxxxxxxxxx", -0x45);
   //assert(TESScriptCompileAddress - (uint64)mainModule == 0x004E28E0); //1_10_40
   
-  TESScriptExecuteAddress = FindSignature(&gMainModuleInfo,
+  TESScript_Execute = (_TESScript_Execute)FindSignature(&gMainModuleInfo,
     "\x75\x15\x83\x79\x28\x04\x77\x0F\x32\xC0",
     "xxxxxxxxxx", -0x28);
   //assert(TESScriptExecuteAddress - (uint64)mainModule == 0x004E2460); //1_10_40
   
-  TESScriptCompileAndRunAddress = FindSignature(&gMainModuleInfo,
+  TESScript_CompileAndRun = (_TESScript_CompileAndRun)FindSignature(&gMainModuleInfo,
     "\x4C\x8B\x64\x24\x50\xB0\x01\x48\x8B\x6C\x24\x60",
     "xxxxxxxxxxxx", -0x82);
   //assert(TESScriptCompileAndRunAddress - (uint64)mainModule == 0x004E2830); //1_10_40
   
-  TESScriptSetTextAddress = FindSignature(&gMainModuleInfo,
+  TESScript_SetText = (_TESScript_SetText)FindSignature(&gMainModuleInfo,
     "\x48\x83\xCB\xFF\x4C\x89\x74\x24\x38\x48\xFF\xC3",
     "xxxxxxxxxxxx", -0x5A);
   //assert(TESScriptSetTextAddress - (uint64)mainModule == 0x004E20D0); //1_10_40
   
-  TESObjectReferenceMoveToCellAddress = FindSignature(&gMainModuleInfo,
+  TESObjectReference_MoveToCell = (_TESObjectReference_MoveToCell)FindSignature(&gMainModuleInfo,
     "\xEB\x45\xF6\x43\x40\x01\x75\x3F",
     "xxxxxxxx", -0x94);
   //assert(TESObjectReferenceMoveToCellAddress - (uint64)mainModule == 0x00E9A330); //1_10_40
   
-  TESObjectReferenceGetCurrentLocationAddress = FindSignature(&gMainModuleInfo,
+  TESObjectReference_GetCurrentLocation = (_TESObjectReference_GetCurrentLocation)FindSignature(&gMainModuleInfo,
     "\x5B\xC3\x48\x8B\x89\xB8\x00\x00\x00",
     "xxxxxxxxx", -0x21);
   //assert(TESObjectReferenceGetCurrentLocationAddress - (uint64)mainModule == 0x0040EE70); //1_10_40
   
-  TESCellGetUnkAddress = FindSignature(&gMainModuleInfo,
+  TESCell_GetUnk = (_TESCell_GetUnk)FindSignature(&gMainModuleInfo,
     "\xF6\x45\x40\x01\x74\x04\x33\xFF\xEB",
     "xxxxxxxxx", -0x45);
   //assert(TESCellGetUnkAddress - (uint64)mainModule == 0x003B4A30); //1_10_40
   
-  TESWorldSpaceFindExteriorCellByCoordinatesAddress = FindSignature(&gMainModuleInfo,
+  TESWorldSpace_FindExteriorCellByCoordinates = (_TESWorldSpace_FindExteriorCellByCoordinates)FindSignature(&gMainModuleInfo,
     "\x84\xC0\x0F\x85\x00\x00\x00\x00\x83\xCA\xFF",
     "xxxx????xxx", -0x76);
   //assert(TESWorldSpaceFindExteriorCellByCoordinatesAddress - (uint64)mainModule == 0x004923E0); //1_10_40
@@ -498,12 +493,12 @@ internal void InitSignatures()
     "xxxxxxxxx????xxxx", -0x6);
   assert(TESFindInteriorCellByNameAddress - (uint64)mainModule == 0x00152EB0); //1_10_40*/
   
-  TESFindCellWorldSpaceByNameAddress = FindSignature(&gMainModuleInfo,
+  TESFindCellWorldSpaceByName = (_TESFindCellWorldSpaceByName)FindSignature(&gMainModuleInfo,
     "\x0F\x94\xC0\x4D\x85\xE4\x75\x18",
     "xxxxxxxx", -0xB2);
   //assert(TESFindCellWorldSpaceByNameAddress - (uint64)mainModule == 0x00112FA0); //1_10_40
   
-  TESDisplayMessageAddress = FindSignature(&gMainModuleInfo,
+  TESDisplayMessage = (_TESDisplayMessage)FindSignature(&gMainModuleInfo,
     "\x48\x83\xEC\x50\xC6\x44\x24\x28\x00\x44\x88\x4C\x24\x20",
     "xxxxxxxxxxxxxx", -0x2);
   //assert(TESDisplayMessageAddress - (uint64)mainModule == 0x00AE1D10); //1_10_40
@@ -518,25 +513,25 @@ internal void InitSignatures()
   assert(loadgame_end_hook_return_address != 0);
   assert(ProcessWindowAddress != 0);
   assert(TESConsolePrintVA != 0);
-  assert(TESUIIsMenuOpenAddress != 0);
+  assert((uint64)TESUI_IsMenuOpen != 0);
   //assert(BSFixedStringConstructorAddress != 0);
   //assert(BSFixedStringSetAddress != 0);
-  assert(BSFixedStringReleaseAddress != 0);
-  assert(TESFormConstructorAddress != 0);
-  assert(TESGlobalScriptCompileAddress != 0);
-  assert(TESScriptConstructorAddress != 0);
-  assert(TESScriptDestructorAddress != 0);
-  assert(TESScriptMarkAsTemporaryAddress != 0);
-  assert(TESScriptCompileAddress != 0);
-  assert(TESScriptExecuteAddress != 0);
-  assert(TESScriptCompileAndRunAddress != 0);
-  assert(TESScriptSetTextAddress != 0);
-  assert(TESObjectReferenceMoveToCellAddress != 0);
-  assert(TESObjectReferenceGetCurrentLocationAddress != 0);
-  assert(TESCellGetUnkAddress != 0);
-  assert(TESWorldSpaceFindExteriorCellByCoordinatesAddress != 0);
-  assert(TESFindCellWorldSpaceByNameAddress != 0);
-  assert(TESDisplayMessageAddress != 0);
+  assert((uint64)BSFixedString_Release != 0);
+  //assert((uint64)TESForm_Constructor != 0);
+  //assert((uint64)TESGlobalScript_Compile != 0);
+  assert((uint64)TESScript_Constructor != 0);
+  assert((uint64)TESScript_Destructor != 0);
+  assert((uint64)TESScript_MarkAsTemporary != 0);
+  assert((uint64)TESScript_Compile != 0);
+  assert((uint64)TESScript_Execute != 0);
+  assert((uint64)TESScript_CompileAndRun != 0);
+  assert((uint64)TESScript_SetText != 0);
+  assert((uint64)TESObjectReference_MoveToCell != 0);
+  assert((uint64)TESObjectReference_GetCurrentLocation != 0);
+  assert((uint64)TESCell_GetUnk != 0);
+  assert((uint64)TESWorldSpace_FindExteriorCellByCoordinates != 0);
+  assert((uint64)TESFindCellWorldSpaceByName != 0);
+  assert((uint64)TESDisplayMessage != 0);
 }
 
 /*internal void DefineAddresses()
