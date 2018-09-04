@@ -318,7 +318,9 @@ extern "C" void GameLoop()
     
     TES_ExecuteScriptLine("tgm");*/
     
-    TESConsolePrint("This is a test message.");
+    int value = 123;
+    char *testStr = "Hello, World!";
+    TESConsolePrint("This is a test message. %d %s", value, testStr);
   }
 #else
   if( !Initialized ) {
