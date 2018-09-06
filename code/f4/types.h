@@ -255,7 +255,8 @@ struct TESWeather {
 
 #pragma warning(push)
 #pragma warning(disable : 4200)
-struct BSFixedStringData {
+//struct BSFixedStringData {
+struct BSFixedString {
   void *unk00;
   uint16 unk08;
   uint16 unk0A;
@@ -266,13 +267,13 @@ struct BSFixedStringData {
 };
 #pragma warning(pop)
 
-struct BSFixedString {
+/*struct BSFixedString {
   BSFixedStringData *data; // 0x0
-};
+};*/
 
 struct TESTextureDataObject {
   void *unk00;
-  BSFixedStringData *textureName;
+  BSFixedString *textureName;
 };
 
 struct TESWeatherType {

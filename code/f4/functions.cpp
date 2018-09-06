@@ -211,12 +211,12 @@ internal _TESWorldSpace_FindExteriorCellByCoordinates TESWorldSpace_FindExterior
 
 // ------ BSFixedString ------
 typedef BSFixedString * (__fastcall *_BSFixedString_Constructor)
-(BSFixedString *ptr, char *str);
+(BSFixedString **ptr, char *str);
 
 typedef BSFixedString * (__fastcall *_BSFixedString_Set)
-(BSFixedString *ptr, char *str);
+(BSFixedString **ptr, char *str);
 
-typedef void (__fastcall *_BSFixedString_Release)(BSFixedString *ptr);
+typedef void (__fastcall *_BSFixedString_Release)(BSFixedString **ptr);
 
 internal _BSFixedString_Constructor BSFixedString_Constructor;
 internal _BSFixedString_Set BSFixedString_Set;
@@ -224,7 +224,7 @@ internal _BSFixedString_Release BSFixedString_Release;
 // ------ #BSFixedString ------
 
 // ------ TESUI ------
-typedef bool (__fastcall *_TESUI_IsMenuOpen)(void *TESUIObject, BSFixedString *str);
+typedef bool (__fastcall *_TESUI_IsMenuOpen)(void *TESUIObject, BSFixedString **str);
 
 internal _TESUI_IsMenuOpen TESUI_IsMenuOpen;
 // ------ #TESUI ------
@@ -396,8 +396,9 @@ internal void InitSignatures()
   loadgame_end_hook_return_address = loadgame_end_hook_patch_address + 13;
   //assert(loadgame_end_hook_return_address - (uint64)mainModule == 0x00CED8A5); //1_10_40
   
-  //FIX(adm244): Unk3ObjectAddress is passed into ProcessWindow function which is currently null
-  // game's not crashing only because that passed value is changed immediately
+  Unk3ObjectAddress = ParseMemoryAddress(mainloop_hook_patch_address, 3);
+  assert(Unk3ObjectAddress != 0);
+  
   ProcessWindowAddress = FindSignature(&gMainModuleInfo,
     "\x48\x89\x45\xFF\x48\x89\x45\x07\x48\x89\x45\x0F",
     "xxxxxxxxxxxx", -0x21);
@@ -437,24 +438,18 @@ internal void InitSignatures()
     "xxxxxxxxxxxxxxx", -0xAC);
   //assert(TESUIIsMenuOpenAddress - (uint64)mainModule == 0x020420E0); //1_10_40
   
+  //TODO(adm244): put into a function?
+  {
+    uint64 memptr = FindSignature(&gMainModuleInfo,
+      "\x48\x8B\xFA\x4D\x8B\xF8\x4C\x89\x60\xD8",
+      "xxxxxxxxxx", 0x59);
+    
+    BSFixedString_Set = (_BSFixedString_Set)ParseMemoryAddress(memptr, 1);
+    BSFixedString_Constructor = (_BSFixedString_Constructor)ParseMemoryAddress(memptr + 0xF9, 1);
+    BSFixedString_Release = (_BSFixedString_Release)ParseMemoryAddress((uint64)BSFixedString_Set + 0x23, 1);
+  }
+  
   //TODO(adm244): get function pointers from vtable?
-  
-  //FIX(adm244): wrapper function
-  /*BSFixedStringConstructorAddress = FindSignature(&gMainModuleInfo,
-    "\x48\x8B\xD9\x48\x00\x00\x00\x00\x00\x00\x48\x85\xD2\x74\x08\x45\x33\xC0\xE8\x00\x00\x00\x00\x48\x8B\xC3",
-    "xxxx??????xxxxxxxxx????xxx", -0x6);*/
-  //assert(BSFixedStringConstructorAddress - (uint64)mainModule == 0x01B416E0); //1_10_40
-  
-  //FIX(adm244): wrapper function
-  /*BSFixedStringSetAddress = FindSignature(&gMainModuleInfo,
-    "\x48\x85\xD2\x74\x1B\x45\x33\xC0\xE8\x00\x00\x00\x00\x48\x8D\x4C\x24\x30\xE8",
-    "xxxxxxxxx????xxxxxx", -0x11);*/
-  //assert(BSFixedStringSetAddress - (uint64)mainModule == 0x01B41810); //1_10_40
-  
-  BSFixedString_Release = (_BSFixedString_Release)FindSignature(&gMainModuleInfo,
-    "\x48\x8B\x16\x48\x89\x5C\x24\x38\x48\x89\x6C\x24\x30",
-    "xxxxxxxxxxxxx", -0x2D);
-  //assert(BSFixedStringReleaseAddress - (uint64)mainModule == 0x01B42970); //1_10_40
   
   //FIX(adm244): are those ever used?
   /*TESForm_Constructor = (_TESForm_Constructor)FindSignature(&gMainModuleInfo,
@@ -879,7 +874,8 @@ internal inline bool IsMenuOpen(char *str)
 {
   bool result = false;
 
-  BSFixedString bsString = {0};
+  //BSFixedString bsString = {0};
+  BSFixedString *bsString;
   BSFixedString_Constructor(&bsString, str);
   result = TESUI_IsMenuOpen(*((void **)TESUIObjectAddress), &bsString);
   BSFixedString_Release(&bsString);

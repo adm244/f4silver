@@ -318,9 +318,13 @@ extern "C" void GameLoop()
     
     TES_ExecuteScriptLine("tgm");*/
     
-    int value = 123;
+    /*int value = 123;
     char *testStr = "Hello, World!";
-    TESConsolePrint("This is a test message. %d %s", value, testStr);
+    TESConsolePrint("This is a test message. %d %s", value, testStr);*/
+    
+    bool isConsoleOpen = IsMenuOpen("Console");
+    //bool isConsoleOpen = IsMenuOpen("ConsoleNativeUIMenu");
+    TESConsolePrint("Console is %s", isConsoleOpen ? "opened" : "closed");
   }
 #else
   if( !Initialized ) {
