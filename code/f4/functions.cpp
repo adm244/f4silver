@@ -362,6 +362,15 @@ internal void InitSignatures()
   result = GetModuleInformation(currentProcess, mainModule, &gMainModuleInfo, sizeof(gMainModuleInfo));
   assert(result != 0);
   
+  //TODO(adm244): advanced hooking mechanism
+  // - Find start hook address by signature
+  // - Pass manually specified instruction information (count, length, offsets, types (reljump, relmov, etc.))
+  // - Write a detour
+  // - Modify original instructions if necessary (mov relative to RIP)
+  // - Add jump to the next instruction in the original function
+  // - Write original instructions somewhere close in memory
+  // There might be problem with saving registers
+  
   mainloop_hook_patch_address = FindSignature(&gMainModuleInfo,
     "\xE8\x00\x00\x00\x00\x48\x8B\x05\x00\x00\x00\x00\x48\x8B\x58\x30",
     "x????xxx????xxxx", -0x7);
@@ -378,6 +387,7 @@ internal void InitSignatures()
   loadgame_start_hook_return_address = loadgame_start_hook_patch_address + 15;
   //assert(loadgame_start_hook_return_address - (uint64)mainModule == 0x00CED09F); //1_10_40
   
+  //TODO(adm244): use loadgame_start_hook_patch_address with an offset?
   loadgame_end_hook_patch_address = FindSignature(&gMainModuleInfo,
     "\x89\x38\x41\x0F\xB6\xC5\x48",
     "xxxxxxx", 6);
@@ -386,6 +396,8 @@ internal void InitSignatures()
   loadgame_end_hook_return_address = loadgame_end_hook_patch_address + 13;
   //assert(loadgame_end_hook_return_address - (uint64)mainModule == 0x00CED8A5); //1_10_40
   
+  //FIX(adm244): Unk3ObjectAddress is passed into ProcessWindow function which is currently null
+  // game's not crashing only because that passed value is changed immediately
   ProcessWindowAddress = FindSignature(&gMainModuleInfo,
     "\x48\x89\x45\xFF\x48\x89\x45\x07\x48\x89\x45\x0F",
     "xxxxxxxxxxxx", -0x21);
@@ -413,6 +425,12 @@ internal void InitSignatures()
     "xxxxxxxxx", -0x38);
   TESConsoleObjectAddress = ParseMemoryAddress(temp, 3);
   assert(TESConsoleObjectAddress != 0);
+  
+  temp = FindSignature(&gMainModuleInfo,
+    "\xC1\xE8\x04\xA8\x01\x74\x33",
+    "xxxxxxx", -0x37);
+  TESUIObjectAddress = ParseMemoryAddress(temp, 3);
+  assert(TESUIObjectAddress != 0);
   
   TESUI_IsMenuOpen = (_TESUI_IsMenuOpen)FindSignature(&gMainModuleInfo,
     "\x4C\x8B\x74\x24\x40\x48\x8B\x74\x24\x38\x48\x85\xFF\x74\x0A",
