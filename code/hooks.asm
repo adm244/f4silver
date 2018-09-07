@@ -26,9 +26,6 @@
 extern ProcessWindowAddress: qword
 
 extern Unk3ObjectAddress: qword
-extern TESConsoleObjectAddress: qword
-extern GlobalScriptStateAddress: qword
-extern PlayerReferenceAddress: qword
 extern GameDataAddress: qword
 
 extern mainloop_hook_return_address: qword
@@ -104,27 +101,6 @@ ENDM
     
     jmp [loadgame_end_hook_return_address]
   LoadGameEnd_Hook endp
-  
-  TES_GetConsoleObject proc
-    mov rax, qword ptr [TESConsoleObjectAddress]
-    mov rax, qword ptr [rax]
-    
-    ret
-  TES_GetConsoleObject endp
-  
-  TES_GetGlobalScriptObject proc
-    mov rax, qword ptr [GlobalScriptStateAddress]
-    mov rax, qword ptr [rax]
-    
-    ret
-  TES_GetGlobalScriptObject endp
-  
-  TES_GetPlayer proc
-    mov rax, qword ptr [PlayerReferenceAddress]
-    mov rax, qword ptr [rax]
-    
-    ret
-  TES_GetPlayer endp
   
   ;rcx = 0x058ED480 (1_10_26)
   ;dl = 0x4A (worldspace form type)

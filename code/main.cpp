@@ -79,10 +79,6 @@ extern "C" {
   void LoadGameBegin_Hook();
   void LoadGameEnd_Hook();
   
-  void * TES_GetConsoleObject();
-  void * TES_GetGlobalScriptObject();
-  TESPlayer * TES_GetPlayer();
-  
   int TES_GetWorldSpaceCount();
   TESWorldSpace ** TES_GetWorldSpaceArray();
 }

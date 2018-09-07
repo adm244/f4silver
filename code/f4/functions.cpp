@@ -749,10 +749,15 @@ internal bool TES_ExecuteScriptLine(char *text)
   TESScript_Constructor(&scriptObject);
   TESScript_MarkAsTemporary(&scriptObject);
   TESScript_SetText(&scriptObject, text);
-  result = TESScript_CompileAndRun(&scriptObject, TES_GetGlobalScriptObject(), SysWindowCompileAndRun, 0);
+  result = TESScript_CompileAndRun(&scriptObject, *(void **)(GlobalScriptStateAddress), SysWindowCompileAndRun, 0);
   TESScript_Destructor(&scriptObject);
   
   return result;
+}
+
+internal TESPlayer * TES_GetPlayer()
+{
+  return *(TESPlayer **)(PlayerReferenceAddress);
 }
 
 internal inline bool TES_IsInterior(TESCell *cell)
@@ -907,7 +912,7 @@ internal inline void TESConsolePrint(char *format, ...)
   va_list args;
   va_start(args, format);
   //FIX(adm244): TES_GetConsoleObject is actually not an object, it's a structure
-  TESFillConsoleBackbufferVA(TES_GetConsoleObject(), format, args);
+  TESFillConsoleBackbufferVA(*(void **)(TESConsoleObjectAddress), format, args);
   va_end(args);
 }
 // ------ #Functions ------
