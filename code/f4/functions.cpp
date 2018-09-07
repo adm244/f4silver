@@ -427,6 +427,13 @@ internal void InitTESScript(MODULEINFO *moduleInfo)
   assert(memptr_compilerun != 0);
   
   //TODO(adm244): initialize GlobalScriptStateAddress
+  uint64 memptr_scriptstate = FindSignature(moduleInfo,
+    "\x75\xF7\x85\xC0\x74\x32",
+    "xxxxxx", 0x6);
+  assert(memptr_scriptstate != 0);
+  
+  GlobalScriptStateAddress = ParseMemoryAddress(memptr_scriptstate, 3);
+  assert(GlobalScriptStateAddress != 0);
   
   //TESExecuteScriptLine = (_TESExecuteScriptLine)memptr;
   TESScript_Constructor = (_TESScript_Constructor)ParseMemoryAddress(memptr + 0x18, 1);

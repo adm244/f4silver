@@ -326,7 +326,7 @@ extern "C" void GameLoop()
     TESConsolePrint("Console is %s", isConsoleOpen ? "opened" : "closed");
     
     //TODO(adm244): RE TESScript::Compile function and check if it works
-    TES_ExecuteScriptLine("tw");
+    TES_ExecuteScriptLine("twf");
   }
 #else
   if( !Initialized ) {
