@@ -231,8 +231,8 @@ internal _TESUI_IsMenuOpen TESUI_IsMenuOpen;
 
 // ------ Utils ------
 //NOTE(adm244): prints out a c-style formated string into the game console
-typedef void (__fastcall *_TESConsolePrintVA)
-(void *consoleObject, char *format, va_list va);
+typedef void (__fastcall *_TESFillConsoleBackbufferVA)
+(void *consoleObject, char *format, va_list args);
 
 //NOTE(adm244): displays a message in the top-left corner of a screen
 // message - text to be displayed
@@ -250,7 +250,7 @@ typedef TESCell * (__fastcall *_TESFindInteriorCellByName)
 typedef TESWorldSpace * (__fastcall *_TESFindCellWorldSpaceByName)
 (void *unk0, char *cellName, unsigned int *cellX, unsigned int *cellY);
 
-internal _TESConsolePrintVA TESConsolePrintVA;
+internal _TESFillConsoleBackbufferVA TESFillConsoleBackbufferVA;
 internal _TESDisplayMessage TESDisplayMessage;
 internal _TESFindInteriorCellByName TESFindInteriorCellByName;
 internal _TESFindCellWorldSpaceByName TESFindCellWorldSpaceByName;
@@ -399,6 +399,30 @@ internal void InitHooks(MODULEINFO *moduleInfo)
   //assert(ProcessWindowAddress - (uint64)mainModule == 0x00D384E0); //1_10_40
 }
 
+internal void InitTESConsole(uint64 memptr)
+{
+  TESConsoleObjectAddress = ParseMemoryAddress(memptr + 0x1A, 3);
+  assert(TESConsoleObjectAddress != 0);
+  
+  uint64 memptr_fillconsole = ParseMemoryAddress(memptr + 0x28, 1);
+  assert(memptr_fillconsole != 0);
+  
+  //TESFillConsoleBackbuffer = (_TESFillConsoleBackbuffer)memptr_fillconsole;
+  //assert(TESFillConsoleBackbuffer != 0);
+  
+  TESFillConsoleBackbufferVA = (_TESFillConsoleBackbufferVA)ParseMemoryAddress(memptr_fillconsole + 0x18, 1);
+  assert(TESFillConsoleBackbufferVA != 0);
+}
+
+internal void InitTESUI(uint64 memptr)
+{
+  TESUIObjectAddress = ParseMemoryAddress(memptr - 0x17A, 3);
+  assert(TESUIObjectAddress != 0);
+  
+  TESUI_IsMenuOpen = (_TESUI_IsMenuOpen)ParseMemoryAddress(memptr - 0x161, 1);
+  assert((uint64)TESUI_IsMenuOpen != 0);
+}
+
 internal void InitBSFixedString(MODULEINFO *moduleInfo)
 {
   uint64 memptr = FindSignature(moduleInfo,
@@ -416,7 +440,7 @@ internal void InitBSFixedString(MODULEINFO *moduleInfo)
   assert((uint64)BSFixedString_Release != 0);
 }
 
-internal void InitTESScript(MODULEINFO *moduleInfo)
+internal void InitTESScript(MODULEINFO *moduleInfo, uint64 memptr_scriptstate)
 {
   uint64 memptr = FindSignature(&gMainModuleInfo,
     "\x41\xB8\x01\x00\x00\x00\x48\x89\x44\x24\x78",
@@ -425,12 +449,6 @@ internal void InitTESScript(MODULEINFO *moduleInfo)
   
   uint64 memptr_compilerun = ParseMemoryAddress(memptr + 0x59, 1);
   assert(memptr_compilerun != 0);
-  
-  //TODO(adm244): initialize GlobalScriptStateAddress
-  uint64 memptr_scriptstate = FindSignature(moduleInfo,
-    "\x75\xF7\x85\xC0\x74\x32",
-    "xxxxxx", 0x6);
-  assert(memptr_scriptstate != 0);
   
   GlobalScriptStateAddress = ParseMemoryAddress(memptr_scriptstate, 3);
   assert(GlobalScriptStateAddress != 0);
@@ -473,36 +491,20 @@ internal void InitSignatures()
   result = GetModuleInformation(currentProcess, mainModule, &gMainModuleInfo, sizeof(gMainModuleInfo));
   assert(result != 0);
   
+  uint64 memptr = FindSignature(&gMainModuleInfo,
+    "\x75\xF7\x85\xC0\x74\x32",
+    "xxxxxx", 0x6);
+  assert(memptr != 0);
+  
   InitHooks(&gMainModuleInfo);
   
-  //TODO(adm244): search for object constructor, get object and vtable addresses
+  InitTESConsole(memptr);
+  InitTESUI(memptr);
   
-  TESConsolePrintVA = (_TESConsolePrintVA)FindSignature(&gMainModuleInfo,
-    "\xB9\xC0\x09\x00\x00\x48\x03\xF9\x48\x8D\x4C\x24\x20",
-    "xxxxxxxxxxxxx", -0x2F);
-  //assert((uint64)TESConsolePrintVA - (uint64)mainModule == 0x01262860); //1_10_40
-  
-  //TODO(adm244): put into a separate function?
-  uint64 temp = FindSignature(&gMainModuleInfo,
-    "\x48\x0F\x45\xD0\x8B\x41\x28\x25\x8F",
-    "xxxxxxxxx", -0x38);
-  TESConsoleObjectAddress = ParseMemoryAddress(temp, 3);
-  assert(TESConsoleObjectAddress != 0);
-  
-  temp = FindSignature(&gMainModuleInfo,
-    "\xC1\xE8\x04\xA8\x01\x74\x33",
-    "xxxxxxx", -0x37);
-  TESUIObjectAddress = ParseMemoryAddress(temp, 3);
-  assert(TESUIObjectAddress != 0);
-  
-  TESUI_IsMenuOpen = (_TESUI_IsMenuOpen)FindSignature(&gMainModuleInfo,
-    "\x4C\x8B\x74\x24\x40\x48\x8B\x74\x24\x38\x48\x85\xFF\x74\x0A",
-    "xxxxxxxxxxxxxxx", -0xAC);
-  //assert(TESUIIsMenuOpenAddress - (uint64)mainModule == 0x020420E0); //1_10_40
-  
-  //TODO(adm244): put into a function?
   InitBSFixedString(&gMainModuleInfo);
+  InitTESScript(&gMainModuleInfo, memptr);
   
+  //TODO(adm244): search for object constructor, get object and vtable addresses
   //TODO(adm244): get function pointers from vtable?
   
   //FIX(adm244): are those ever used?
@@ -515,8 +517,6 @@ internal void InitSignatures()
     "\x48\x8B\xF1\x48\x8D\x4C\x24\x20\x41\x8B\xF9",
     "xxxxxxxxxxx", -0x12);
   //assert(TESGlobalScriptCompileAddress - (uint64)mainModule == 0x004E7B30); //1_10_40*/
-  
-  InitTESScript(&gMainModuleInfo);
   
   TESObjectReference_MoveToCell = (_TESObjectReference_MoveToCell)FindSignature(&gMainModuleInfo,
     "\xEB\x45\xF6\x43\x40\x01\x75\x3F",
@@ -563,17 +563,8 @@ internal void InitSignatures()
   assert(loadgame_end_hook_patch_address != 0);
   assert(loadgame_end_hook_return_address != 0);
   assert(ProcessWindowAddress != 0);
-  assert(TESConsolePrintVA != 0);
-  assert((uint64)TESUI_IsMenuOpen != 0);
   //assert((uint64)TESForm_Constructor != 0);
   //assert((uint64)TESGlobalScript_Compile != 0);
-  assert((uint64)TESScript_Constructor != 0);
-  assert((uint64)TESScript_Destructor != 0);
-  assert((uint64)TESScript_MarkAsTemporary != 0);
-  assert((uint64)TESScript_Compile != 0);
-  assert((uint64)TESScript_Execute != 0);
-  assert((uint64)TESScript_CompileAndRun != 0);
-  assert((uint64)TESScript_SetText != 0);
   assert((uint64)TESObjectReference_MoveToCell != 0);
   assert((uint64)TESObjectReference_GetCurrentLocation != 0);
   assert((uint64)TESCell_GetUnk != 0);
@@ -916,7 +907,7 @@ internal inline void TESConsolePrint(char *format, ...)
   va_list args;
   va_start(args, format);
   //FIX(adm244): TES_GetConsoleObject is actually not an object, it's a structure
-  TESConsolePrintVA(TES_GetConsoleObject(), format, args);
+  TESFillConsoleBackbufferVA(TES_GetConsoleObject(), format, args);
   va_end(args);
 }
 // ------ #Functions ------
