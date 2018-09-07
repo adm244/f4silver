@@ -343,6 +343,7 @@ internal uint64 FindSignature(MODULEINFO *moduleInfo, char *pattern, char *mask,
   return 0;
 }
 
+//NOTE(adm244): rename to "ParseRIPRelativeAddress" or something like that
 internal uint64 ParseMemoryAddress(uint64 address, uint8 skipCount)
 {
   int32 offset = *((int32 *)(address + skipCount));
@@ -365,12 +366,14 @@ internal void InitHooks(MODULEINFO *moduleInfo)
   mainloop_hook_patch_address = FindSignature(moduleInfo,
     "\xE8\x00\x00\x00\x00\x48\x8B\x05\x00\x00\x00\x00\x48\x8B\x58\x30",
     "x????xxx????xxxx", -0x7);
+  assert(mainloop_hook_patch_address != 0);
   
   mainloop_hook_return_address = mainloop_hook_patch_address + 12;
   
   loadgame_start_hook_patch_address = FindSignature(moduleInfo,
     "\x48\x8B\xF1\x4A\x8B\x04\xD0\xB9\xC0\x09\x00\x00\x45\x8B\xE8",
     "xxxxxxxxxxxxxxx", -0x39);
+  assert(loadgame_start_hook_patch_address != 0);
   
   loadgame_start_hook_return_address = loadgame_start_hook_patch_address + 15;
   
@@ -379,15 +382,15 @@ internal void InitHooks(MODULEINFO *moduleInfo)
   loadgame_end_hook_patch_address = FindSignature(moduleInfo,
     "\x89\x38\x41\x0F\xB6\xC5\x48",
     "xxxxxxx", 6);
+  assert(loadgame_end_hook_patch_address != 0);
   
   loadgame_end_hook_return_address = loadgame_end_hook_patch_address + 13;
   
   Unk3ObjectAddress = ParseMemoryAddress(mainloop_hook_patch_address, 3);
   assert(Unk3ObjectAddress != 0);
   
-  ProcessWindowAddress = FindSignature(moduleInfo,
-    "\x48\x89\x45\xFF\x48\x89\x45\x07\x48\x89\x45\x0F",
-    "xxxxxxxxxxxx", -0x21);
+  ProcessWindowAddress = ParseMemoryAddress(mainloop_hook_patch_address + 0x7, 1);
+  assert(ProcessWindowAddress != 0);
   
   //assert(mainloop_hook_patch_address - (uint64)mainModule == 0x00D36707); //1_10_40
   //assert(mainloop_hook_return_address - (uint64)mainModule == 0x00D36713); //1_10_40
