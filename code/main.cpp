@@ -323,8 +323,10 @@ extern "C" void GameLoop()
     TESConsolePrint("This is a test message. %d %s", value, testStr);*/
     
     bool isConsoleOpen = IsMenuOpen("Console");
-    //bool isConsoleOpen = IsMenuOpen("ConsoleNativeUIMenu");
     TESConsolePrint("Console is %s", isConsoleOpen ? "opened" : "closed");
+    
+    //TODO(adm244): RE TESScript::Compile function and check if it works
+    TES_ExecuteScriptLine("tw");
   }
 #else
   if( !Initialized ) {

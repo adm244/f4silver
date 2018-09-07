@@ -345,10 +345,114 @@ internal uint64 FindSignature(MODULEINFO *moduleInfo, char *pattern, char *mask,
 
 internal uint64 ParseMemoryAddress(uint64 address, uint8 skipCount)
 {
-  uint32 offset = *((uint32 *)(address + skipCount));
+  int32 offset = *((int32 *)(address + skipCount));
   uint64 rip = (address + skipCount + sizeof(offset));
   
   return (rip + offset);
+}
+
+internal void InitHooks(MODULEINFO *moduleInfo)
+{
+  //TODO(adm244): advanced hooking mechanism
+  // - Find start hook address by signature
+  // - Pass manually specified instruction information (count, length, offsets, types (reljump, relmov, etc.))
+  // - Write a detour
+  // - Modify original instructions if necessary (mov relative to RIP)
+  // - Add jump to the next instruction in the original function
+  // - Write original instructions somewhere close in memory
+  // There might be problem with saving registers
+  
+  mainloop_hook_patch_address = FindSignature(moduleInfo,
+    "\xE8\x00\x00\x00\x00\x48\x8B\x05\x00\x00\x00\x00\x48\x8B\x58\x30",
+    "x????xxx????xxxx", -0x7);
+  
+  mainloop_hook_return_address = mainloop_hook_patch_address + 12;
+  
+  loadgame_start_hook_patch_address = FindSignature(moduleInfo,
+    "\x48\x8B\xF1\x4A\x8B\x04\xD0\xB9\xC0\x09\x00\x00\x45\x8B\xE8",
+    "xxxxxxxxxxxxxxx", -0x39);
+  
+  loadgame_start_hook_return_address = loadgame_start_hook_patch_address + 15;
+  
+  //NOTE(adm244): use loadgame_start_hook_patch_address with an offset?
+  //NOTE(adm244): distance is quite long, high chance of function change
+  loadgame_end_hook_patch_address = FindSignature(moduleInfo,
+    "\x89\x38\x41\x0F\xB6\xC5\x48",
+    "xxxxxxx", 6);
+  
+  loadgame_end_hook_return_address = loadgame_end_hook_patch_address + 13;
+  
+  Unk3ObjectAddress = ParseMemoryAddress(mainloop_hook_patch_address, 3);
+  assert(Unk3ObjectAddress != 0);
+  
+  ProcessWindowAddress = FindSignature(moduleInfo,
+    "\x48\x89\x45\xFF\x48\x89\x45\x07\x48\x89\x45\x0F",
+    "xxxxxxxxxxxx", -0x21);
+  
+  //assert(mainloop_hook_patch_address - (uint64)mainModule == 0x00D36707); //1_10_40
+  //assert(mainloop_hook_return_address - (uint64)mainModule == 0x00D36713); //1_10_40
+  //assert(loadgame_start_hook_patch_address - (uint64)mainModule == 0x00CED090); //1_10_40
+  //assert(loadgame_start_hook_return_address - (uint64)mainModule == 0x00CED09F); //1_10_40
+  //assert(loadgame_end_hook_patch_address - (uint64)mainModule == 0x00CED898); //1_10_40
+  //assert(loadgame_end_hook_return_address - (uint64)mainModule == 0x00CED8A5); //1_10_40
+  //assert(Unk3ObjectAddress - (uint64)mainModule == 0x05ADE288); //1_10_40
+  //assert(ProcessWindowAddress - (uint64)mainModule == 0x00D384E0); //1_10_40
+}
+
+internal void InitBSFixedString(MODULEINFO *moduleInfo)
+{
+  uint64 memptr = FindSignature(moduleInfo,
+    "\x48\x8B\xFA\x4D\x8B\xF8\x4C\x89\x60\xD8",
+    "xxxxxxxxxx", 0x59);
+  assert(memptr != 0);
+  
+  BSFixedString_Set = (_BSFixedString_Set)ParseMemoryAddress(memptr, 1);
+  assert((uint64)BSFixedString_Set != 0);
+  
+  BSFixedString_Constructor = (_BSFixedString_Constructor)ParseMemoryAddress(memptr + 0xF9, 1);
+  BSFixedString_Release = (_BSFixedString_Release)ParseMemoryAddress((uint64)BSFixedString_Set + 0x23, 1);
+  
+  assert((uint64)BSFixedString_Constructor != 0);
+  assert((uint64)BSFixedString_Release != 0);
+}
+
+internal void InitTESScript(MODULEINFO *moduleInfo)
+{
+  uint64 memptr = FindSignature(&gMainModuleInfo,
+    "\x41\xB8\x01\x00\x00\x00\x48\x89\x44\x24\x78",
+    "xxxxxxxxxxx", -0x4E);
+  assert(memptr != 0);
+  
+  uint64 memptr_compilerun = ParseMemoryAddress(memptr + 0x59, 1);
+  assert(memptr_compilerun != 0);
+  
+  //TODO(adm244): initialize GlobalScriptStateAddress
+  
+  //TESExecuteScriptLine = (_TESExecuteScriptLine)memptr;
+  TESScript_Constructor = (_TESScript_Constructor)ParseMemoryAddress(memptr + 0x18, 1);
+  TESScript_MarkAsTemporary = (_TESScript_MarkAsTemporary)ParseMemoryAddress(memptr + 0x22, 1);
+  TESScript_SetText = (_TESScript_SetText)ParseMemoryAddress(memptr + 0x2F, 1);
+  TESScript_Compile = (_TESScript_Compile)ParseMemoryAddress(memptr_compilerun + 0x47, 1);
+  TESScript_Execute = (_TESScript_Execute)ParseMemoryAddress(memptr_compilerun + 0x75, 1);
+  TESScript_CompileAndRun = (_TESScript_CompileAndRun)memptr_compilerun;
+  TESScript_Destructor = (_TESScript_Destructor)ParseMemoryAddress(memptr + 0x63, 1);
+  
+  //assert((uint64)TESExecuteScriptLine != 0);
+  assert((uint64)TESScript_Constructor != 0);
+  assert((uint64)TESScript_MarkAsTemporary != 0);
+  assert((uint64)TESScript_SetText != 0);
+  assert((uint64)TESScript_Compile != 0);
+  assert((uint64)TESScript_Execute != 0);
+  assert((uint64)TESScript_CompileAndRun != 0);
+  assert((uint64)TESScript_Destructor != 0);
+  
+  //assert(TESScriptConstructorAddress - (uint64)mainModule == 0x004E14F0); //1_10_40
+  //assert(TESScriptMarkAsTemporaryAddress - (uint64)mainModule == 0x00153F00); //1_10_40
+  //assert(TESScriptSetTextAddress - (uint64)mainModule == 0x004E20D0); //1_10_40*/
+  //assert(TESScriptCompileAddress - (uint64)mainModule == 0x004E28E0); //1_10_40
+  //assert(TESScriptExecuteAddress - (uint64)mainModule == 0x004E2460); //1_10_40
+  //assert(TESScriptCompileAndRunAddress - (uint64)mainModule == 0x004E2830); //1_10_40
+  //assert(TESScriptDestructorAddress - (uint64)mainModule == 0x004E1570); //1_10_40
 }
 
 internal void InitSignatures()
@@ -362,56 +466,7 @@ internal void InitSignatures()
   result = GetModuleInformation(currentProcess, mainModule, &gMainModuleInfo, sizeof(gMainModuleInfo));
   assert(result != 0);
   
-  //TODO(adm244): advanced hooking mechanism
-  // - Find start hook address by signature
-  // - Pass manually specified instruction information (count, length, offsets, types (reljump, relmov, etc.))
-  // - Write a detour
-  // - Modify original instructions if necessary (mov relative to RIP)
-  // - Add jump to the next instruction in the original function
-  // - Write original instructions somewhere close in memory
-  // There might be problem with saving registers
-  
-  mainloop_hook_patch_address = FindSignature(&gMainModuleInfo,
-    "\xE8\x00\x00\x00\x00\x48\x8B\x05\x00\x00\x00\x00\x48\x8B\x58\x30",
-    "x????xxx????xxxx", -0x7);
-  //assert(mainloop_hook_patch_address - (uint64)mainModule == 0x00D36707); //1_10_40
-  
-  mainloop_hook_return_address = mainloop_hook_patch_address + 12;
-  //assert(mainloop_hook_return_address - (uint64)mainModule == 0x00D36713); //1_10_40
-  
-  loadgame_start_hook_patch_address = FindSignature(&gMainModuleInfo,
-    "\x48\x8B\xF1\x4A\x8B\x04\xD0\xB9\xC0\x09\x00\x00\x45\x8B\xE8",
-    "xxxxxxxxxxxxxxx", -0x39);
-  //assert(loadgame_start_hook_patch_address - (uint64)mainModule == 0x00CED090); //1_10_40
-  
-  loadgame_start_hook_return_address = loadgame_start_hook_patch_address + 15;
-  //assert(loadgame_start_hook_return_address - (uint64)mainModule == 0x00CED09F); //1_10_40
-  
-  //TODO(adm244): use loadgame_start_hook_patch_address with an offset?
-  loadgame_end_hook_patch_address = FindSignature(&gMainModuleInfo,
-    "\x89\x38\x41\x0F\xB6\xC5\x48",
-    "xxxxxxx", 6);
-  //assert(loadgame_end_hook_patch_address - (uint64)mainModule == 0x00CED898); //1_10_40
-  
-  loadgame_end_hook_return_address = loadgame_end_hook_patch_address + 13;
-  //assert(loadgame_end_hook_return_address - (uint64)mainModule == 0x00CED8A5); //1_10_40
-  
-  Unk3ObjectAddress = ParseMemoryAddress(mainloop_hook_patch_address, 3);
-  assert(Unk3ObjectAddress != 0);
-  
-  ProcessWindowAddress = FindSignature(&gMainModuleInfo,
-    "\x48\x89\x45\xFF\x48\x89\x45\x07\x48\x89\x45\x0F",
-    "xxxxxxxxxxxx", -0x21);
-  //assert(ProcessWindowAddress - (uint64)mainModule == 0x00D384E0); //1_10_40
-  
-  //IMPORTANT(adm244): how do we get a global variable address?
-  //NOTE(adm244): pattern search for a place where global variable is accessed
-  // and retrieve address from instruction?
-  
-  //TODO(adm244): these small functions are just wrappers,
-  // make our own wrappers for functions that we ACTUALLY need to call,
-  // because there's two (or more) identical wrapper functions that calls
-  // different ones...
+  InitHooks(&gMainModuleInfo);
   
   //TODO(adm244): search for object constructor, get object and vtable addresses
   
@@ -439,15 +494,7 @@ internal void InitSignatures()
   //assert(TESUIIsMenuOpenAddress - (uint64)mainModule == 0x020420E0); //1_10_40
   
   //TODO(adm244): put into a function?
-  {
-    uint64 memptr = FindSignature(&gMainModuleInfo,
-      "\x48\x8B\xFA\x4D\x8B\xF8\x4C\x89\x60\xD8",
-      "xxxxxxxxxx", 0x59);
-    
-    BSFixedString_Set = (_BSFixedString_Set)ParseMemoryAddress(memptr, 1);
-    BSFixedString_Constructor = (_BSFixedString_Constructor)ParseMemoryAddress(memptr + 0xF9, 1);
-    BSFixedString_Release = (_BSFixedString_Release)ParseMemoryAddress((uint64)BSFixedString_Set + 0x23, 1);
-  }
+  InitBSFixedString(&gMainModuleInfo);
   
   //TODO(adm244): get function pointers from vtable?
   
@@ -462,40 +509,7 @@ internal void InitSignatures()
     "xxxxxxxxxxx", -0x12);
   //assert(TESGlobalScriptCompileAddress - (uint64)mainModule == 0x004E7B30); //1_10_40*/
   
-  TESScript_Constructor = (_TESScript_Constructor)FindSignature(&gMainModuleInfo,
-    "\x48\x8B\x04\xC8\x44\x88\x04\x02\x4C\x89\x43\x58",
-    "xxxxxxxxxxxx", -0x54);
-  //assert(TESScriptConstructorAddress - (uint64)mainModule == 0x004E14F0); //1_10_40
-  
-  TESScript_Destructor = (_TESScript_Destructor)FindSignature(&gMainModuleInfo,
-    "\x48\x89\x01\xE8\x00\x00\x00\x00\x48\x8D\x4B\x70\xE8\x00\x00\x00\x00\x48\x8D\x4B\x60",
-    "xxxx????xxxxx????xxxx", -0x10);
-  //assert(TESScriptDestructorAddress - (uint64)mainModule == 0x004E1570); //1_10_40
-  
-  TESScript_MarkAsTemporary = (_TESScript_MarkAsTemporary)FindSignature(&gMainModuleInfo,
-    "\x81\x4B\x10\x00\x40\x00\x00\x48\x83\xC4\x20",
-    "xxxxxxxxxxx", -0x22);
-  //assert(TESScriptMarkAsTemporaryAddress - (uint64)mainModule == 0x00153F00); //1_10_40
-  
-  TESScript_Compile = (_TESScript_Compile)FindSignature(&gMainModuleInfo,
-    "\x8B\x1E\xC7\x06\x12\x00\x00\x00\xC6\x44\x24\x20\x00",
-    "xxxxxxxxxxxxx", -0x45);
-  //assert(TESScriptCompileAddress - (uint64)mainModule == 0x004E28E0); //1_10_40
-  
-  TESScript_Execute = (_TESScript_Execute)FindSignature(&gMainModuleInfo,
-    "\x75\x15\x83\x79\x28\x04\x77\x0F\x32\xC0",
-    "xxxxxxxxxx", -0x28);
-  //assert(TESScriptExecuteAddress - (uint64)mainModule == 0x004E2460); //1_10_40
-  
-  TESScript_CompileAndRun = (_TESScript_CompileAndRun)FindSignature(&gMainModuleInfo,
-    "\x4C\x8B\x64\x24\x50\xB0\x01\x48\x8B\x6C\x24\x60",
-    "xxxxxxxxxxxx", -0x82);
-  //assert(TESScriptCompileAndRunAddress - (uint64)mainModule == 0x004E2830); //1_10_40
-  
-  TESScript_SetText = (_TESScript_SetText)FindSignature(&gMainModuleInfo,
-    "\x48\x83\xCB\xFF\x4C\x89\x74\x24\x38\x48\xFF\xC3",
-    "xxxxxxxxxxxx", -0x5A);
-  //assert(TESScriptSetTextAddress - (uint64)mainModule == 0x004E20D0); //1_10_40
+  InitTESScript(&gMainModuleInfo);
   
   TESObjectReference_MoveToCell = (_TESObjectReference_MoveToCell)FindSignature(&gMainModuleInfo,
     "\xEB\x45\xF6\x43\x40\x01\x75\x3F",
@@ -544,9 +558,6 @@ internal void InitSignatures()
   assert(ProcessWindowAddress != 0);
   assert(TESConsolePrintVA != 0);
   assert((uint64)TESUI_IsMenuOpen != 0);
-  //assert(BSFixedStringConstructorAddress != 0);
-  //assert(BSFixedStringSetAddress != 0);
-  assert((uint64)BSFixedString_Release != 0);
   //assert((uint64)TESForm_Constructor != 0);
   //assert((uint64)TESGlobalScript_Compile != 0);
   assert((uint64)TESScript_Constructor != 0);
