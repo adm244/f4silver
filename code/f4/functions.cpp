@@ -521,6 +521,18 @@ internal void InitSignatures()
     "xxxxxxxxxxx", -0x12);
   //assert(TESGlobalScriptCompileAddress - (uint64)mainModule == 0x004E7B30); //1_10_40*/
   
+  //TODO(adm244): get these pointers from MoveToCell function:
+  // - FindInteriorCellByName
+  // - FindCellWorldSpaceByName
+  // - TESWorldspace::GetEncounterZone
+  // - TESWorldspace::FindExteriorCell
+  // - TESCell::GetEncounterZone
+  // Also, these pointers from TESWorldspace::GetEncounterZone:
+  // - TESWorldspace::GetLocation
+  // - TESLocation::GetEncounterZone
+  // Also, these pointers from TESWorldspace::FindExteriorCell:
+  // - TESWorldspace::GetCellAt
+  // - TESCell::Constructor
   TESObjectReference_MoveToCell = (_TESObjectReference_MoveToCell)FindSignature(&gMainModuleInfo,
     "\xEB\x45\xF6\x43\x40\x01\x75\x3F",
     "xxxxxxxx", -0x94);
