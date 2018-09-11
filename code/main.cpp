@@ -294,7 +294,7 @@ internal bool IsActivationPaused()
       || (Settings.IgnoreIfPlayerIsDead && IsActorDead((TESActor *)TES_GetPlayer())));
 }
 
-#define SIGTEST
+//#define SIGTEST
 
 extern "C" void GameLoop()
 {

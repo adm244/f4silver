@@ -92,6 +92,8 @@ internal int batches_count = 0;
   return result;
 }*/
 
+//FIX(adm244): loading into interior cell and teleporting crashing the game
+// (wrong TESWorldSpace pointer is passed into FindExteriorCell)
 internal void Teleport()
 {
   TESWorldSpace *worldspace = GetPlayerCurrentWorldSpace();
@@ -151,7 +153,7 @@ internal void Teleport()
       continue;
     }
     
-    targetCell = TESWorldSpace_FindExteriorCellByCoordinates(worldspace, cellX, cellY);
+    targetCell = TESWorldSpace_FindExteriorCell(worldspace, cellX, cellY);
     
     /*if( IsCellWithinBorderRegion(targetCell) ) {
       fprintf_s(file, "Success [%d, %d]\n", cellX, cellY);
