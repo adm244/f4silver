@@ -183,6 +183,9 @@ internal void ProcessQueue(Queue *queue, bool checkExecState)
     uint64 offset = batch->offset;
     bool isQueueEmpty = QueueIsEmpty(queue);
     
+    //FIX(adm244): something wrong with a timer
+    // test case: @timer used in @exterioronly batch file
+    // activate batch in interior then go outside
     if( batch->timerIndex >= 0 ) {
       if( IsTimerStoped(batch->timerIndex) ) {
         FreeTimer(batch->timerIndex);

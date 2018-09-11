@@ -194,6 +194,9 @@ OTHER DEALINGS IN THE SOFTWARE.
   OVIS 0x9E
 */
 
+#ifndef _TYPES_H
+#define _TYPES_H
+
 enum FormTypes {
   FormType_Form = 0,
   FormType_Script = 0x16,
@@ -709,3 +712,5 @@ struct TESScript {
 }; // 376 bytes (0x178)
 
 #pragma pack(pop)
+
+#endif
