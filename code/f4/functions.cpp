@@ -325,6 +325,10 @@ extern "C" {
 
 internal MODULEINFO gMainModuleInfo = {0};
 
+#ifdef F4_VERSION_1_10_40
+internal HMODULE gMainModule = GetModuleHandle(0);
+#endif
+
 //TODO(adm244): switch to multiple patterns search (Aho-Corasick?)
 internal uint64 FindSignature(MODULEINFO *moduleInfo, char *pattern, char *mask, uint64 offset)
 {
@@ -398,14 +402,16 @@ internal void InitHooks(MODULEINFO *moduleInfo)
   ProcessWindowAddress = ParseMemoryAddress(mainloop_hook_patch_address + 0x7, 1);
   assert(ProcessWindowAddress != 0);
   
-  //assert(mainloop_hook_patch_address - (uint64)mainModule == 0x00D36707); //1_10_40
-  //assert(mainloop_hook_return_address - (uint64)mainModule == 0x00D36713); //1_10_40
-  //assert(loadgame_start_hook_patch_address - (uint64)mainModule == 0x00CED090); //1_10_40
-  //assert(loadgame_start_hook_return_address - (uint64)mainModule == 0x00CED09F); //1_10_40
-  //assert(loadgame_end_hook_patch_address - (uint64)mainModule == 0x00CED898); //1_10_40
-  //assert(loadgame_end_hook_return_address - (uint64)mainModule == 0x00CED8A5); //1_10_40
-  //assert(Unk3ObjectAddress - (uint64)mainModule == 0x05ADE288); //1_10_40
-  //assert(ProcessWindowAddress - (uint64)mainModule == 0x00D384E0); //1_10_40
+#ifdef F4_VERSION_1_10_40
+  assert(mainloop_hook_patch_address - (uint64)gMainModule == 0x00D36707); //1_10_40
+  assert(mainloop_hook_return_address - (uint64)gMainModule == 0x00D36713); //1_10_40
+  assert(loadgame_start_hook_patch_address - (uint64)gMainModule == 0x00CED090); //1_10_40
+  assert(loadgame_start_hook_return_address - (uint64)gMainModule == 0x00CED09F); //1_10_40
+  assert(loadgame_end_hook_patch_address - (uint64)gMainModule == 0x00CED898); //1_10_40
+  assert(loadgame_end_hook_return_address - (uint64)gMainModule == 0x00CED8A5); //1_10_40
+  assert(Unk3ObjectAddress - (uint64)gMainModule == 0x05ADE288); //1_10_40
+  assert(ProcessWindowAddress - (uint64)gMainModule == 0x00D384E0); //1_10_40
+#endif
 }
 
 internal void InitTESConsole(uint64 memptr)
@@ -421,6 +427,11 @@ internal void InitTESConsole(uint64 memptr)
   
   TESFillConsoleBackbufferVA = (_TESFillConsoleBackbufferVA)ParseMemoryAddress(memptr_fillconsole + 0x18, 1);
   assert(TESFillConsoleBackbufferVA != 0);
+  
+#ifdef F4_VERSION_1_10_40
+  assert(TESConsoleObjectAddress - (uint64)gMainModule == 0x0591AB30); //1_10_40
+  assert(memptr_fillconsole - (uint64)gMainModule == 0x01262830); //1_10_40
+#endif
 }
 
 internal void InitTESUI(uint64 memptr)
@@ -430,6 +441,11 @@ internal void InitTESUI(uint64 memptr)
   
   TESUI_IsMenuOpen = (_TESUI_IsMenuOpen)ParseMemoryAddress(memptr - 0x161, 1);
   assert((uint64)TESUI_IsMenuOpen != 0);
+  
+#ifdef F4_VERSION_1_10_40
+  assert(TESUIObjectAddress - (uint64)gMainModule == 0x0590A918); //1_10_40
+  assert((uint64)TESUI_IsMenuOpen - (uint64)gMainModule == 0x020420E0); //1_10_40
+#endif
 }
 
 internal void InitBSFixedString(MODULEINFO *moduleInfo)
@@ -447,11 +463,17 @@ internal void InitBSFixedString(MODULEINFO *moduleInfo)
   
   assert((uint64)BSFixedString_Constructor != 0);
   assert((uint64)BSFixedString_Release != 0);
+  
+#ifdef F4_VERSION_1_10_40
+  assert((uint64)BSFixedString_Set - (uint64)gMainModule == 0x01B41810); //1_10_40
+  assert((uint64)BSFixedString_Constructor - (uint64)gMainModule == 0x01B416E0); //1_10_40
+  assert((uint64)BSFixedString_Release - (uint64)gMainModule == 0x01B42970); //1_10_40
+#endif
 }
 
 internal void InitTESScript(MODULEINFO *moduleInfo, uint64 memptr_scriptstate)
 {
-  uint64 memptr = FindSignature(&gMainModuleInfo,
+  uint64 memptr = FindSignature(moduleInfo,
     "\x41\xB8\x01\x00\x00\x00\x48\x89\x44\x24\x78",
     "xxxxxxxxxxx", -0x4E);
   assert(memptr != 0);
@@ -480,22 +502,30 @@ internal void InitTESScript(MODULEINFO *moduleInfo, uint64 memptr_scriptstate)
   assert((uint64)TESScript_CompileAndRun != 0);
   assert((uint64)TESScript_Destructor != 0);
   
-  //assert(TESScriptConstructorAddress - (uint64)mainModule == 0x004E14F0); //1_10_40
-  //assert(TESScriptMarkAsTemporaryAddress - (uint64)mainModule == 0x00153F00); //1_10_40
-  //assert(TESScriptSetTextAddress - (uint64)mainModule == 0x004E20D0); //1_10_40*/
-  //assert(TESScriptCompileAddress - (uint64)mainModule == 0x004E28E0); //1_10_40
-  //assert(TESScriptExecuteAddress - (uint64)mainModule == 0x004E2460); //1_10_40
-  //assert(TESScriptCompileAndRunAddress - (uint64)mainModule == 0x004E2830); //1_10_40
-  //assert(TESScriptDestructorAddress - (uint64)mainModule == 0x004E1570); //1_10_40
+#ifdef F4_VERSION_1_10_40
+  assert(GlobalScriptStateAddress - (uint64)gMainModule == 0x05B15420); //1_10_40
+  assert((uint64)TESScript_Constructor - (uint64)gMainModule == 0x004E14F0); //1_10_40
+  assert((uint64)TESScript_MarkAsTemporary - (uint64)gMainModule == 0x00153F00); //1_10_40
+  assert((uint64)TESScript_SetText - (uint64)gMainModule == 0x004E20D0); //1_10_40
+  assert((uint64)TESScript_Compile - (uint64)gMainModule == 0x004E28E0); //1_10_40
+  assert((uint64)TESScript_Execute - (uint64)gMainModule == 0x004E2460); //1_10_40
+  assert((uint64)TESScript_CompileAndRun - (uint64)gMainModule == 0x004E2830); //1_10_40
+  assert((uint64)TESScript_Destructor - (uint64)gMainModule == 0x004E1570); //1_10_40
+#endif
 }
 
 internal void InitUtils(uint64 memptr)
 {
   TESFindInteriorCellByName = (_TESFindInteriorCellByName)ParseMemoryAddress(memptr + 0x22, 1);
-  assert(TESFindInteriorCellByName != 0);
+  assert((uint64)TESFindInteriorCellByName != 0);
   
   TESFindCellWorldSpaceByName = (_TESFindCellWorldSpaceByName)ParseMemoryAddress(memptr + 0x63, 1);
-  assert(TESFindCellWorldSpaceByName != 0);
+  assert((uint64)TESFindCellWorldSpaceByName != 0);
+  
+#ifdef F4_VERSION_1_10_40
+  assert((uint64)TESFindInteriorCellByName - (uint64)gMainModule == 0x00152EB0); //1_10_40
+  assert((uint64)TESFindCellWorldSpaceByName - (uint64)gMainModule == 0x00112FA0); //1_10_40
+#endif
 }
 
 internal void InitTESWorldSpace(uint64 memptr)
@@ -517,6 +547,12 @@ internal void InitTESWorldSpace(uint64 memptr)
   assert((uint64)TESWorldSpace_FindExteriorCell != 0);
   //assert((uint64)TESWorldSpace_GetCellAt != 0);
   //assert((uint64)TESLocation_GetEncounterZone != 0);
+  
+#ifdef F4_VERSION_1_10_40
+  assert((uint64)TESWorldSpace_GetEncounterZone - (uint64)gMainModule == 0x004932D0); //1_10_40
+  assert((uint64)TESWorldSpace_GetLocation - (uint64)gMainModule == 0x00493710); //1_10_40
+  assert((uint64)TESWorldSpace_FindExteriorCell - (uint64)gMainModule == 0x004923E0); //1_10_40
+#endif
 }
 
 internal void InitGlobalVariables(uint64 memptr)
@@ -529,18 +565,27 @@ internal void InitGlobalVariables(uint64 memptr)
   
   assert(PlayerReferenceAddress != 0);
   assert(GameDataAddress != 0);
+  
+#ifdef F4_VERSION_1_10_40
+  assert(PlayerReferenceAddress - (uint64)gMainModule == 0x05ADE398); //1_10_40
+  assert(GameDataAddress - (uint64)gMainModule == 0x05909100); //1_10_40
+#endif
 }
 
 internal void InitTESObjectReference(MODULEINFO *moduleInfo, uint64 memptr)
 {
   TESObjectReference_MoveToCell = (_TESObjectReference_MoveToCell)memptr;
-  assert(TESObjectReference_MoveToCell != 0);
-  //assert(TESObjectReferenceMoveToCellAddress - (uint64)mainModule == 0x00E9A330); //1_10_40
+  assert((uint64)TESObjectReference_MoveToCell != 0);
   
   TESObjectReference_GetCurrentLocation = (_TESObjectReference_GetCurrentLocation)FindSignature(moduleInfo,
     "\x5B\xC3\x48\x8B\x89\xB8\x00\x00\x00",
     "xxxxxxxxx", -0x21);
-  //assert(TESObjectReferenceGetCurrentLocationAddress - (uint64)mainModule == 0x0040EE70); //1_10_40
+  assert((uint64)TESObjectReference_GetCurrentLocation != 0);
+  
+#ifdef F4_VERSION_1_10_40
+  assert((uint64)TESObjectReference_MoveToCell - (uint64)gMainModule == 0x00E9A330); //1_10_40
+  assert((uint64)TESObjectReference_GetCurrentLocation - (uint64)gMainModule == 0x0040EE70); //1_10_40
+#endif
 }
 
 internal void InitSignatures()
@@ -592,12 +637,12 @@ internal void InitSignatures()
   TESCell_GetUnk = (_TESCell_GetUnk)FindSignature(&gMainModuleInfo,
     "\xF6\x45\x40\x01\x74\x04\x33\xFF\xEB",
     "xxxxxxxxx", -0x45);
-  //assert(TESCellGetUnkAddress - (uint64)mainModule == 0x003B4A30); //1_10_40
+  assert((uint64)TESCell_GetUnk != 0);
   
   TESDisplayMessage = (_TESDisplayMessage)FindSignature(&gMainModuleInfo,
     "\x48\x83\xEC\x50\xC6\x44\x24\x28\x00\x44\x88\x4C\x24\x20",
     "xxxxxxxxxxxxxx", -0x2);
-  //assert(TESDisplayMessageAddress - (uint64)mainModule == 0x00AE1D10); //1_10_40
+  assert((uint64)TESDisplayMessage != 0);
   
   //TODO(adm244): convert all addresses
   //TODO(adm244): search for object constructor, get object and vtable addresses
@@ -613,19 +658,14 @@ internal void InitSignatures()
     "\x48\x8B\xF1\x48\x8D\x4C\x24\x20\x41\x8B\xF9",
     "xxxxxxxxxxx", -0x12);
   //assert(TESGlobalScriptCompileAddress - (uint64)mainModule == 0x004E7B30); //1_10_40*/
-  
-  assert(mainloop_hook_patch_address != 0);
-  assert(mainloop_hook_return_address != 0);
-  assert(loadgame_start_hook_patch_address != 0);
-  assert(loadgame_start_hook_return_address != 0);
-  assert(loadgame_end_hook_patch_address != 0);
-  assert(loadgame_end_hook_return_address != 0);
-  assert(ProcessWindowAddress != 0);
+
   //assert((uint64)TESForm_Constructor != 0);
   //assert((uint64)TESGlobalScript_Compile != 0);
-  assert((uint64)TESObjectReference_GetCurrentLocation != 0);
-  assert((uint64)TESCell_GetUnk != 0);
-  assert((uint64)TESDisplayMessage != 0);
+  
+#ifdef F4_VERSION_1_10_40
+  assert((uint64)TESCell_GetUnk - (uint64)gMainModule == 0x003B4A30); //1_10_40
+  assert((uint64)TESDisplayMessage - (uint64)gMainModule == 0x00AE1D10); //1_10_40
+#endif
 }
 
 /*internal void DefineAddresses()

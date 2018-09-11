@@ -110,6 +110,7 @@ ENDM
   ;  rcx + rax*8 + 0x78 (total worldspace count)
   TES_GetWorldSpaceCount proc
     mov rcx, qword ptr [GameDataAddress]
+    mov rcx, qword ptr [rcx]
     
     mov r9, 4Ah
     
@@ -121,6 +122,7 @@ ENDM
   
   TES_GetWorldSpaceArray proc
     mov rcx, qword ptr [GameDataAddress]
+    mov rcx, qword ptr [rcx]
     
     mov r9, 4Ah
     

@@ -29,13 +29,15 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define _F4_VERSION_H_
 
 //#define MAKE_EXE_VERSION_FULL(major, minor, build, sub) (MAJOR(major) | MINOR(minor) | BUILD(build) | SUB(sub))
-#define MAKE_EXE_VERSION_FULL(major, minor, build, sub)	((((major) & 0xFF) << 24) | (((minor) & 0xFF) << 16) | (((build) & 0xFFF) << 4) | ((sub) & 0xF))
-#define MAKE_EXE_VERSION(major, minor, build) MAKE_EXE_VERSION_FULL(major, minor, build, 0)
+//#define MAKE_EXE_VERSION_FULL(major, minor, build, sub)	((((major) & 0xFF) << 24) | (((minor) & 0xFF) << 16) | (((build) & 0xFFF) << 4) | ((sub) & 0xF))
+//#define MAKE_EXE_VERSION(major, minor, build) MAKE_EXE_VERSION_FULL(major, minor, build, 0)
 
 //NOTE(adm244): fallout 4 runtime versions
-#define F4_VERSION_1_10_26 MAKE_EXE_VERSION(1, 10, 26)
-#define F4_VERSION_1_10_40 MAKE_EXE_VERSION(1, 10, 40)
+//#define F4_VERSION_1_10_26 MAKE_EXE_VERSION(1, 10, 26)
+//#define F4_VERSION_1_10_40 MAKE_EXE_VERSION(1, 10, 40)
 
-#define F4_VERSION F4_VERSION_1_10_40
+//#define F4_VERSION F4_VERSION_1_10_40
+
+#define F4_VERSION_1_10_40
 
 #endif
