@@ -88,7 +88,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   HAZD 0x34 TESHazard
   BNDS 0x35
   SLGM 0x36
-  TERM 0x37
+  TERM 0x37 BGSTerminal(?)
   LVLI 0x38 TESLeveledItem
   WTHR 0x39 TESWeather
   CLMT 0x3A TESClimate
@@ -232,6 +232,10 @@ enum TESFlags {
 };
 
 #pragma pack(push, 1)
+
+struct BSInputEventReceiver {
+  void *vtable;
+};
 
 struct TESForm {
   void *vtable; // 0x00

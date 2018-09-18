@@ -124,9 +124,10 @@ internal _BSFixedString_Release BSFixedString_Release;
 // ------ #BSFixedString ------
 
 // ------ TESUI ------
-typedef bool (__fastcall *_TESUI_IsMenuOpen)(void *TESUIObject, BSFixedString **str);
+typedef bool (__fastcall *_Native_IsMenuOpen)
+(BSInputEventReceiver *inputEventReceiver, BSFixedString **str);
 
-internal _TESUI_IsMenuOpen TESUI_IsMenuOpen;
+internal _Native_IsMenuOpen Native_IsMenuOpen;
 // ------ #TESUI ------
 
 // ------ Utils ------
@@ -142,13 +143,15 @@ typedef void (__fastcall *_TESFillConsoleBackbufferVA)
 typedef void (__fastcall *_TESDisplayMessage)
 (char *message, int32 unk1, int32 unk2, bool unk3);
 
+//FIX(adm244): looks like this is actually FindFormByName
+// (it returns BGSMusicType as well)
 //NOTE(adm244): searches for an interior cell with specified cell name
 // cellName - an interior cell name to be found
 typedef TESCell * (__fastcall *_TESFindInteriorCellByName)
 (char *cellName);
 
 typedef TESWorldSpace * (__fastcall *_TESFindCellWorldSpaceByName)
-(void *unk0, char *cellName, unsigned int *cellX, unsigned int *cellY);
+(void *gameData, char *cellName, unsigned int *cellX, unsigned int *cellY);
 
 internal _TESFillConsoleBackbufferVA TESFillConsoleBackbufferVA;
 internal _TESDisplayMessage TESDisplayMessage;

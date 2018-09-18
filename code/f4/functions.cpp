@@ -287,10 +287,10 @@ internal inline bool IsMenuOpen(char *str)
 {
   bool result = false;
 
-  //BSFixedString bsString = {0};
+  //TODO(adm244): cache bsString
   BSFixedString *bsString;
   BSFixedString_Constructor(&bsString, str);
-  result = TESUI_IsMenuOpen(*((void **)TESUIObjectAddress), &bsString);
+  result = Native_IsMenuOpen(BSInputEventReceiverPtr, &bsString);
   BSFixedString_Release(&bsString);
   
   return result;

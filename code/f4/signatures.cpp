@@ -51,7 +51,7 @@ extern "C" {
   uint64 ProcessWindowAddress;
   uint64 Unk3ObjectAddress;
   uint64 TESConsoleObjectAddress;
-  uint64 TESUIObjectAddress;
+  BSInputEventReceiver *BSInputEventReceiverPtr;
   uint64 GlobalScriptStateAddress;
   uint64 PlayerReferenceAddress;
   uint64 GameDataAddress;
@@ -164,16 +164,18 @@ internal void InitTESConsole(uint64 memptr)
 
 internal void InitTESUI(uint64 memptr)
 {
-  TESUIObjectAddress = ParseMemoryAddress(memptr - 0x17A, 3);
-  assert(TESUIObjectAddress != 0);
+  BSInputEventReceiverPtr = (BSInputEventReceiver *)ParseMemoryAddress(memptr - 0x17A, 3);
+  assert((uint64)BSInputEventReceiverPtr != 0);
   
-  TESUI_IsMenuOpen = (_TESUI_IsMenuOpen)ParseMemoryAddress(memptr - 0x161, 1);
-  assert((uint64)TESUI_IsMenuOpen != 0);
+  Native_IsMenuOpen = (_Native_IsMenuOpen)ParseMemoryAddress(memptr - 0x161, 1);
+  assert((uint64)Native_IsMenuOpen != 0);
   
 #ifdef F4_VERSION_1_10_40
-  assert(TESUIObjectAddress - (uint64)gMainModule == 0x0590A918); //1_10_40
-  assert((uint64)TESUI_IsMenuOpen - (uint64)gMainModule == 0x020420E0); //1_10_40
+  assert((uint64)BSInputEventReceiverPtr - (uint64)gMainModule == 0x0590A918); //1_10_40
+  assert((uint64)Native_IsMenuOpen - (uint64)gMainModule == 0x020420E0); //1_10_40
 #endif
+  
+  BSInputEventReceiverPtr = *(BSInputEventReceiver **)BSInputEventReceiverPtr;
 }
 
 internal void InitBSFixedString(MODULEINFO *moduleInfo)
