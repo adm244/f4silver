@@ -37,15 +37,15 @@ OTHER DEALINGS IN THE SOFTWARE.
   TES4 0x01
   GRUP 0x02
   GMST 0x03
-  KYWD 0x04 TESKeyword???
-  LCRT 0x05
-  AACT 0x06
-  TRNS 0x07
+  KYWD 0x04 BGSKeyword
+  LCRT 0x05 BGSLocationRefType
+  AACT 0x06 BGSAction
+  TRNS 0x07 BGSTransform
   CMPO 0x08
   TXST 0x09
   MICN 0x0A
   GLOB 0x0B TESGlobalObject
-  DMGT 0x0C
+  DMGT 0x0C BGSDamageType
   CLAS 0x0D
   FACT 0x0E
   HDPT 0x0F
@@ -54,9 +54,9 @@ OTHER DEALINGS IN THE SOFTWARE.
   SOUN 0x12 TESSound
   ASPC 0x13 TESAcousticSpace
   SKIL 0x14
-  MGEF 0x15
-  SCPT 0x16 TESScript
-  LTEX 0x17
+  MGEF 0x15 EffectSetting(?)
+  SCPT 0x16 Script
+  LTEX 0x17 TESLandTexture
   ENCH 0x18
   SPEL 0x19
   SCRL 0x1A
@@ -92,13 +92,13 @@ OTHER DEALINGS IN THE SOFTWARE.
   LVLI 0x38 TESLeveledItem
   WTHR 0x39 TESWeather
   CLMT 0x3A TESClimate
-  SPGD 0x3B
-  RFCT 0x3C
+  SPGD 0x3B BGSShaderParticleGeometryData
+  RFCT 0x3C BGSReferenceEffect
   REGN 0x3D TESRegion
   NAVI 0x3E
-  CELL 0x3F TESCell
-  REFR 0x40 TESObjectReference
-  ACHR 0x41 TESActor
+  CELL 0x3F TESObjectCELL
+  REFR 0x40 TESObjectREFR
+  ACHR 0x41 Actor
   PMIS 0x42
   PARW 0x43
   PGRE 0x44
@@ -108,7 +108,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   PBAR 0x48
   PHZD 0x49
   WRLD 0x4A TESWorldSpace
-  LAND 0x4B TESLand
+  LAND 0x4B TESObjectLAND
   NAVM 0x4C TESNavMesh
   TLOD 0x4D
   DIAL 0x4E TESDialog
@@ -116,40 +116,40 @@ OTHER DEALINGS IN THE SOFTWARE.
   QUST 0x50 TESQuest
   IDLE 0x51
   PACK 0x52
-  CSTY 0x53
+  CSTY 0x53 TESCombatStyle
   LSCR 0x54
   LVSP 0x55
-  ANIO 0x56
-  WATR 0x57 TESWaterType
-  EFSH 0x58
+  ANIO 0x56 TESObjectANIO
+  WATR 0x57 TESWaterForm
+  EFSH 0x58 TESEffectShader
   TOFT 0x59
   EXPL 0x5A
-  DEBR 0x5B
-  IMGS 0x5C TESImageSpace(???)
-  IMAD 0x5D
+  DEBR 0x5B BGSDebris
+  IMGS 0x5C TESImageSpace
+  IMAD 0x5D TESImageSpaceModifier
   FLST 0x5E
   PERK 0x5F TESPerk
   BPTD 0x60
   ADDN 0x61
   AVIF 0x62 TESActorValueInfo
-  CAMS 0x63
-  CPTH 0x64
+  CAMS 0x63 BGSCameraShot
+  CPTH 0x64 BGSCameraPath
   VTYP 0x65
   MATT 0x66
   IPCT 0x67
   IPDS 0x68
   ARMA 0x69
-  ECZN 0x6A TESEncounterZone
-  LCTN 0x6B TESLocation
+  ECZN 0x6A BGSEncounterZone
+  LCTN 0x6B BGSLocation
   MESG 0x6C
   RGDL 0x6D
-  DOBJ 0x6E
-  DFOB 0x6F
-  LGTM 0x70 TESLightingTemplate
+  DOBJ 0x6E BGSDefaultObjectManager
+  DFOB 0x6F BGSDefaultObject
+  LGTM 0x70 BGSLightingTemplate
   MUSC 0x71 BGSMusicType
-  FSTP 0x72
-  FSTS 0x73
-  SMBN 0x74
+  FSTP 0x72 BGSFootstep
+  FSTS 0x73 BGSFootstepSet
+  SMBN 0x74 BGSStoryManagerBranchNode
   SMQN 0x75
   SMEN 0x76
   DLBR 0x77
@@ -161,37 +161,37 @@ OTHER DEALINGS IN THE SOFTWARE.
   RELA 0x7D
   SCEN 0x7E
   ASTP 0x7F
-  OTFT 0x80
+  OTFT 0x80 BGSOutfit
   ARTO 0x81
   MATO 0x82
-  MOVT 0x83
+  MOVT 0x83 BGSMovementType
   SNDR 0x84
   DUAL 0x85
   SNCT 0x86
   SOPM 0x87
-  COLL 0x88
-  CLFM 0x89
+  COLL 0x88 BGSCollisionLayer
+  CLFM 0x89 BGSColorForm
   REVB 0x8A
-  PKIN 0x8B
-  RFGP 0x8C
-  AMDL 0x8D
+  PKIN 0x8B BGSPackIn
+  RFGP 0x8C BGSReferenceGroup
+  AMDL 0x8D BGSAimModel
   LAYR 0x8E
-  COBJ 0x8F
-  OMOD 0x90
-  MSWP 0x91
-  ZOOM 0x92
-  INNR 0x93
-  KSSM 0x94
-  AECH 0x95
+  COBJ 0x8F BGSConstructibleObject
+  OMOD 0x90 Mod
+  MSWP 0x91 BGSMaterialSwap
+  ZOOM 0x92 BGSZoomData
+  INNR 0x93 BGSInstanceNamingRules
+  KSSM 0x94 BGSSoundKeywordMapping
+  AECH 0x95 BGSAudioEffectChain
   SCCO 0x96
-  AORU 0x97
-  SCSN 0x98
-  STAG 0x99
-  NOCM 0x9A
-  LENS 0x9B
+  AORU 0x97 BGSAttractionRule
+  SCSN 0x98 BGSSoundCategorySnapshot
+  STAG 0x99 BGSSoundTagSet
+  NOCM 0x9A NavMeshObstacleCoverManager
+  LENS 0x9B BGSLensFlare
   LSPR 0x9C
-  GDRY 0x9D
-  OVIS 0x9E
+  GDRY 0x9D BGSGodRays
+  OVIS 0x9E BGSObjectVisibilityManager
 */
 
 #ifndef _TYPES_H
