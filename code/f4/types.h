@@ -43,13 +43,13 @@ OTHER DEALINGS IN THE SOFTWARE.
   TRNS 0x07 BGSTransform
   CMPO 0x08
   TXST 0x09
-  MICN 0x0A
-  GLOB 0x0B TESGlobalObject
+  MICN 0x0A BGSMenuIcon
+  GLOB 0x0B TESGlobal
   DMGT 0x0C BGSDamageType
-  CLAS 0x0D
-  FACT 0x0E
-  HDPT 0x0F
-  EYES 0x10
+  CLAS 0x0D TESClass
+  FACT 0x0E TESFaction
+  HDPT 0x0F BGSHeadPart
+  EYES 0x10 TESEyes
   RACE 0x11 TESRace
   SOUN 0x12 TESSound
   ASPC 0x13 TESAcousticSpace
@@ -95,7 +95,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   SPGD 0x3B BGSShaderParticleGeometryData
   RFCT 0x3C BGSReferenceEffect
   REGN 0x3D TESRegion
-  NAVI 0x3E
+  NAVI 0x3E NavMeshInfoMap
   CELL 0x3F TESObjectCELL
   REFR 0x40 TESObjectREFR
   ACHR 0x41 Actor
@@ -109,15 +109,15 @@ OTHER DEALINGS IN THE SOFTWARE.
   PHZD 0x49
   WRLD 0x4A TESWorldSpace
   LAND 0x4B TESObjectLAND
-  NAVM 0x4C TESNavMesh
+  NAVM 0x4C NavMesh
   TLOD 0x4D
-  DIAL 0x4E TESDialog
-  INFO 0x4F
+  DIAL 0x4E TESTopic
+  INFO 0x4F TESTopicInfo
   QUST 0x50 TESQuest
-  IDLE 0x51
-  PACK 0x52
+  IDLE 0x51 TESIdleForm
+  PACK 0x52 TESPackage
   CSTY 0x53 TESCombatStyle
-  LSCR 0x54
+  LSCR 0x54 TESLoadScreen
   LVSP 0x55
   ANIO 0x56 TESObjectANIO
   WATR 0x57 TESWaterForm
@@ -127,21 +127,21 @@ OTHER DEALINGS IN THE SOFTWARE.
   DEBR 0x5B BGSDebris
   IMGS 0x5C TESImageSpace
   IMAD 0x5D TESImageSpaceModifier
-  FLST 0x5E
-  PERK 0x5F TESPerk
-  BPTD 0x60
+  FLST 0x5E BGSListForm
+  PERK 0x5F BGSPerk
+  BPTD 0x60 BGSBodyPartData
   ADDN 0x61
-  AVIF 0x62 TESActorValueInfo
+  AVIF 0x62 ActorValueInfo
   CAMS 0x63 BGSCameraShot
   CPTH 0x64 BGSCameraPath
-  VTYP 0x65
-  MATT 0x66
-  IPCT 0x67
-  IPDS 0x68
+  VTYP 0x65 BGSVoiceType
+  MATT 0x66 BGSMaterialType
+  IPCT 0x67 BGSImpactData
+  IPDS 0x68 BGSImpactDataSet
   ARMA 0x69
   ECZN 0x6A BGSEncounterZone
   LCTN 0x6B BGSLocation
-  MESG 0x6C
+  MESG 0x6C BGSMessage
   RGDL 0x6D
   DOBJ 0x6E BGSDefaultObjectManager
   DFOB 0x6F BGSDefaultObject
@@ -150,28 +150,28 @@ OTHER DEALINGS IN THE SOFTWARE.
   FSTP 0x72 BGSFootstep
   FSTS 0x73 BGSFootstepSet
   SMBN 0x74 BGSStoryManagerBranchNode
-  SMQN 0x75
-  SMEN 0x76
-  DLBR 0x77
-  MUST 0x78
+  SMQN 0x75 BGSStoryManagerQuestNode
+  SMEN 0x76 BGSStoryManagerEventNode
+  DLBR 0x77 BGSDialogueBranch
+  MUST 0x78 BGSMusicTrackFormWrapper
   DLVW 0x79
-  WOOP 0x7A
-  SHOU 0x7B
-  EQUP 0x7C
-  RELA 0x7D
-  SCEN 0x7E
-  ASTP 0x7F
+  WOOP 0x7A TESWordOfPower
+  SHOU 0x7B TESShout
+  EQUP 0x7C BGSEquipSlot
+  RELA 0x7D BGSRelationship
+  SCEN 0x7E BGSScene
+  ASTP 0x7F BGSAssociationType
   OTFT 0x80 BGSOutfit
   ARTO 0x81
-  MATO 0x82
+  MATO 0x82 BGSMaterialObject
   MOVT 0x83 BGSMovementType
-  SNDR 0x84
+  SNDR 0x84 BGSSoundDescriptorForm
   DUAL 0x85
-  SNCT 0x86
-  SOPM 0x87
+  SNCT 0x86 BGSSoundCategory
+  SOPM 0x87 BGSSoundOutput
   COLL 0x88 BGSCollisionLayer
   CLFM 0x89 BGSColorForm
-  REVB 0x8A
+  REVB 0x8A BGSReverbParameters
   PKIN 0x8B BGSPackIn
   RFGP 0x8C BGSReferenceGroup
   AMDL 0x8D BGSAimModel
