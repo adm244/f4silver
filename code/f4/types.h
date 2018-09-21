@@ -41,8 +41,8 @@ OTHER DEALINGS IN THE SOFTWARE.
   LCRT 0x05 BGSLocationRefType
   AACT 0x06 BGSAction
   TRNS 0x07 BGSTransform
-  CMPO 0x08
-  TXST 0x09
+  CMPO 0x08 BGSComponent
+  TXST 0x09 BGSTextureSet
   MICN 0x0A BGSMenuIcon
   GLOB 0x0B TESGlobal
   DMGT 0x0C BGSDamageType
@@ -52,63 +52,63 @@ OTHER DEALINGS IN THE SOFTWARE.
   EYES 0x10 TESEyes
   RACE 0x11 TESRace
   SOUN 0x12 TESSound
-  ASPC 0x13 TESAcousticSpace
+  ASPC 0x13 BGSAcousticSpace
   SKIL 0x14
-  MGEF 0x15 EffectSetting(?)
+  MGEF 0x15 EffectSetting
   SCPT 0x16 Script
   LTEX 0x17 TESLandTexture
-  ENCH 0x18
-  SPEL 0x19
-  SCRL 0x1A
-  ACTI 0x1B TESActivator
-  TACT 0x1C
-  ARMO 0x1D TESArmor
-  BOOK 0x1E
-  CONT 0x1F
-  DOOR 0x20
-  INGR 0x21
-  LIGH 0x22 TESLight
-  MISC 0x23
-  STAT 0x24
-  SCOL 0x25
-  MSTT 0x26
-  GRAS 0x27
-  TREE 0x28
-  FLOR 0x29
-  FURN 0x2A
-  WEAP 0x2B TESWeapon
+  ENCH 0x18 EnchantmentItem
+  SPEL 0x19 SpellItem
+  SCRL 0x1A ScrollItem
+  ACTI 0x1B TESObjectACTI (activator)
+  TACT 0x1C BGSTalkingActivator
+  ARMO 0x1D TESObjectARMO (armor)
+  BOOK 0x1E TESObjectBOOK (book)
+  CONT 0x1F TESObjectCONT (container?)
+  DOOR 0x20 TESObjectDOOR (door?)
+  INGR 0x21 IngredientItem
+  LIGH 0x22 TESObjectLIGH (light)
+  MISC 0x23 TESObjectMISC (miscellaneous)
+  STAT 0x24 TESObjectSTAT
+  SCOL 0x25 BGSStaticCollection
+  MSTT 0x26 BGSMovableStatic
+  GRAS 0x27 TESGrass
+  TREE 0x28 TESObjectTREE (tree)
+  FLOR 0x29 TESFlora
+  FURN 0x2A TESFurniture
+  WEAP 0x2B TESObjectWEAP (weapon)
   AMMO 0x2C TESAmmo
-  NPC_ 0x2D TESActor
-  LVLN 0x2E
-  KEYM 0x2F
-  ALCH 0x30
-  IDLM 0x31
-  NOTE 0x32
-  PROJ 0x33 TESProjectile
-  HAZD 0x34 TESHazard
-  BNDS 0x35
-  SLGM 0x36
-  TERM 0x37 BGSTerminal(?)
-  LVLI 0x38 TESLeveledItem
+  NPC_ 0x2D TESNPC
+  LVLN 0x2E TESLevCharacter
+  KEYM 0x2F TESKey
+  ALCH 0x30 AlchemyItem (0x1E0)
+  IDLM 0x31 BGSIdleMarker
+  NOTE 0x32 BGSNote
+  PROJ 0x33 BGSProjectile
+  HAZD 0x34 BGSHazard
+  BNDS 0x35 BGSBendableSpline
+  SLGM 0x36 TESSoulGem
+  TERM 0x37 BGSTerminal
+  LVLI 0x38 TESLevItem (leveled item)
   WTHR 0x39 TESWeather
   CLMT 0x3A TESClimate
   SPGD 0x3B BGSShaderParticleGeometryData
   RFCT 0x3C BGSReferenceEffect
   REGN 0x3D TESRegion
   NAVI 0x3E NavMeshInfoMap
-  CELL 0x3F TESObjectCELL
-  REFR 0x40 TESObjectREFR
-  ACHR 0x41 Actor
-  PMIS 0x42
-  PARW 0x43
-  PGRE 0x44
-  PBEA 0x45
-  PFLA 0x46
-  PCON 0x47
-  PBAR 0x48
-  PHZD 0x49
+  CELL 0x3F TESObjectCELL (cell)
+  REFR 0x40 TESObjectREFR (reference)
+  ACHR 0x41 Actor (0x490)
+  PMIS 0x42 MissileProjectile
+  PARW 0x43 ArrowProjectile
+  PGRE 0x44 GrenadeProjectile
+  PBEA 0x45 BeamProjectile
+  PFLA 0x46 FlameProjectile
+  PCON 0x47 ConeProjectile
+  PBAR 0x48 BarrierProjectile
+  PHZD 0x49 Hazard
   WRLD 0x4A TESWorldSpace
-  LAND 0x4B TESObjectLAND
+  LAND 0x4B TESObjectLAND (landscape)
   NAVM 0x4C NavMesh
   TLOD 0x4D
   DIAL 0x4E TESTopic
@@ -118,19 +118,19 @@ OTHER DEALINGS IN THE SOFTWARE.
   PACK 0x52 TESPackage
   CSTY 0x53 TESCombatStyle
   LSCR 0x54 TESLoadScreen
-  LVSP 0x55
+  LVSP 0x55 TESLevSpell
   ANIO 0x56 TESObjectANIO
   WATR 0x57 TESWaterForm
   EFSH 0x58 TESEffectShader
   TOFT 0x59
-  EXPL 0x5A
+  EXPL 0x5A BGSExplosion
   DEBR 0x5B BGSDebris
   IMGS 0x5C TESImageSpace
   IMAD 0x5D TESImageSpaceModifier
   FLST 0x5E BGSListForm
   PERK 0x5F BGSPerk
   BPTD 0x60 BGSBodyPartData
-  ADDN 0x61
+  ADDN 0x61 BGSAddonNode
   AVIF 0x62 ActorValueInfo
   CAMS 0x63 BGSCameraShot
   CPTH 0x64 BGSCameraPath
@@ -138,7 +138,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   MATT 0x66 BGSMaterialType
   IPCT 0x67 BGSImpactData
   IPDS 0x68 BGSImpactDataSet
-  ARMA 0x69
+  ARMA 0x69 TESObjectARMA
   ECZN 0x6A BGSEncounterZone
   LCTN 0x6B BGSLocation
   MESG 0x6C BGSMessage
@@ -162,11 +162,11 @@ OTHER DEALINGS IN THE SOFTWARE.
   SCEN 0x7E BGSScene
   ASTP 0x7F BGSAssociationType
   OTFT 0x80 BGSOutfit
-  ARTO 0x81
+  ARTO 0x81 BGSArtObject
   MATO 0x82 BGSMaterialObject
   MOVT 0x83 BGSMovementType
   SNDR 0x84 BGSSoundDescriptorForm
-  DUAL 0x85
+  DUAL 0x85 BGSDualCastData
   SNCT 0x86 BGSSoundCategory
   SOPM 0x87 BGSSoundOutput
   COLL 0x88 BGSCollisionLayer
@@ -189,7 +189,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   STAG 0x99 BGSSoundTagSet
   NOCM 0x9A NavMeshObstacleCoverManager
   LENS 0x9B BGSLensFlare
-  LSPR 0x9C
+  LSPR 0x9C 
   GDRY 0x9D BGSGodRays
   OVIS 0x9E BGSObjectVisibilityManager
 */
@@ -373,7 +373,7 @@ struct TESRegion {
   uint64 unk40;
   uint32 unk48;
   uint32 unk4C;
-  float unk50;
+  real32 unk50;
   uint32 unk54;
 }; // 88 bytes (0x58)
 
@@ -574,9 +574,9 @@ struct TESCell {
 };
 
 struct Vector3 {
-  float x; // 0x0
-  float y; // 0x4
-  float z; // 0x8
+  real32 x; // 0x0
+  real32 y; // 0x4
+  real32 z; // 0x8
 }; // 13 bytes (0xC)
 
 struct TESObjectReference {
