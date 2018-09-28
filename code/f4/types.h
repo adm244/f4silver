@@ -212,6 +212,50 @@ enum FormTypes {
   FormType_MusicType = 0x71,
 };
 
+enum ExtraDataTypes {
+  ExtraDataType_InitActions = 0x16,
+  ExtraDataType_PackageStartLocation = 0x18,
+  ExtraDataType_TresPassPackage = 0x1A,
+  ExtraDataType_ReferenceHandles = 0x1C,
+  ExtraDataType_LevCreaModifier = 0x1E,
+  ExtraDataType_Ghost = 0x1F,
+  ExtraDataType_Global = 0x22,
+  ExtraDataType_Rank = 0x23,
+  ExtraDataType_Count = 0x24,
+  ExtraDataType_Health = 0x25,
+  ExtraDataType_RangedDistOverride = 0x26,
+  ExtraDataType_TimeLeft = 0x27,
+  ExtraDataType_Charge = 0x28,
+  ExtraDataType_LeveledItem = 0x2E,
+  ExtraDataType_Scale = 0x2F,
+  ExtraDataType_ItemDropper = 0x38,
+  ExtraDataType_Poison = 0x3E,
+  ExtraDataType_HeadingTarget = 0x45,
+  ExtraDataType_StartingWorldOrCell = 0x48,
+  ExtraDataType_Favorite = 0x49,
+  ExtraDataType_HasNoRumors = 0x4D,
+  ExtraDataType_LinkedRef = 0x50,
+  ExtraDataType_CanTalkToPlayer = 0x54,
+  ExtraDataType_ObjectHealth = 0x55,
+  ExtraDataType_Radius = 0x59,
+  ExtraDataType_ActorCause = 0x5D,
+  ExtraDataType_CombatStyle = 0x65,
+  ExtraDataType_OpenCloseActivateRef = 0x68,
+  ExtraDataType_Ammo = 0x6A,
+  ExtraDataType_PackageData = 0x6C,
+  ExtraDataType_EncounterZone = 0x70,
+  ExtraDataType_CreatureAwakeSound = 0x79,
+  ExtraDataType_AliasInstanceArray = 0x88,
+  ExtraDataType_Location = 0x89,
+  ExtraDataType_OutfitItem = 0x8E,
+  ExtraDataType_SceneData = 0x92,
+  ExtraDataType_Enchantment = 0x9B,
+  ExtraDataType_UniqueID = 0x9F,
+  ExtraDataType_Flags = 0xA0,
+  ExtraDataType_RefrPath = 0xA1,
+  ExtraDataType_ModRank = 0xC9,
+};
+
 enum TESFlags {
   // (1 << 0) = ???
   FLAG_TESForm_Default = (1 << 3),
@@ -232,6 +276,16 @@ enum TESFlags {
 };
 
 #pragma pack(push, 1)
+
+struct BSExtraData {
+  void *vtable;
+  BSExtraData *next;
+  uint16 unk10;
+  uint16 type; // 0x12
+  uint32 unk14;
+  real32 value; // 0x18
+  uint32 unk1C;
+}; // 32 bytes (0x20)
 
 struct BSInputEventReceiver {
   void *vtable;
@@ -579,6 +633,15 @@ struct Vector3 {
   real32 z; // 0x8
 }; // 13 bytes (0xC)
 
+struct ExtraDataUnk {
+  uint32 unk00;
+  uint32 unk04;
+  BSExtraData *extraData; // 0x08
+  uint64 unk10;
+  uint64 unk18;
+  void *unk20;
+};
+
 struct TESObjectReference {
   TESForm tesForm;
   
@@ -612,11 +675,11 @@ struct TESObjectReference {
   uint8 padCC[4];
   Vector3 position; // 0xD0
   uint8 padDC[4];
-  TESForm *baseForm; // E0
+  TESForm *baseForm; // 0xE0
   uint64 unkE8;
   uint64 unkF0;
   uint64 unkF8;
-  void *unk100;
+  ExtraDataUnk *extraDataUnk; // 0x100
   uint16 unk108;
   uint16 unk10A;
   uint32 pad10C;
