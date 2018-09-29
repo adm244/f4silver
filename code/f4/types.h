@@ -642,6 +642,48 @@ struct ExtraDataUnk {
   void *unk20;
 };
 
+struct InventoryStack {
+  uint64 unk00;
+  uint64 unk08;
+  InventoryStack *next; // 0x10
+  uint64 unk18;
+  int32 count; // 0x20
+  uint32 unk24;
+  // ...?
+};
+
+struct InventoryUnk {
+  TESForm *item; // 0x00
+  InventoryStack *stack; // 0x08
+}; // 16 bytes (0x10)
+
+struct Inventory {
+  uint64 unk00;
+  uint64 unk08;
+  uint32 unk10;
+  uint32 unk14;
+  uint32 unk18;
+  uint32 unk1C;
+  uint64 unk20;
+  uint64 unk28;
+  uint64 unk30;
+  uint64 unk38;
+  uint64 unk40;
+  uint64 unk48;
+  uint64 unk50;
+  InventoryUnk *items; // 0x58
+  uint32 unk60;
+  uint32 unk64;
+  int32 itemsCount; // 0x68
+  uint32 unk6C;
+  real32 weight; // 0x70
+  uint16 unk74;
+  uint16 unk76;
+  int32 threadId; // 0x78
+  uint32 unk7C;
+  // ...?
+};
+
 struct TESObjectReference {
   TESForm tesForm;
   
@@ -678,7 +720,7 @@ struct TESObjectReference {
   TESForm *baseForm; // 0xE0
   uint64 unkE8;
   uint64 unkF0;
-  uint64 unkF8;
+  Inventory *inventory; // 0xF8
   ExtraDataUnk *extraDataUnk; // 0x100
   uint16 unk108;
   uint16 unk10A;
