@@ -290,7 +290,7 @@ internal inline bool IsMenuOpen(char *str)
   //TODO(adm244): cache bsString
   BSFixedString *bsString;
   BSFixedString_Constructor(&bsString, str);
-  result = Native_IsMenuOpen(BSInputEventReceiverPtr, &bsString);
+  result = Native_IsMenuOpen(*BSInputEventReceiverPtr, &bsString);
   BSFixedString_Release(&bsString);
   
   return result;

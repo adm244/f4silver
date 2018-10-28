@@ -51,7 +51,7 @@ extern "C" {
   uint64 ProcessWindowAddress;
   uint64 Unk3ObjectAddress;
   uint64 TESConsoleObjectAddress;
-  BSInputEventReceiver *BSInputEventReceiverPtr;
+  BSInputEventReceiver **BSInputEventReceiverPtr;
   uint64 GlobalScriptStateAddress;
   uint64 PlayerReferenceAddress;
   uint64 GameDataAddress;
@@ -142,6 +142,28 @@ internal void InitHooks(MODULEINFO *moduleInfo)
 #endif
 }
 
+/*internal void InitPatches(MODULEINFO *moduleInfo)
+{
+  uint64 memptr = FindSignature(moduleInfo,
+    "\x33\xC9\x0F\xC6\xCA\xAA\x0F\xC6\xD2\xFF",
+    "xxxxxxxxxx", 0x16);
+  assert(memptr != 0);
+
+  uint64 func_randomint = ParseMemoryAddress(memptr, 1);
+  assert(func_randomint != 0);
+  
+  uint64 func_randomfloat = ParseMemoryAddress(memptr - 0x4CD, 1);
+  assert(func_randomfloat != 0);
+  
+#ifdef F4_VERSION_1_10_40
+  assert(func_randomint - (uint64)gMainModule == 0x01B12780); //1_10_40
+  assert(func_randomfloat - (uint64)gMainModule == 0x01B127F0); //1_10_40
+#endif
+  
+  //ReplaceFunction(func_randomint, (uint64)RandomInt);
+  //ReplaceFunction(func_randomfloat, (uint64)RandomDouble);
+}*/
+
 internal void InitTESConsole(uint64 memptr)
 {
   TESConsoleObjectAddress = ParseMemoryAddress(memptr + 0x1A, 3);
@@ -164,7 +186,7 @@ internal void InitTESConsole(uint64 memptr)
 
 internal void InitTESUI(uint64 memptr)
 {
-  BSInputEventReceiverPtr = (BSInputEventReceiver *)ParseMemoryAddress(memptr - 0x17A, 3);
+  BSInputEventReceiverPtr = (BSInputEventReceiver **)ParseMemoryAddress(memptr - 0x17A, 3);
   assert((uint64)BSInputEventReceiverPtr != 0);
   
   Native_IsMenuOpen = (_Native_IsMenuOpen)ParseMemoryAddress(memptr - 0x161, 1);
@@ -175,7 +197,8 @@ internal void InitTESUI(uint64 memptr)
   assert((uint64)Native_IsMenuOpen - (uint64)gMainModule == 0x020420E0); //1_10_40
 #endif
   
-  BSInputEventReceiverPtr = *(BSInputEventReceiver **)BSInputEventReceiverPtr;
+  /*BSInputEventReceiverPtr = *(BSInputEventReceiver **)BSInputEventReceiverPtr;
+  assert((uint64)BSInputEventReceiverPtr != 0);*/
 }
 
 internal void InitBSFixedString(MODULEINFO *moduleInfo)
@@ -335,6 +358,7 @@ internal void InitSignatures()
   assert(memptr != 0);
   
   InitHooks(&gMainModuleInfo);
+  //InitPatches(&gMainModuleInfo);
   
   InitTESConsole(memptr);
   InitTESUI(memptr);
