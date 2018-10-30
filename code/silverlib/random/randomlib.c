@@ -109,28 +109,35 @@ internal void RandomInitialize(int ij, int kl)
 */
 internal double RandomUniform(void)
 {
-  double uni;
+  double uni = 0.0;
 
-  /* Make sure the initialisation routine has been called */
-  if (!test)
-    RandomInitialize(1802,9373);
+  //TODO(adm244): rewrite random library, so it's thread-safe
+  // and can handle multiple random sequences simultaneously
+  DWORD mutexState = WaitForSingleObject(gMutexRandom, INFINITE);
+  if (mutexState == WAIT_OBJECT_0) {
+    /* Make sure the initialisation routine has been called */
+    if (!test)
+      RandomInitialize(1802,9373);
 
-  uni = u[i97-1] - u[j97-1];
-  if (uni <= 0.0)
-    uni++;
-  u[i97-1] = uni;
-  i97--;
-  if (i97 == 0)
-    i97 = 97;
-  j97--;
-  if (j97 == 0)
-    j97 = 97;
-  c -= cd;
-  if (c < 0.0)
-    c += cm;
-  uni -= c;
-  if (uni < 0.0)
-    uni++;
+    uni = u[i97-1] - u[j97-1];
+    if (uni <= 0.0)
+      uni++;
+    u[i97-1] = uni;
+    i97--;
+    if (i97 == 0)
+      i97 = 97;
+    j97--;
+    if (j97 == 0)
+      j97 = 97;
+    c -= cd;
+    if (c < 0.0)
+      c += cm;
+    uni -= c;
+    if (uni < 0.0)
+      uni++;
+  
+    ReleaseMutex(gMutexRandom);
+  }
 
   return(uni);
 }
@@ -195,6 +202,11 @@ internal int RandomInt(int lower, int upper)
 internal double RandomDouble(double lower, double upper)
 {
   return((upper - lower) * RandomUniform() + lower);
+}
+
+internal float RandomFloat(float min, float max)
+{
+  return((max - min) * (float)RandomUniform() + min);
 }
 
 #endif

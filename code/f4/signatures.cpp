@@ -142,7 +142,17 @@ internal void InitHooks(MODULEINFO *moduleInfo)
 #endif
 }
 
-/*internal void InitPatches(MODULEINFO *moduleInfo)
+internal int DEBUGRandomInt(int min, int max)
+{
+  return RandomInt(min, max - 1);
+}
+
+/*internal double DEBUGRandomFloat(double min, double max)
+{
+  return min;
+}*/
+
+internal void InitPatches(MODULEINFO *moduleInfo)
 {
   uint64 memptr = FindSignature(moduleInfo,
     "\x33\xC9\x0F\xC6\xCA\xAA\x0F\xC6\xD2\xFF",
@@ -160,9 +170,9 @@ internal void InitHooks(MODULEINFO *moduleInfo)
   assert(func_randomfloat - (uint64)gMainModule == 0x01B127F0); //1_10_40
 #endif
   
-  //ReplaceFunction(func_randomint, (uint64)RandomInt);
-  //ReplaceFunction(func_randomfloat, (uint64)RandomDouble);
-}*/
+  WriteBranch(func_randomint, (uint64)DEBUGRandomInt);
+  WriteBranch(func_randomfloat, (uint64)RandomFloat);
+}
 
 internal void InitTESConsole(uint64 memptr)
 {
@@ -196,9 +206,6 @@ internal void InitTESUI(uint64 memptr)
   assert((uint64)BSInputEventReceiverPtr - (uint64)gMainModule == 0x0590A918); //1_10_40
   assert((uint64)Native_IsMenuOpen - (uint64)gMainModule == 0x020420E0); //1_10_40
 #endif
-  
-  /*BSInputEventReceiverPtr = *(BSInputEventReceiver **)BSInputEventReceiverPtr;
-  assert((uint64)BSInputEventReceiverPtr != 0);*/
 }
 
 internal void InitBSFixedString(MODULEINFO *moduleInfo)
@@ -358,7 +365,7 @@ internal void InitSignatures()
   assert(memptr != 0);
   
   InitHooks(&gMainModuleInfo);
-  //InitPatches(&gMainModuleInfo);
+  InitPatches(&gMainModuleInfo);
   
   InitTESConsole(memptr);
   InitTESUI(memptr);

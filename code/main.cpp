@@ -89,6 +89,10 @@ internal HMODULE f4silver = 0;
 internal bool IsInterior = 0;
 internal bool ActualGameplay = false;
 
+internal HANDLE gMutexRandom = 0;
+
+#include "silverlib/random/functions.c"
+
 #include "f4/version.h"
 #include "f4/functions.cpp"
 
@@ -99,7 +103,6 @@ internal bool ActualGameplay = false;
 #define MAX_BATCHES 50
 
 #include "silverlib/config.cpp"
-#include "silverlib/random/functions.c"
 #include "silverlib/batch_processor.cpp"
 
 internal bool Initialized = false;
@@ -401,6 +404,10 @@ internal void HookLoadGame()
 
 internal void Initialize(HMODULE module)
 {
+  //TODO(adm244): mutex pool?
+  gMutexRandom = CreateMutexA(0, FALSE, 0);
+  assert(gMutexRandom != 0);
+  
   //DefineAddresses();
   //ShiftAddresses();
   InitSignatures();
