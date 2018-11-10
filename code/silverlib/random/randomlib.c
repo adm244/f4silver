@@ -197,6 +197,14 @@ internal int RandomInt(int lower, int upper)
 }
 
 /*
+  Return random integer within a range, min -> (max - 1)
+*/
+internal int RandomIntExclusive(int min, int max)
+{
+  return((int)(RandomUniform() * (max - min)) + min);
+}
+
+/*
   Return random float within a range, lower -> upper
 */
 internal double RandomDouble(double lower, double upper)

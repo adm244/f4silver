@@ -142,16 +142,6 @@ internal void InitHooks(MODULEINFO *moduleInfo)
 #endif
 }
 
-internal int DEBUGRandomInt(int min, int max)
-{
-  return RandomInt(min, max - 1);
-}
-
-/*internal double DEBUGRandomFloat(double min, double max)
-{
-  return min;
-}*/
-
 internal void InitPatches(MODULEINFO *moduleInfo)
 {
   uint64 memptr = FindSignature(moduleInfo,
@@ -170,7 +160,7 @@ internal void InitPatches(MODULEINFO *moduleInfo)
   assert(func_randomfloat - (uint64)gMainModule == 0x01B127F0); //1_10_40
 #endif
   
-  WriteBranch(func_randomint, (uint64)DEBUGRandomInt);
+  WriteBranch(func_randomint, (uint64)RandomIntExclusive);
   WriteBranch(func_randomfloat, (uint64)RandomFloat);
 }
 
