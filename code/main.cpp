@@ -292,45 +292,60 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
   }
 }
 
+#define SWITCH_STATE_NORMAL 0
+#define SWITCH_STATE_CHANGED 1
+#define SWITCH_STATE_WAIT 2
+#define SKIP_FRAMES 30
+
 internal bool IsActivationPaused()
 {
-  return (Settings.IgnoreInDialogue && IsPlayerInDialogue())
+  static uint8 switch_state = SWITCH_STATE_NORMAL;
+  static bool state_before_change = false;
+  static uint frames = 0;
+  
+  bool state = (Settings.IgnoreInDialogue && IsPlayerInDialogue())
       || (Settings.IgnoreInMenu && IsInMenuMode())
-      || (Settings.IgnoreInVATS && IsMenuOpen("VATSMenu")
-      || (Settings.IgnoreIfPlayerIsDead && IsActorDead((TESActor *)TES_GetPlayer())));
-}
+      || (Settings.IgnoreInVATS && IsMenuOpen("VATSMenu"))
+      || (Settings.IgnoreIfPlayerIsDead && IsActorDead((TESActor *)TES_GetPlayer()));
 
-//#define SIGTEST
+  switch (switch_state) {
+    case SWITCH_STATE_NORMAL: {
+      //NOTE(adm244): track state change only when leaving paused mode
+      if ((!state) && (state != state_before_change)) {
+        switch_state = SWITCH_STATE_CHANGED;
+      } else {
+        state_before_change = state;
+      }
+    } break;
+    
+    case SWITCH_STATE_CHANGED: {
+      //DisplayMessage("CHANGED state");
+      
+      frames = 0;
+      switch_state = SWITCH_STATE_WAIT;
+    } break;
+    
+    case SWITCH_STATE_WAIT: {
+      //DisplayMessage("WAIT state");
+      
+      //TODO(adm244): if state changes while in the wait state, then go to changed again
+      if (frames >= SKIP_FRAMES) {
+        //DisplayMessage("back to NORMAL state");
+        
+        switch_state = SWITCH_STATE_NORMAL;
+        state_before_change = state;
+        return state;
+      } else {
+        ++frames;
+      }
+    } break;
+  }
+  
+  return state_before_change;
+}
 
 extern "C" void GameLoop()
 {
-#ifdef SIGTEST
-  if (!Initialized) {
-    MessageBoxA(0, "Injection is successfull!", "InjectDLL", MB_OK);
-    
-    Initialized = true;
-  }
-  
-  if (IsActivated(&CommandRandom)) {
-    /*bool isPlayerDead = IsActorDead((TESActor *)TES_GetPlayer());
-    TESConsolePrint("Player is %s\n", isPlayerDead ? "dead" : "NOT dead");
-    
-    bool isVATSOpen = IsMenuOpen("VATSMenu");
-    TESConsolePrint("VATS menu is %s\n", isVATSOpen ? "opened" : "closed");
-    
-    TES_ExecuteScriptLine("tgm");*/
-    
-    /*int value = 123;
-    char *testStr = "Hello, World!";
-    TESConsolePrint("This is a test message. %d %s", value, testStr);*/
-    
-    bool isConsoleOpen = IsMenuOpen("Console");
-    TESConsolePrint("Console is %s", isConsoleOpen ? "opened" : "closed");
-    
-    //TODO(adm244): RE TESScript::Compile function and check if it works
-    TES_ExecuteScriptLine("twf");
-  }
-#else
   if( !Initialized ) {
     QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
     CloseHandle(QueueHandle);
@@ -378,7 +393,6 @@ extern "C" void GameLoop()
       ProcessQueue(&BatchQueue, true);
     }
   }
-#endif
 }
 
 extern "C" void LoadGameBegin(char *filename)
