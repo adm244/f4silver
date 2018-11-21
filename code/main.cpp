@@ -328,15 +328,18 @@ internal bool IsActivationPaused()
     case SWITCH_STATE_WAIT: {
       //DisplayMessage("WAIT state");
       
-      //TODO(adm244): if state changes while in the wait state, then go to changed again
-      if (frames >= SKIP_FRAMES) {
-        //DisplayMessage("back to NORMAL state");
-        
+      if ((state == state_before_change) && (state_before_change)) {
         switch_state = SWITCH_STATE_NORMAL;
-        state_before_change = state;
-        return state;
       } else {
-        ++frames;
+        if (frames >= SKIP_FRAMES) {
+          //DisplayMessage("back to NORMAL state");
+          
+          switch_state = SWITCH_STATE_NORMAL;
+          state_before_change = state;
+          return state;
+        } else {
+          ++frames;
+        }
       }
     } break;
   }
