@@ -46,4 +46,6 @@ typedef double real64;
 typedef long long pointer;
 typedef unsigned int uint;
 
+typedef uint32 bool32;
+
 #endif

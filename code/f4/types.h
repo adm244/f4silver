@@ -226,6 +226,7 @@ enum ExtraDataTypes {
   ExtraDataType_RangedDistOverride = 0x26,
   ExtraDataType_TimeLeft = 0x27,
   ExtraDataType_Charge = 0x28,
+  ExtraDataType_Lock = 0x2A,
   ExtraDataType_LeveledItem = 0x2E,
   ExtraDataType_Scale = 0x2F,
   ExtraDataType_ItemDropper = 0x38,
@@ -253,6 +254,7 @@ enum ExtraDataTypes {
   ExtraDataType_UniqueID = 0x9F,
   ExtraDataType_Flags = 0xA0,
   ExtraDataType_RefrPath = 0xA1,
+  ExtraDataType_PowerArmor = 0xBB,
   ExtraDataType_ModRank = 0xC9,
 };
 
@@ -260,7 +262,12 @@ enum TESFlags {
   // (1 << 0) = ???
   FLAG_TESForm_Default = (1 << 3),
   FLAG_TESForm_IsDeleted = (1 << 5),
+  //TODO(adm244): rename to TESRegion
+  //TODO(adm244): confirm that (1 << 6) is PLAYER_KNOWS flag
   FLAG_TESForm_IsBorderRegion = (1 << 6),
+  //TODO(adm244): confirm these
+  //FLAG_TESForm_Persistent = (1 << 10),
+  //FLAG_TESForm_IsDisabled = (1 << 11),
   // (1 << 13) = ???
   // (1 << 15) = ???
   FLAG_TESForm_IsPersistent = (1 << 16),
@@ -275,16 +282,41 @@ enum TESFlags {
   FLAG_TESActor_IsInDialogue = (1 << 3),
 };
 
+enum ExtraLockFlags {
+  FLAG_ExtraLock_IsLocked = (1 << 0),
+  FLAG_ExtraLock_NoMultiplier = (1 << 2),
+};
+
 #pragma pack(push, 1)
 
 struct BSExtraData {
-  void *vtable;
-  BSExtraData *next;
+  void *vtable; // 0x0
+  BSExtraData *next; // 0x8
   uint16 unk10;
   uint16 type; // 0x12
   uint32 unk14;
+}; // 24 bytes (0x18)
+
+struct ExtraHealth {
+  BSExtraData base; // 0x0
+
   real32 value; // 0x18
   uint32 unk1C;
+}; // 32 bytes (0x20)
+
+struct ExtraLockData {
+  uint8 level; // 0x0
+  uint8 pad01[7]; // 0x1
+  uint64 unk08;
+  uint8 flags; // 0x10
+  uint8 pad11[3]; // 0x11
+  bool32 isBroken; // 0x14
+}; // 24 bytes (0x18)
+
+struct ExtraLock {
+  BSExtraData base; // 0x0
+
+  ExtraLockData *data; // 0x18
 }; // 32 bytes (0x20)
 
 struct BSInputEventReceiver {
@@ -633,14 +665,14 @@ struct Vector3 {
   real32 z; // 0x8
 }; // 13 bytes (0xC)
 
-struct ExtraDataUnk {
+struct ExtraDataList {
   uint32 unk00;
   uint32 unk04;
   BSExtraData *extraData; // 0x08
   uint64 unk10;
   uint64 unk18;
-  void *unk20;
-};
+  void *lock; // 0x20
+}; // 40 bytes (0x28)
 
 struct InventoryStack {
   uint64 unk00;
@@ -684,6 +716,7 @@ struct Inventory {
   // ...?
 };
 
+//TODO(adm244): rename to match the bethesda's naming
 struct TESObjectReference {
   TESForm tesForm;
   
@@ -721,7 +754,7 @@ struct TESObjectReference {
   uint64 unkE8;
   uint64 unkF0;
   Inventory *inventory; // 0xF8
-  ExtraDataUnk *extraDataUnk; // 0x100
+  ExtraDataList *extraDataList; // 0x100
   uint16 unk108;
   uint16 unk10A;
   uint32 pad10C;
