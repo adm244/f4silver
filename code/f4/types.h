@@ -319,6 +319,20 @@ struct ExtraLock {
   ExtraLockData *data; // 0x18
 }; // 32 bytes (0x20)
 
+struct BSReadWriteLock {
+  int32 threadID;
+  int32 value;
+};
+
+struct ExtraDataList {
+  uint32 unk00;
+  uint32 unk04;
+  BSExtraData *extraData; // 0x08
+  uint64 unk10;
+  uint64 unk18;
+  BSReadWriteLock lock; // 0x20
+}; // 40 bytes (0x28)
+
 struct BSInputEventReceiver {
   void *vtable;
 };
@@ -664,15 +678,6 @@ struct Vector3 {
   real32 y; // 0x4
   real32 z; // 0x8
 }; // 13 bytes (0xC)
-
-struct ExtraDataList {
-  uint32 unk00;
-  uint32 unk04;
-  BSExtraData *extraData; // 0x08
-  uint64 unk10;
-  uint64 unk18;
-  void *lock; // 0x20
-}; // 40 bytes (0x28)
 
 struct InventoryStack {
   uint64 unk00;

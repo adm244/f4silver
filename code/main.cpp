@@ -413,11 +413,45 @@ extern "C" void LoadGameEnd()
 extern "C" void HackingPrepare()
 {
   TESConsolePrint("Terminal Hacking Entered");
+  
+  ExtraDataList *extrasList = (*gActiveTerminalREFR)->extraDataList;
+  assert(extrasList != 0);
+  
+  ExtraLockData *lockData = ExtraDataList_GetExtraLockData(extrasList);
+  assert(lockData != 0);
+  
+  BSReadWriteLock_Lock(&extrasList->lock);
+  
+  //NOTE(adm244): unused flag, should be safe
+  if (lockData->flags & 0x80) {
+    //NOTE(adm244): using padding here, should be safe
+    uint8 savedTries = lockData->pad01[0];
+    if (savedTries == 0) {
+      lockData->flags &= 0x7F;
+    } else {
+      *gTerminalTryCount = (int32)savedTries;
+    }
+  }
+  
+  BSReadWriteLock_Unlock(&extrasList->lock);
 }
 
 extern "C" void HackingQuit()
 {
   TESConsolePrint("Terminal Hacking Quitted");
+  
+  ExtraDataList *extrasList = (*gActiveTerminalREFR)->extraDataList;
+  assert(extrasList != 0);
+  
+  ExtraLockData *lockData = ExtraDataList_GetExtraLockData(extrasList);
+  assert(lockData != 0);
+  
+  BSReadWriteLock_Lock(&extrasList->lock);
+  
+  lockData->flags |= 0x80;
+  lockData->pad01[0] = (uint8)(*gTerminalTryCount);
+  
+  BSReadWriteLock_Unlock(&extrasList->lock);
 }
 
 internal void HookMainLoop()

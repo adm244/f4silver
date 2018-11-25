@@ -139,8 +139,8 @@ internal _ExtraDataList_Find ExtraDataList_Find;
 // ------ #ExtraDataList ------
 
 // ------ BSReadWriteLock ------
-typedef void (__fastcall *_BSReadWriteLock_Lock)(void *lock);
-typedef void (__fastcall *_BSReadWriteLock_Unlock)(void *lock);
+typedef void (__fastcall *_BSReadWriteLock_Lock)(BSReadWriteLock *lock);
+typedef void (__fastcall *_BSReadWriteLock_Unlock)(BSReadWriteLock *lock);
 
 internal _BSReadWriteLock_Lock BSReadWriteLock_Lock;
 internal _BSReadWriteLock_Unlock BSReadWriteLock_Unlock;
