@@ -231,6 +231,31 @@ internal void InitObScript(MODULEINFO *moduleInfo)
   assert(gObScriptCommands != 0);
 }
 
+enum ObScriptFunctions {
+  ObScript_Lock = 114,
+};
+
+internal void InitObScriptDependentPointers()
+{
+  assert(gObScriptCommands != 0);
+  
+  // Lock(TESObjectREFR *, ...) - 114
+  ObScriptCommand obLock = gObScriptCommands[ObScript_Lock];
+  
+  uint64 memptr = (uint64)(obLock.function);
+  assert(memptr != 0);
+  
+  uint64 TESObjectReference_GetExistingExtraLockData = ParseMemoryAddress(memptr + 0x8E, 1);
+  assert(TESObjectReference_GetExistingExtraLockData != 0);
+  
+  ExtraDataList_GetExtraLockData = (_ExtraDataList_GetExtraLockData)
+    ParseMemoryAddress(TESObjectReference_GetExistingExtraLockData + 0x14, 1);
+  assert(ExtraDataList_GetExtraLockData != 0);
+  
+  ExtraDataList_Find = (_ExtraDataList_Find)ParseMemoryAddress((uint64)ExtraDataList_GetExtraLockData + 0x6, 1);
+  assert(ExtraDataList_Find != 0);
+}
+
 internal void InitTESConsole(uint64 memptr)
 {
   TESConsoleObjectAddress = ParseMemoryAddress(memptr + 0x1A, 3);
@@ -425,6 +450,7 @@ internal void InitSignatures()
   InitPatches(&gMainModuleInfo);
   
   InitObScript(&gMainModuleInfo);
+  InitObScriptDependentPointers();
   
   InitTESConsole(memptr);
   InitTESUI(memptr);

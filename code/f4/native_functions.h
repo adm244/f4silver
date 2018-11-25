@@ -130,6 +130,14 @@ typedef bool (__fastcall *_Native_IsMenuOpen)
 internal _Native_IsMenuOpen Native_IsMenuOpen;
 // ------ #TESUI ------
 
+// ------ ExtraDataList ------
+typedef ExtraLockData * (__fastcall *_ExtraDataList_GetExtraLockData)(ExtraDataList *list);
+typedef BSExtraData * (__fastcall *_ExtraDataList_Find)(ExtraDataList *list, uint8 extraType);
+
+internal _ExtraDataList_GetExtraLockData ExtraDataList_GetExtraLockData;
+internal _ExtraDataList_Find ExtraDataList_Find;
+// ------ #ExtraDataList ------
+
 // ------ Utils ------
 //NOTE(adm244): prints out a c-style formated string into the game console
 typedef void (__fastcall *_TESFillConsoleBackbufferVA)
