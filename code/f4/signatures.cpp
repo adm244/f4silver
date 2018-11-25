@@ -254,6 +254,12 @@ internal void InitObScriptDependentPointers()
   
   ExtraDataList_Find = (_ExtraDataList_Find)ParseMemoryAddress((uint64)ExtraDataList_GetExtraLockData + 0x6, 1);
   assert(ExtraDataList_Find != 0);
+  
+  BSReadWriteLock_Lock = (_BSReadWriteLock_Lock)ParseMemoryAddress((uint64)ExtraDataList_Find + 0x1C, 1);
+  assert(BSReadWriteLock_Lock != 0);
+  
+  BSReadWriteLock_Unlock = (_BSReadWriteLock_Unlock)ParseMemoryAddress((uint64)ExtraDataList_Find + 0x39, 1);
+  assert(BSReadWriteLock_Unlock != 0);
 }
 
 internal void InitTESConsole(uint64 memptr)

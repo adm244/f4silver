@@ -138,6 +138,14 @@ internal _ExtraDataList_GetExtraLockData ExtraDataList_GetExtraLockData;
 internal _ExtraDataList_Find ExtraDataList_Find;
 // ------ #ExtraDataList ------
 
+// ------ BSReadWriteLock ------
+typedef void (__fastcall *_BSReadWriteLock_Lock)(void *lock);
+typedef void (__fastcall *_BSReadWriteLock_Unlock)(void *lock);
+
+internal _BSReadWriteLock_Lock BSReadWriteLock_Lock;
+internal _BSReadWriteLock_Unlock BSReadWriteLock_Unlock;
+// ------ #BSReadWriteLock ------
+
 // ------ Utils ------
 //NOTE(adm244): prints out a c-style formated string into the game console
 typedef void (__fastcall *_TESFillConsoleBackbufferVA)
