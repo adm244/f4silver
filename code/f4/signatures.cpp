@@ -56,12 +56,16 @@ extern "C" {
   uint64 PlayerReferenceAddress;
   uint64 GameDataAddress;
   
+  // terminal
   uint64 prepare_hacking_hook_addr;
   uint64 quit_hacking_hook_addr;
   
   TESObjectReference *gActiveTerminalREFR;
   BGSTerminal *gActiveTerminalForm;
   int32 *gTerminalTryCount;
+  
+  // obscript
+  ObScriptCommand *gObScriptCommands;
 }
 
 //TODO(adm244): switch to multiple patterns search (Aho-Corasick?)
@@ -214,6 +218,17 @@ internal void InitPatches(MODULEINFO *moduleInfo)
 {
   PatchRandom(moduleInfo);
   PatchTerminalHacking(moduleInfo);
+}
+
+internal void InitObScript(MODULEINFO *moduleInfo)
+{
+  uint64 memptr = FindSignature(moduleInfo,
+    "\x48\x8B\x43\x38\x0F\xB7\x4B\x22",
+    "xxxxxxxx", -0xB7);
+  assert(memptr != 0);
+  
+  gObScriptCommands = (ObScriptCommand *)ParseMemoryAddress(memptr, 3);
+  assert(gObScriptCommands != 0);
 }
 
 internal void InitTESConsole(uint64 memptr)
@@ -408,6 +423,8 @@ internal void InitSignatures()
   
   InitHooks(&gMainModuleInfo);
   InitPatches(&gMainModuleInfo);
+  
+  InitObScript(&gMainModuleInfo);
   
   InitTESConsole(memptr);
   InitTESUI(memptr);
