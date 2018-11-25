@@ -807,6 +807,12 @@ struct TESPlayer {
   //???
 }; // 3600 bytes (0xE10)
 
+struct BGSTerminal {
+  TESForm tesForm;
+  
+  //TODO(adm244): fill this
+};
+
 struct ObScriptParam {
   char *type; // 0x00
   uint32 typeId; // 0x08

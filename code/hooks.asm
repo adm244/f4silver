@@ -31,10 +31,14 @@ extern GameDataAddress: qword
 extern mainloop_hook_return_address: qword
 extern loadgame_start_hook_return_address: qword
 extern loadgame_end_hook_return_address: qword
+extern prepare_hacking_hook_addr: qword
+extern quit_hacking_hook_addr: qword
 
 extern GameLoop: proc
 extern LoadGameBegin: proc
 extern LoadGameEnd: proc
+extern HackingPrepare: proc
+extern HackingQuit: proc
 
 pushregs MACRO
   push rbx
@@ -101,6 +105,36 @@ ENDM
     
     jmp [loadgame_end_hook_return_address]
   LoadGameEnd_Hook endp
+  
+  HackingPrepare_Hook proc
+    pushregs
+    call HackingPrepare
+    popregs
+    
+    mov rdx, qword ptr [rdi+30h]
+    mov rcx, qword ptr [rdi+20h]
+    and eax, 8Fh
+    
+    mov rax, prepare_hacking_hook_addr
+    add rax, 13
+    jmp rax
+  HackingPrepare_Hook endp
+  
+  HackingQuit_Hook proc
+    pushregs
+    push rcx
+    call HackingQuit
+    pop rcx
+    popregs
+    
+    lea rdx, qword ptr [rbp-8h]
+    add rcx, 120h
+    mov qword ptr [rbp], r14
+    
+    mov rax, quit_hacking_hook_addr
+    add rax, 15
+    jmp rax
+  HackingQuit_Hook endp
   
   ;rcx = 0x058ED480 (1_10_26)
   ;dl = 0x4A (worldspace form type)

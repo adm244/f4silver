@@ -92,6 +92,11 @@ internal void SafeWriteBuf(uint64 addr, void *data, uint64 len)
   }
 }
 
+internal void SafeWrite8(uint64 addr, uint8 value)
+{
+  SafeWriteBuf(addr, &value, 1);
+}
+
 internal void WriteBranch(uint64 source, uint64 dest)
 {
 #define CODE_LENGTH 12

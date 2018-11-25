@@ -55,6 +55,13 @@ extern "C" {
   uint64 GlobalScriptStateAddress;
   uint64 PlayerReferenceAddress;
   uint64 GameDataAddress;
+  
+  uint64 prepare_hacking_hook_addr;
+  uint64 quit_hacking_hook_addr;
+  
+  TESObjectReference *gActiveTerminalREFR;
+  BGSTerminal *gActiveTerminalForm;
+  int32 *gTerminalTryCount;
 }
 
 //TODO(adm244): switch to multiple patterns search (Aho-Corasick?)
@@ -142,7 +149,7 @@ internal void InitHooks(MODULEINFO *moduleInfo)
 #endif
 }
 
-internal void InitPatches(MODULEINFO *moduleInfo)
+internal void PatchRandom(MODULEINFO *moduleInfo)
 {
   uint64 memptr = FindSignature(moduleInfo,
     "\x33\xC9\x0F\xC6\xCA\xAA\x0F\xC6\xD2\xFF",
@@ -162,6 +169,51 @@ internal void InitPatches(MODULEINFO *moduleInfo)
   
   WriteBranch(func_randomint, (uint64)RandomIntExclusive);
   WriteBranch(func_randomfloat, (uint64)RandomFloat);
+}
+
+internal void PatchTerminalHacking(MODULEINFO *moduleInfo)
+{
+  uint64 memptr = FindSignature(moduleInfo,
+    "\x48\x89\x5D\x17\x3C\x0A",
+    "xxxxxx", -0x1C);
+  assert(memptr != 0);
+  
+  prepare_hacking_hook_addr = (memptr + 0x8);
+  assert(prepare_hacking_hook_addr != 0);
+  
+  WriteBranch(prepare_hacking_hook_addr, (uint64)HackingPrepare_Hook);
+  SafeWrite8(prepare_hacking_hook_addr + 12, 0x90);
+  
+  uint64 prepare_hacking_func_memptr = ParseMemoryAddress(memptr, 1);
+  assert(prepare_hacking_func_memptr != 0);
+  
+  gActiveTerminalREFR = (TESObjectReference *)ParseMemoryAddress(prepare_hacking_func_memptr + 0x36, 3);
+  assert(gActiveTerminalREFR != 0);
+  gActiveTerminalForm = (BGSTerminal *)ParseMemoryAddress(prepare_hacking_func_memptr + 0x3D, 3);
+  assert(gActiveTerminalForm != 0);
+  
+  uint64 initialize_hacking_func_memptr = ParseMemoryAddress(prepare_hacking_func_memptr + 0x31, 1);
+  assert(initialize_hacking_func_memptr != 0);
+  
+  gTerminalTryCount = (int32 *)ParseMemoryAddress(initialize_hacking_func_memptr + 0x1E8, 2);
+  assert(gTerminalTryCount != 0);
+  
+  memptr = FindSignature(moduleInfo,
+    "\x48\x8D\x55\xF8\x48\x81\xC1\x20\x01\x00\x00",
+    "xxxxxxxxxxx", 0x0);
+  assert(memptr != 0);
+  
+  quit_hacking_hook_addr = memptr;
+  WriteBranch(quit_hacking_hook_addr, (uint64)HackingQuit_Hook);
+  SafeWrite8(quit_hacking_hook_addr + 12, 0x90);
+  SafeWrite8(quit_hacking_hook_addr + 13, 0x90);
+  SafeWrite8(quit_hacking_hook_addr + 14, 0x90);
+}
+
+internal void InitPatches(MODULEINFO *moduleInfo)
+{
+  PatchRandom(moduleInfo);
+  PatchTerminalHacking(moduleInfo);
 }
 
 internal void InitTESConsole(uint64 memptr)

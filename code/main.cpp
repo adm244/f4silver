@@ -78,6 +78,8 @@ extern "C" {
   void GameLoop_Hook();
   void LoadGameBegin_Hook();
   void LoadGameEnd_Hook();
+  void HackingPrepare_Hook();
+  void HackingQuit_Hook();
   
   int TES_GetWorldSpaceCount();
   TESWorldSpace ** TES_GetWorldSpaceArray();
@@ -406,6 +408,16 @@ extern "C" void LoadGameBegin(char *filename)
 extern "C" void LoadGameEnd()
 {
   ActualGameplay = true;
+}
+
+extern "C" void HackingPrepare()
+{
+  TESConsolePrint("Terminal Hacking Entered");
+}
+
+extern "C" void HackingQuit()
+{
+  TESConsolePrint("Terminal Hacking Quitted");
 }
 
 internal void HookMainLoop()
