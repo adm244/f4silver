@@ -60,8 +60,8 @@ extern "C" {
   uint64 prepare_hacking_hook_addr;
   uint64 quit_hacking_hook_addr;
   
-  TESObjectReference *gActiveTerminalREFR;
-  BGSTerminal *gActiveTerminalForm;
+  TESObjectReference **gActiveTerminalREFR;
+  BGSTerminal **gActiveTerminalForm;
   int32 *gTerminalTryCount;
   
   // obscript
@@ -191,9 +191,9 @@ internal void PatchTerminalHacking(MODULEINFO *moduleInfo)
   uint64 prepare_hacking_func_memptr = ParseMemoryAddress(memptr, 1);
   assert(prepare_hacking_func_memptr != 0);
   
-  gActiveTerminalREFR = (TESObjectReference *)ParseMemoryAddress(prepare_hacking_func_memptr + 0x36, 3);
+  gActiveTerminalREFR = (TESObjectReference **)ParseMemoryAddress(prepare_hacking_func_memptr + 0x36, 3);
   assert(gActiveTerminalREFR != 0);
-  gActiveTerminalForm = (BGSTerminal *)ParseMemoryAddress(prepare_hacking_func_memptr + 0x3D, 3);
+  gActiveTerminalForm = (BGSTerminal **)ParseMemoryAddress(prepare_hacking_func_memptr + 0x3D, 3);
   assert(gActiveTerminalForm != 0);
   
   uint64 initialize_hacking_func_memptr = ParseMemoryAddress(prepare_hacking_func_memptr + 0x31, 1);
