@@ -63,6 +63,7 @@ OTHER DEALINGS IN THE SOFTWARE.
     none yet
 */
 
+#include <assert.h>
 #include <stdio.h>
 #include <string>
 #include <windows.h>
@@ -90,8 +91,6 @@ internal HMODULE f4silver = 0;
 
 internal bool IsInterior = 0;
 internal bool ActualGameplay = false;
-
-internal HANDLE gMutexRandom = 0;
 
 #include "silverlib/random/functions.c"
 
@@ -275,10 +274,14 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
           DisplayRandomFailureMessage();
         }*/
         
+        if (!BatchRandomSequence.initialized) {
+          RandomInitializeSeed(&BatchRandomSequence, GetTickCount64());
+        }
+        
         int index = -1;
         //NOTE(adm244): temporary solution...
         do {
-          index = RandomInt(0, batches_count - 1);
+          index = RandomInt(&BatchRandomSequence, 0, batches_count - 1);
         } while( batches[index].excludeRandom );
         
         QueuePut(&BatchQueue, (pointer)&batches[index]);
@@ -467,10 +470,6 @@ internal void HookLoadGame()
 
 internal void Initialize(HMODULE module)
 {
-  //TODO(adm244): mutex pool?
-  gMutexRandom = CreateMutexA(0, FALSE, 0);
-  assert(gMutexRandom != 0);
-  
   //DefineAddresses();
   //ShiftAddresses();
   InitSignatures();
@@ -492,7 +491,7 @@ internal void Initialize(HMODULE module)
   //QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
   
   //RandomGeneratorInitialize(batchesCount);
-  RandomInitializeSeed(GetTickCount64());
+  RandomInitializeSeed(&DefaultRandomSequence, GetTickCount64());
   
   //FILE *deadCountFile = fopen(FILE_DEADCOUNT, "r");
   //if (deadCountFile) {

@@ -1,6 +1,6 @@
 // Taken from http://paulbourke.net/miscellaneous/random/
-// and modified a bit in order to be compilable as one unit
-// along with mwsilver
+// and modified to handle multiple random sequences and
+// to be compilable as one unit
 
 /*
   This Random Number Generator is based on the algorithm in a FORTRAN
@@ -43,9 +43,28 @@
 #define _RANDOM_LIB
 
 /* Globals */
-internal double u[97],c, cd, cm;
-internal int i97, j97;
-internal int test = FALSE;
+//internal double u[97],c, cd, cm;
+//internal int i97, j97;
+//internal int test = FALSE;
+
+struct RandomSequence {
+  double u[97];
+  double c;
+  double cd;
+  double cm;
+  int i97;
+  int j97;
+  
+  int ij;
+  int kl;
+  int initialized;
+  
+  HANDLE mutex;
+};
+
+internal RandomSequence DefaultRandomSequence;
+internal RandomSequence BatchRandomSequence;
+internal RandomSequence TeleportRandomSequence;
 
 /*
   This is the initialization routine for the random number generator.
@@ -59,10 +78,13 @@ internal int test = FALSE;
   number generator can create 900 million different subsequences -- with
   each subsequence having a length of approximately 10^30.
 */
-internal void RandomInitialize(int ij, int kl)
+internal void RandomInitialize(RandomSequence *seq, int ij, int kl)
 {
   double s, t;
   int ii, i, j, k, l, jj, m;
+  
+  seq->mutex = CreateMutexA(0, FALSE, 0);
+  assert(seq->mutex != 0);
 
   /*
     Handle the seed range errors
@@ -73,70 +95,78 @@ internal void RandomInitialize(int ij, int kl)
     ij = 1802;
     kl = 9373;
   }
+  
+  DWORD mutexState = WaitForSingleObject(seq->mutex, INFINITE);
+  if (mutexState == WAIT_OBJECT_0) {
+    seq->ij;
+    seq->kl;
 
-  i = (ij / 177) % 177 + 2;
-  j = (ij % 177)       + 2;
-  k = (kl / 169) % 178 + 1;
-  l = (kl % 169);
+    i = (ij / 177) % 177 + 2;
+    j = (ij % 177)       + 2;
+    k = (kl / 169) % 178 + 1;
+    l = (kl % 169);
 
-   for (ii=0; ii<97; ii++) {
-      s = 0.0;
-      t = 0.5;
-    for (jj=0; jj<24; jj++) {
-      m = (((i * j) % 179) * k) % 179;
-      i = j;
-      j = k;
-      k = m;
-      l = (53 * l + 1) % 169;
-      if (((l * m % 64)) >= 32)
-        s += t;
-      t *= 0.5;
+     for (ii=0; ii<97; ii++) {
+        s = 0.0;
+        t = 0.5;
+      for (jj=0; jj<24; jj++) {
+        m = (((i * j) % 179) * k) % 179;
+        i = j;
+        j = k;
+        k = m;
+        l = (53 * l + 1) % 169;
+        if (((l * m % 64)) >= 32)
+          s += t;
+        t *= 0.5;
+      }
+      seq->u[ii] = s;
     }
-    u[ii] = s;
-  }
 
-  c    = 362436.0 / 16777216.0;
-  cd   = 7654321.0 / 16777216.0;
-  cm   = 16777213.0 / 16777216.0;
-  i97  = 97;
-  j97  = 33;
-  test = TRUE;
+    seq->c    = 362436.0 / 16777216.0;
+    seq->cd   = 7654321.0 / 16777216.0;
+    seq->cm   = 16777213.0 / 16777216.0;
+    seq->i97  = 97;
+    seq->j97  = 33;
+    seq->initialized = TRUE;
+    
+    ReleaseMutex(seq->mutex);
+  }
 }
 
 /*
   This is the random number generator proposed by George Marsaglia in
   Florida State University Report: FSU-SCRI-87-50
 */
-internal double RandomUniform(void)
+internal double RandomUniform(RandomSequence *seq)
 {
   double uni = 0.0;
 
   //TODO(adm244): rewrite random library, so it's thread-safe
   // and can handle multiple random sequences simultaneously
-  DWORD mutexState = WaitForSingleObject(gMutexRandom, INFINITE);
+  DWORD mutexState = WaitForSingleObject(seq->mutex, INFINITE);
   if (mutexState == WAIT_OBJECT_0) {
     /* Make sure the initialisation routine has been called */
-    if (!test)
-      RandomInitialize(1802,9373);
+    if (!seq->initialized)
+      RandomInitialize(seq, 1802, 9373);
 
-    uni = u[i97-1] - u[j97-1];
+    uni = seq->u[seq->i97-1] - seq->u[seq->j97-1];
     if (uni <= 0.0)
       uni++;
-    u[i97-1] = uni;
-    i97--;
-    if (i97 == 0)
-      i97 = 97;
-    j97--;
-    if (j97 == 0)
-      j97 = 97;
-    c -= cd;
-    if (c < 0.0)
-      c += cm;
-    uni -= c;
+    seq->u[seq->i97-1] = uni;
+    seq->i97--;
+    if (seq->i97 == 0)
+      seq->i97 = 97;
+    seq->j97--;
+    if (seq->j97 == 0)
+      seq->j97 = 97;
+    seq->c -= seq->cd;
+    if (seq->c < 0.0)
+      seq->c += seq->cm;
+    uni -= seq->c;
     if (uni < 0.0)
       uni++;
   
-    ReleaseMutex(gMutexRandom);
+    ReleaseMutex(seq->mutex);
   }
 
   return(uni);
@@ -153,7 +183,7 @@ internal double RandomUniform(void)
   The algorithm uses the ratio of uniforms method of A.J. Kinderman
   and J.F. Monahan augmented with quadratic bounding curves.
 */
-internal double RandomGaussian(double mean, double stddev)
+internal double RandomGaussian(RandomSequence *seq, double mean, double stddev)
 {
   double q, u, v, x, y;
 
@@ -163,8 +193,8 @@ internal double RandomGaussian(double mean, double stddev)
     gaussian() requires uniforms > 0, but RandomUniform() delivers >= 0.
   */
    do {
-    u = RandomUniform();
-    v = RandomUniform();
+    u = RandomUniform(seq);
+    v = RandomUniform(seq);
     
     if (u <= 0.0 || v <= 0.0) {
       u = 1.0;
@@ -191,30 +221,40 @@ internal double RandomGaussian(double mean, double stddev)
 /*
   Return random integer within a range, lower -> upper INCLUSIVE
 */
-internal int RandomInt(int lower, int upper)
+internal int RandomInt(RandomSequence *seq, int lower, int upper)
 {
-  return((int)(RandomUniform() * (upper - lower + 1)) + lower);
+  return((int)(RandomUniform(seq) * (upper - lower + 1)) + lower);
 }
 
 /*
   Return random integer within a range, min -> (max - 1)
 */
-internal int RandomIntExclusive(int min, int max)
+internal int RandomIntExclusive(RandomSequence *seq, int min, int max)
 {
-  return((int)(RandomUniform() * (max - min)) + min);
+  return((int)(RandomUniform(seq) * (max - min)) + min);
 }
 
 /*
   Return random float within a range, lower -> upper
 */
-internal double RandomDouble(double lower, double upper)
+internal double RandomDouble(RandomSequence *seq, double lower, double upper)
 {
-  return((upper - lower) * RandomUniform() + lower);
+  return((upper - lower) * RandomUniform(seq) + lower);
 }
 
-internal float RandomFloat(float min, float max)
+internal float RandomFloat(RandomSequence *seq, float min, float max)
 {
-  return((max - min) * (float)RandomUniform() + min);
+  return((max - min) * (float)RandomUniform(seq) + min);
+}
+
+internal int RandomIntDefault(int lower, int upper)
+{
+  return RandomIntExclusive(&DefaultRandomSequence, lower, upper);
+}
+
+internal float RandomFloatDefault(float min, float max)
+{
+  return RandomFloat(&DefaultRandomSequence, min, max);
 }
 
 #endif

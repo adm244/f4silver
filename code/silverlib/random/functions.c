@@ -30,8 +30,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include "randomlib.c"
 
-internal uint64 random_seed = 0;
-
 /*internal int randomGenerated = 0;
 internal uint8 randomCounters[MAX_BATCHES];
 
@@ -61,13 +59,12 @@ internal int GetNextBatchIndex(int batchesCount)
   return value;
 }*/
 
-internal void RandomInitializeSeed(uint64 seed)
+internal void RandomInitializeSeed(RandomSequence *seq, uint64 seed)
 {
   uint64 ij = seed % 31328;
   uint64 kj = ((seed >> 3) ^ seed) % 30081;
   
-  random_seed = seed;
-  RandomInitialize(ij, kj);
+  RandomInitialize(seq, ij, kj);
 }
 
 #endif

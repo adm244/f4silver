@@ -28,8 +28,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 #ifndef _SIGNATURES_H
 #define _SIGNATURES_H
 
-#include <assert.h>
-
 #define PSAPI_VERSION 1
 #include <psapi.h>
 
@@ -171,8 +169,8 @@ internal void PatchRandom(MODULEINFO *moduleInfo)
   assert(func_randomfloat - (uint64)gMainModule == 0x01B127F0); //1_10_40
 #endif
   
-  WriteBranch(func_randomint, (uint64)RandomIntExclusive);
-  WriteBranch(func_randomfloat, (uint64)RandomFloat);
+  WriteBranch(func_randomint, (uint64)RandomIntDefault);
+  WriteBranch(func_randomfloat, (uint64)RandomFloatDefault);
 }
 
 internal void PatchTerminalHacking(MODULEINFO *moduleInfo)

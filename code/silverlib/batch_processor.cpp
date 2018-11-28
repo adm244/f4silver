@@ -131,7 +131,10 @@ internal void Teleport()
   }
   
   //uint64 old_seed = random_seed;
-  RandomInitializeSeed(GetTickCount64());
+  //RandomInitializeSeed(GetTickCount64());
+  if (!TeleportRandomSequence.initialized) {
+    RandomInitializeSeed(&TeleportRandomSequence, GetTickCount64());
+  }
   
   do {
     if( loop_count++ > cells_count ) {
@@ -145,8 +148,8 @@ internal void Teleport()
     cellY += minY;
     cellX += minX;*/
     
-    int cellX = RandomInt(minX, maxX);
-    int cellY = RandomInt(minY, maxY);
+    int cellX = RandomInt(&TeleportRandomSequence, minX, maxX);
+    int cellY = RandomInt(&TeleportRandomSequence, minY, maxY);
     
     uint cell_distance_sqr = Sqr(cellX - player_cell_x) + Sqr(cellY - player_cell_y);
     if (cell_distance_sqr < 144) {
