@@ -52,7 +52,7 @@ extern "C" {
   BSInputEventReceiver **BSInputEventReceiverPtr;
   uint64 GlobalScriptStateAddress;
   uint64 PlayerReferenceAddress;
-  uint64 GameDataAddress;
+  GameData **GameDataPtr;
   
   // terminal
   uint64 prepare_hacking_hook_addr;
@@ -407,14 +407,14 @@ internal void InitGlobalVariables(uint64 memptr)
   assert(memptr_unkfunc != 0);
   
   PlayerReferenceAddress = ParseMemoryAddress(memptr_unkfunc + 0x7D, 3);
-  GameDataAddress = ParseMemoryAddress(memptr + 0x47, 3);
+  GameDataPtr = (GameData **)ParseMemoryAddress(memptr + 0x47, 3);
   
   assert(PlayerReferenceAddress != 0);
-  assert(GameDataAddress != 0);
+  assert(GameDataPtr != 0);
   
 #ifdef F4_VERSION_1_10_40
   assert(PlayerReferenceAddress - (uint64)gMainModule == 0x05ADE398); //1_10_40
-  assert(GameDataAddress - (uint64)gMainModule == 0x05909100); //1_10_40
+  assert((uint64)GameDataPtr - (uint64)gMainModule == 0x05909100); //1_10_40
 #endif
 }
 

@@ -26,7 +26,6 @@
 extern ProcessWindowAddress: qword
 
 extern Unk3ObjectAddress: qword
-extern GameDataAddress: qword
 
 extern mainloop_hook_return_address: qword
 extern loadgame_start_hook_return_address: qword
@@ -135,34 +134,4 @@ ENDM
     add rax, 15
     jmp rax
   HackingQuit_Hook endp
-  
-  ;rcx = 0x058ED480 (1_10_26)
-  ;dl = 0x4A (worldspace form type)
-  ;
-  ;rax = dl + dl*2 (= 0xDE)
-  ;  rcx + rax*8 + 0x68 (pointer to array of worldspaces)
-  ;  rcx + rax*8 + 0x78 (total worldspace count)
-  TES_GetWorldSpaceCount proc
-    mov rcx, qword ptr [GameDataAddress]
-    mov rcx, qword ptr [rcx]
-    
-    mov r9, 4Ah
-    
-    lea rax, qword ptr [r9+r9*2]
-    mov rax, qword ptr [rcx+rax*8+78h]
-    
-    ret
-  TES_GetWorldSpaceCount endp
-  
-  TES_GetWorldSpaceArray proc
-    mov rcx, qword ptr [GameDataAddress]
-    mov rcx, qword ptr [rcx]
-    
-    mov r9, 4Ah
-    
-    lea rax, qword ptr [r9+r9*2]
-    mov rax, qword ptr [rcx+rax*8+68h]
-    
-    ret
-  TES_GetWorldSpaceArray endp
 end

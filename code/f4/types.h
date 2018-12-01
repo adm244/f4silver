@@ -210,6 +210,8 @@ enum FormTypes {
   FormType_ActorValueInfo = 0x62,
   FormType_Location = 0x6B,
   FormType_MusicType = 0x71,
+  
+  FormType_Max = 0x9E
 };
 
 enum ExtraDataTypes {
@@ -288,6 +290,24 @@ enum ExtraLockFlags {
 };
 
 #pragma pack(push, 1)
+
+//TODO(adm244): split types into different files
+
+struct DynamicArray {
+  void *entries; // 0x0
+  uint32 capacity; // 0x8
+  uint32 pad0C;
+  uint32 length; // 0x10
+  uint32 pad14;
+}; // 24 bytes (0x18)
+
+struct GameData {
+  uint64 unk00;
+  DynamicArray unkArray[4]; // 0x8
+  DynamicArray forms[FormType_Max]; // 0x68
+  
+  // ...
+};
 
 struct BSExtraData {
   void *vtable; // 0x0
@@ -477,6 +497,7 @@ struct TESRegion {
   uint32 unk54;
 }; // 88 bytes (0x58)
 
+//FIX(adm244): probably just a linked-list
 struct RegionUnk {
   TESRegion *region;
   RegionUnk *nextRegionUnk;

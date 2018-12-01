@@ -99,8 +99,12 @@ internal void Teleport()
   TESWorldSpace *worldspace = GetPlayerCurrentWorldSpace();
   if( !worldspace ) {
     //TODO(adm244): remember the last one?
-    worldspace = *TES_GetWorldSpaceArray();
+    DynamicArray *worldspaceArray = GetFormsByType(FormType_WorldSpace);
+    assert(worldspaceArray != 0);
+    
+    worldspace = (TESWorldSpace *)worldspaceArray->entries;
   }
+  assert(worldspace != 0);
   
   /*FILE *file = 0;
   fopen_s(&file, "f4silver.log", "a");

@@ -138,6 +138,15 @@ internal const int SysWindowCompileAndRun = 1;
 internal const int DialogueCompileAndRun = 2;
 
 // ------ Functions ------
+internal DynamicArray * GetFormsByType(int type)
+{
+  GameData *data = *GameDataPtr;
+  if (!data) return 0;
+  if ((type < 0) || (type > FormType_Max)) return 0;
+  
+  return &data->forms[type];
+}
+
 internal bool TES_ExecuteScriptLine(char *text)
 {
   bool result = false;
@@ -203,16 +212,15 @@ internal TESWorldSpace * GetPlayerCurrentWorldSpace()
           location = location->parent;
         }
         
-        int worldSpaceCount = TES_GetWorldSpaceCount();
-        TESWorldSpace **worldspaceArray = TES_GetWorldSpaceArray();
+        DynamicArray *worldspaceArray = GetFormsByType(FormType_WorldSpace);
+        assert(worldspaceArray != 0);
         
-        for( int i = 0; i < worldSpaceCount; ++i ) {
-          //NOTE(adm244): convert it to be syntactically an array?
-          TESWorldSpace *p = *(worldspaceArray + i);
-          
-          if( p->location == location ) {
+        TESWorldSpace *worldspaces = (TESWorldSpace *)worldspaceArray->entries;
+        assert(worldspaces != 0);
+        
+        for( int i = 0; i < worldspaceArray->length; ++i ) {
+          if( worldspaces[i].location == location ) {
             //NOTE(adm244): get root worldspace?
-            worldspace = p;
             break;
           }
         }

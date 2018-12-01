@@ -81,9 +81,6 @@ extern "C" {
   void LoadGameEnd_Hook();
   void HackingPrepare_Hook();
   void HackingQuit_Hook();
-  
-  int TES_GetWorldSpaceCount();
-  TESWorldSpace ** TES_GetWorldSpaceArray();
 }
 
 extern "C" uint64 baseAddress = 0;
