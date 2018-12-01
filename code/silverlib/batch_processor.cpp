@@ -102,7 +102,7 @@ internal void Teleport()
     DynamicArray *worldspaceArray = GetFormsByType(FormType_WorldSpace);
     assert(worldspaceArray != 0);
     
-    worldspace = (TESWorldSpace *)worldspaceArray->entries;
+    worldspace = *((TESWorldSpace **)worldspaceArray->entries);
   }
   assert(worldspace != 0);
   
