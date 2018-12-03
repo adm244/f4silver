@@ -211,7 +211,7 @@ enum FormTypes {
   FormType_Location = 0x6B,
   FormType_MusicType = 0x71,
   
-  FormType_Max = 0x9E
+  FormType_Max = 0x9F
 };
 
 enum ExtraDataTypes {
@@ -293,8 +293,17 @@ enum ExtraLockFlags {
 
 //TODO(adm244): split types into different files
 
+struct NiTPrimitiveArray {
+  void *vtable; // 0x0
+  void **entries; // 0x8
+  uint16 capacity; // 0x10
+  uint16 firstFreeIndex; // 0x12
+  uint16 length; // 0x14
+  uint16 growSize; // 0x16
+}; // 24 bytes (0x18)
+
 struct DynamicArray {
-  void *entries; // 0x0
+  void **entries; // 0x0
   uint32 capacity; // 0x8
   uint32 pad0C;
   uint32 length; // 0x10
@@ -305,6 +314,9 @@ struct GameData {
   uint64 unk00;
   DynamicArray unkArray[4]; // 0x8
   DynamicArray forms[FormType_Max]; // 0x68
+  void *unkF50;
+  NiTPrimitiveArray interiorCellsList; // 0xF58
+  NiTPrimitiveArray addonNodeList; // 0xF70
   
   // ...
 };
@@ -570,11 +582,12 @@ struct TESWorldSpace {
   uint32 unkB8;
   uint32 unkBC;
   uint64 unkC0;
-  void *unkC8; // array of TESObjectReference, Character, ...
-  uint32 unkD0;
-  uint32 unkD4;
-  uint32 unkD8;
-  uint32 unkDC;
+  //void *unkC8; // array of TESObjectReference, Character, ...
+  //uint32 unkD0;
+  //uint32 unkD4;
+  //uint32 unkD8;
+  //uint32 unkDC;
+  DynamicArray formsList; // 0xC8
   TESActorValueInfo *unkE0;
   uint32 unkE8;
   uint32 unkEC;
@@ -592,11 +605,12 @@ struct TESWorldSpace {
   uint32 unk138;
   uint32 unk13C;
   void *unk140;
-  void *unk148; // array of TESObjectReference
-  uint32 unk150;
-  uint32 unk154;
-  uint32 unk158;
-  uint32 unk15C;
+  //void *unk148; // array of TESObjectReference
+  //uint32 unk150;
+  //uint32 unk154;
+  //uint32 unk158;
+  //uint32 unk15C;
+  DynamicArray unk148;
   void *unk160;
   void *unk168;
   void *unk170;
@@ -630,7 +644,7 @@ struct TESWorldSpace {
   uint32 unk200;
   uint32 unk204;
   char *editorID; // 0x208
-  uint16 unk210;
+  uint16 editorIDLength; // 0x210
   uint16 unk212;
   uint16 unk214;
   uint16 unk216;

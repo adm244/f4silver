@@ -147,6 +147,14 @@ internal DynamicArray * GetFormsByType(int type)
   return &data->forms[type];
 }
 
+internal NiTPrimitiveArray * GetInteriorCellsArray()
+{
+  GameData *data = *GameDataPtr;
+  if (!data) return 0;
+  
+  return &data->interiorCellsList;
+}
+
 internal bool TES_ExecuteScriptLine(char *text)
 {
   bool result = false;
@@ -215,11 +223,11 @@ internal TESWorldSpace * GetPlayerCurrentWorldSpace()
         DynamicArray *worldspaceArray = GetFormsByType(FormType_WorldSpace);
         assert(worldspaceArray != 0);
         
-        TESWorldSpace *worldspaces = (TESWorldSpace *)worldspaceArray->entries;
+        TESWorldSpace **worldspaces = (TESWorldSpace **)worldspaceArray->entries;
         assert(worldspaces != 0);
         
         for( int i = 0; i < worldspaceArray->length; ++i ) {
-          if( worldspaces[i].location == location ) {
+          if( worldspaces[i]->location == location ) {
             //NOTE(adm244): get root worldspace?
             break;
           }
