@@ -412,7 +412,7 @@ extern "C" void LoadGameEnd()
 
 extern "C" void HackingPrepare()
 {
-  TESConsolePrint("Terminal Hacking Entered");
+  //TESConsolePrint("Terminal Hacking Entered");
   
   ExtraDataList *extrasList = (*gActiveTerminalREFR)->extraDataList;
   assert(extrasList != 0);
@@ -438,7 +438,7 @@ extern "C" void HackingPrepare()
 
 extern "C" void HackingQuit()
 {
-  TESConsolePrint("Terminal Hacking Quitted");
+  //TESConsolePrint("Terminal Hacking Quitted");
   
   ExtraDataList *extrasList = (*gActiveTerminalREFR)->extraDataList;
   assert(extrasList != 0);

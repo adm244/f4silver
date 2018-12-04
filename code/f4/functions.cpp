@@ -198,6 +198,89 @@ internal inline TESLocation * TES_GetPlayerLocation()
   return player->location;
 }
 
+internal TESWorldSpace * GetRootWorldspace(TESWorldSpace *worldspace)
+{
+  TESWorldSpace * result = worldspace;
+  assert(result != 0);
+
+  while( result->parentWorldSpace ) {
+    result = result->parentWorldSpace;
+  }
+  
+  return result;
+}
+
+internal TESLocation * GetRootLocation(TESLocation *location)
+{
+  TESLocation *result = location;
+  assert(result != 0);
+
+  while( result->parent ) {
+    result = result->parent;
+  }
+  
+  return result;
+}
+
+internal bool IsPrimaryWorldspace(TESWorldSpace *worldspace)
+{
+  assert(worldspace != 0);
+  
+  bool emptyNW = (worldspace->NWCellX == 0) && (worldspace->NWCellY == 0);
+  bool emptySE = (worldspace->SECellX == 0) && (worldspace->SECellY == 0);
+  if ((!emptyNW) || (!emptySE)) {
+    if (worldspace->mapImage) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+internal TESWorldSpace * GetWorldspaceByIndex(uint8 esp_index)
+{
+  TESWorldSpace *worldspace = 0;
+  
+  DynamicArray *worldspaceArray = GetFormsByType(FormType_WorldSpace);
+  assert(worldspaceArray != 0);
+    
+  TESWorldSpace **worldspaces = (TESWorldSpace **)worldspaceArray->entries;
+  assert(worldspaces != 0);
+  
+  for( int i = 0; i < worldspaceArray->length; ++i ) {
+    uint8 worldspace_esp_index = (worldspaces[i]->tesForm.formId >> 24);
+    if (esp_index == worldspace_esp_index) {
+      if (IsPrimaryWorldspace(worldspaces[i])) {
+        worldspace = GetRootWorldspace(worldspaces[i]);
+        break;
+      }
+    }
+  }
+  
+  return worldspace;
+}
+
+internal TESWorldSpace * GetWorldspaceByLocation(TESLocation *location)
+{
+  TESWorldSpace *worldspace = 0;
+  assert(location != 0);
+
+  DynamicArray *worldspaceArray = GetFormsByType(FormType_WorldSpace);
+  assert(worldspaceArray != 0);
+  
+  TESWorldSpace **worldspaces = (TESWorldSpace **)worldspaceArray->entries;
+  assert(worldspaces != 0);
+  
+  for( int i = 0; i < worldspaceArray->length; ++i ) {
+    if( worldspaces[i]->location == location ) {
+      worldspace = GetRootWorldspace(worldspaces[i]);
+      break;
+    }
+  }
+  
+  return worldspace;
+}
+
 //FIX(adm244): spell worldspace in types.h with non-capital 's'
 internal TESWorldSpace * GetPlayerCurrentWorldSpace()
 {
@@ -210,35 +293,19 @@ internal TESWorldSpace * GetPlayerCurrentWorldSpace()
     worldspace = playerCell->worldSpace;
     
     if( worldspace ) {
-      while( worldspace->parentWorldSpace ) {
-        worldspace = worldspace->parentWorldSpace;
-      }
+      // exterior cell
+      worldspace = GetRootWorldspace(worldspace);
     } else {
+      // interior cell
       TESLocation *location = TES_GetPlayerLocation();
       if( location ) {
-        while( location->parent ) {
-          location = location->parent;
-        }
-        
-        DynamicArray *worldspaceArray = GetFormsByType(FormType_WorldSpace);
-        assert(worldspaceArray != 0);
-        
-        TESWorldSpace **worldspaces = (TESWorldSpace **)worldspaceArray->entries;
-        assert(worldspaces != 0);
-        
-        for( int i = 0; i < worldspaceArray->length; ++i ) {
-          if( worldspaces[i]->location == location ) {
-            //NOTE(adm244): get root worldspace?
-            break;
-          }
-        }
-        
-        if( !worldspace ) {
-          //NOTE(adm244): location isn't attached to any of worldspaces, try encounter zone?
-        }
-      } else {
-        //NOTE(adm244): no location attached to player's cell, try encounter zone?
+        location = GetRootLocation(location);
+        worldspace = GetWorldspaceByLocation(location);
       }
+    }
+    
+    if( !worldspace ) {
+      worldspace = GetWorldspaceByIndex((playerCell->tesForm.formId >> 24));
     }
   }
   

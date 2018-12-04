@@ -555,7 +555,7 @@ struct TESWorldSpace {
   void *unk20;
   void *unk28;
   void *unk30;
-  void *unk38;
+  BSFixedString *mapImage; // 0x38
   TESActorValueInfo *unk40;
   uint32 unk48;
   uint32 unk4C;
@@ -582,11 +582,6 @@ struct TESWorldSpace {
   uint32 unkB8;
   uint32 unkBC;
   uint64 unkC0;
-  //void *unkC8; // array of TESObjectReference, Character, ...
-  //uint32 unkD0;
-  //uint32 unkD4;
-  //uint32 unkD8;
-  //uint32 unkDC;
   DynamicArray formsList; // 0xC8
   TESActorValueInfo *unkE0;
   uint32 unkE8;
@@ -605,11 +600,6 @@ struct TESWorldSpace {
   uint32 unk138;
   uint32 unk13C;
   void *unk140;
-  //void *unk148; // array of TESObjectReference
-  //uint32 unk150;
-  //uint32 unk154;
-  //uint32 unk158;
-  //uint32 unk15C;
   DynamicArray unk148;
   void *unk160;
   void *unk168;
