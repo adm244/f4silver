@@ -39,6 +39,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 //TODO(adm244): move outside
 #define BATCH_SAVEGAME "@savegame"
 #define BATCH_TELEPORT "@teleport"
+#define BATCH_TROPELET "@tropelet"
 #define BATCH_TIMEOUT "@timeout"
 
 #define EXEC_DEFAULT 0
@@ -66,6 +67,18 @@ struct CustomCommand {
   bool enabled;
 };
 
+struct TropeletData {
+  bool initialized;
+
+  int x;
+  int y;
+  TESWorldSpace *worldspace;
+  TESCell *cell;
+  
+  Vector3 position;
+  Vector3 rotation;
+};
+
 /*struct BatchGroup {
   uint length;
   uint batches[MAX_BATCHES];
@@ -79,6 +92,8 @@ internal CustomCommand CommandRandom;
 internal bool keys_active = true;
 internal bool not_initialized = true;
 internal int batches_count = 0;
+
+internal TropeletData gTropeletData = {0};
 
 /*internal BatchData * GetRandomBatch(BatchGroup *group)
 {
@@ -175,7 +190,39 @@ internal void Teleport()
   fclose(file);*/
   
   if( targetCell ) {
+    TESPlayer *player = TES_GetPlayer();
+    TESCell *playerCell = player->tesActor.objectReference.parentCell;
+    //assert(playerCell != 0);
+    
+    if (playerCell) {
+      gTropeletData.cell = playerCell;
+      gTropeletData.x = playerCell->coordinates->x;
+      gTropeletData.y = playerCell->coordinates->y;
+      gTropeletData.worldspace = playerCell->worldSpace;
+      gTropeletData.position.x = player->tesActor.objectReference.position.x;
+      gTropeletData.position.y = player->tesActor.objectReference.position.y;
+      gTropeletData.position.z = player->tesActor.objectReference.position.z;
+      gTropeletData.initialized = true;
+    }
+    
+    TESObjectReference_MoveToCell((TESObjectReference *)player, 0, targetCell);
+  }
+}
+
+//NOTE(adm244): teleport in reverse
+internal void Tropelet()
+{
+  if (gTropeletData.initialized) {
+    TESCell *targetCell = gTropeletData.cell;
+    if (gTropeletData.worldspace) {
+      targetCell = TESWorldSpace_FindExteriorCell(gTropeletData.worldspace, gTropeletData.x, gTropeletData.y);
+    }
+    
+    assert(targetCell != 0);
+    //FIX(adm244): 
     TESObjectReference_MoveToCell((TESObjectReference *)TES_GetPlayer(), 0, targetCell);
+  } else {
+    Teleport();
   }
 }
 
@@ -368,6 +415,8 @@ internal int ExecuteBatch(BatchData *batch, uint64 offset)
         //SaveGame(Strings.SaveDisplayName, Strings.SaveFileName);
       } else if( strcmp(line, BATCH_TELEPORT) == 0 ) {
         Teleport();
+      } else if( strcmp(line, BATCH_TROPELET) == 0 ) {
+        Tropelet();
       } else if( strncmp(line, BATCH_TIMEOUT, strlen(BATCH_TIMEOUT)) == 0 ) {
         char timeoutBuffer[8];
         strncpy_s(timeoutBuffer, 8, line + strlen(BATCH_TIMEOUT), 8);
