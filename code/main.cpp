@@ -294,6 +294,21 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
   }
 }
 
+/*#define ENUM_ITEM(e) e,
+#define _ENUM_FIRST(n) n ## FirstIndex
+#define _ENUM_LAST(n) n ## LastIndex
+#define ENUM(n, e) \
+  enum n { \
+    ENUM_ITEM(_ENUM_FIRST(n)) \
+    e(ENUM_ITEM) \
+    ENUM_ITEM(_ENUM_LAST(n)) \
+  };
+#define ENUM_FIRST(e) _ENUM_FIRST(e) + 1
+#define ENUM_LAST(e) _ENUM_LAST(e) - 1
+
+ENUM(TESMenus, TESMENUS)*/
+
+//TODO(adm244): move it in a more appropriate place
 #define SWITCH_STATE_NORMAL 0
 #define SWITCH_STATE_CHANGED 1
 #define SWITCH_STATE_WAIT 2
@@ -308,6 +323,7 @@ internal bool IsActivationPaused()
   bool state = (Settings.IgnoreInDialogue && IsPlayerInDialogue())
       || (Settings.IgnoreInMenu && IsInMenuMode())
       || (Settings.IgnoreInVATS && IsMenuOpen("VATSMenu"))
+      || (Settings.IgnoreInCooking && IsMenuOpen("CookingMenu"))
       || (Settings.IgnoreIfPlayerIsDead && IsActorDead((TESActor *)TES_GetPlayer()));
 
   switch (switch_state) {
@@ -420,7 +436,7 @@ extern "C" void HackingPrepare()
   ExtraLockData *lockData = ExtraDataList_GetExtraLockData(extrasList);
   assert(lockData != 0);
   
-  BSReadWriteLock_Lock(&extrasList->lock);
+  //BSReadWriteLock_Lock(&extrasList->lock);
   
   //NOTE(adm244): unused flag, should be safe
   if (lockData->flags & 0x80) {
@@ -433,7 +449,7 @@ extern "C" void HackingPrepare()
     }
   }
   
-  BSReadWriteLock_Unlock(&extrasList->lock);
+  //BSReadWriteLock_Unlock(&extrasList->lock);
 }
 
 extern "C" void HackingQuit()
@@ -446,12 +462,13 @@ extern "C" void HackingQuit()
   ExtraLockData *lockData = ExtraDataList_GetExtraLockData(extrasList);
   assert(lockData != 0);
   
-  BSReadWriteLock_Lock(&extrasList->lock);
+  //FIX(adm244): locks game sometimes?
+  //BSReadWriteLock_Lock(&extrasList->lock);
   
   lockData->flags |= 0x80;
   lockData->pad01[0] = (uint8)(*gTerminalTryCount);
   
-  BSReadWriteLock_Unlock(&extrasList->lock);
+  //BSReadWriteLock_Unlock(&extrasList->lock);
 }
 
 internal void HookMainLoop()
@@ -477,6 +494,8 @@ internal void Initialize(HMODULE module)
   
   int batchesCount = InitilizeBatches(module);
   if( batchesCount <= 0 ) {
+    //FIX(adm244): MessageBox call in DllMain
+    // https://docs.microsoft.com/en-us/windows/desktop/Dlls/dynamic-link-library-best-practices
     MessageBox(0, "Batch files could not be located!", "Error", MB_OK | MB_ICONERROR);
   }
   

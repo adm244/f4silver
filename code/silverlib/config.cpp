@@ -50,6 +50,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define CONFIG_AUTOSAVE "bAutoSave"
 #define CONFIG_CHECK_MENU "bIgnoreInMenu"
 #define CONFIG_CHECK_VATS "bIgnoreInVATS"
+#define CONFIG_CHECK_COOKING "bIgnoreInCooking"
 #define CONFIG_CHECK_DIALOGUE "bIgnoreInDialogue"
 #define CONFIG_CHECK_PLAYER_DEAD "bIgnoreIfPlayerIsDead"
 #define CONFIG_KEY_DEATH_EVENT "iKeyDeathEvent"
@@ -84,6 +85,7 @@ struct SilverSettings {
   bool AutoSaveEnabled;
   bool IgnoreInMenu;
   bool IgnoreInVATS;
+  bool IgnoreInCooking;
   bool IgnoreInDialogue;
   bool IgnoreIfPlayerIsDead;
   uint Timeout;
@@ -108,6 +110,7 @@ internal void SettingsInitialize(HMODULE module)
   Settings.AutoSaveEnabled = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_AUTOSAVE, true);
   Settings.IgnoreInMenu = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_CHECK_MENU, true);
   Settings.IgnoreInVATS = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_CHECK_VATS, true);
+  Settings.IgnoreInCooking = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_CHECK_COOKING, true);
   Settings.IgnoreInDialogue = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_CHECK_DIALOGUE, true);
   Settings.IgnoreIfPlayerIsDead = IniReadBool(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_CHECK_PLAYER_DEAD, true);
   
