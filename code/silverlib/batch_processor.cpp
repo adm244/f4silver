@@ -219,8 +219,8 @@ internal void Tropelet()
     }
     
     assert(targetCell != 0);
-    //FIX(adm244): 
     TESObjectReference_MoveToCell((TESObjectReference *)TES_GetPlayer(), 0, targetCell);
+    //TODO(adm244): set player's position and rotation
   } else {
     Teleport();
   }
@@ -312,65 +312,6 @@ internal bool InitBatchFiles(HMODULE module, BatchData *batches, int *num)
   *num = index;
   return(index > 0);
 }
-
-/*internal void ReadBatchDescriptions(BatchData *batches)
-{
-  FILE *file = NULL;
-  char line[MAX_DESCRIPTION];
-  
-  for( int i = 0; i < batches_count; ++i ) {
-    fopen_s(&file, batches[i].filename, "r");
-    
-    if( file ) {
-      if( fgets(line, sizeof(line), file) ) {
-        uint32 lineLen = strlen(line);
-        if(line[lineLen - 1] == '\n'){
-          line[lineLen - 1] = 0;
-        }
-        
-        strcpy(batches[i].description, line);
-      }
-      
-      fclose(file);
-    }
-  }
-}
-
-//IMPORTANT(adm244): get rid off duplicated file readings!
-internal uint8 GetBatchExecState(char *filename)
-{
-  uint8 result = EXEC_DEFAULT;
-
-  FILE *src = NULL;
-  fopen_s(&src, filename, "r");
-  
-  if( src ){
-    char line[4096];
-    
-    //FIX(adm244): hack
-    fgets(line, sizeof(line), src);
-    
-    while( fgets(line, sizeof(line), src) ){
-      uint32 lineLen = strlen(line);
-      
-      if(line[lineLen - 1] == '\n'){
-        line[lineLen - 1] = 0;
-      }
-    
-      if( strcmp(line, BATCH_EXTERIOR_ONLY) == 0 ) {
-        result = EXEC_EXTERIOR_ONLY;
-        break;
-      } else if( strcmp(line, BATCH_INTERIOR_ONLY) == 0 ) {
-        result = EXEC_INTERIOR_ONLY;
-        break;
-      }
-    }
-
-    fclose(src);
-  }
-
-  return result;
-}*/
 
 enum ExecuteBatch_ResultCodes {
   ExecuteBatch_Fail = -1,

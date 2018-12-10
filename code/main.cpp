@@ -25,42 +25,38 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 //IMPORTANT(adm244): SCRATCH VERSION JUST TO GET IT UP WORKING
 
-//IMPORTANT(adm244): patch only AFTER executable is decrypted!
-// (just wait a bit?)
-
 /*
-  IMPLEMENTED:
-    - Main game loop hook
-    - Load screen hook
-    - Print to console
-    - Print in-game message
-    - Execute console command
-    - Execute commands from *.txt file line by line (bat command)
-    - Check if player is in interior or exterior
-    - Teleport command
-    - Remove random counters clear timer
-    - Implement @timeout command to delay batch lines execution
-    - Check if player is in dialogue
-    - Check if menu is opened
-    - Check if vats is active
-    - @excluderandom command to exclude batch from random
-  TODO:
-    - Add comments support to batch files
-    - Rewrite hooking mechanism (detours)
-    - Rewrite batch file structure (meta data + actual commands)
-    - Draw game overlay
-    - Reload configuration on demand
-    - Save game when it's minimized
-    
-    - Hook initialize function (clear DllMain)?
-    - Save game function
+TODO:
+  Features:
+  - Steam support
+  - Draw game overlay
+  - Save game function
+  - Batch file comments support
+  - Reload configuration on demand
+  - Repair broken armor parts command
+  - Local server for message exchange with external programs
+  - In-game debug menu
   
-    - Rewrite config file structure and implement new parser (read entire config data into a structure)
-    
-    - Get rid of C Runtime Library
-    - Code cleanup
-  DROPPED:
-    none yet
+  Patches:
+  - Allow PushActorAway function to apply ragdoll on actors with broken limbs
+  
+  Bugs:
+  - Fix game crash at Teleport function
+  - Investigate BSReadWriteLock_Lock problem
+  - IsCellWithinBorderRegion sometimes returns incorrect results (CreationKit bug)
+  
+  Misc:
+  - Cache BSFixedString strings in IsMenuOpen
+  - Assert structure sizes
+  - Implement arena memory allocator
+  - Change Teleport to use Gaussian random value distribution
+  - Don't display RANDOM message if batch is activated immediately after
+  - Rewrite hooking mechanism (detours)
+  - Rewrite batch file structure (meta data + actual commands)
+  - Rewrite config file structure and implement new parser (read entire config data into a structure)
+  - Hook initialize function (clear DllMain)?
+  - Get rid of C Runtime Library
+  - Code cleanup
 */
 
 #include <assert.h>

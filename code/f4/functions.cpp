@@ -312,6 +312,7 @@ internal TESWorldSpace * GetPlayerCurrentWorldSpace()
   return worldspace;
 }
 
+//TODO(adm244): rename to TESCell_IsInPlayableArea or something like that
 internal bool IsCellWithinBorderRegion(TESCell *cell)
 {
   //FIX(adm244): doesn't work for every cell (editor bug)
@@ -320,12 +321,14 @@ internal bool IsCellWithinBorderRegion(TESCell *cell)
   TESCellUnk *cellUnk = TESCell_GetUnk(cell, 1);
   
   if( cellUnk ) {
+    //TODO(adm244): is regionUnk a linked-list?
     RegionUnk *regionUnk = (RegionUnk *)(&cellUnk->region);
     if( regionUnk ) {
       while( regionUnk ) {
         TESRegion *region = regionUnk->region;
         if( !region ) break;
         
+        //TODO(adm244): use enum value instead of literal constant
         result = ((region->tesForm.flags) >> 6) && 1;
         if( result ) break;
         

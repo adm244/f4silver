@@ -98,6 +98,7 @@ internal HMODULE HookLibrary(char *key)
 
 internal BOOL WINAPI DllMain(HANDLE procHandle, DWORD reason, LPVOID reserved)
 {
+  //FIX(adm244): don't call LoadLibrary from DllMain
   if( reason == DLL_PROCESS_ATTACH )
   {
     proxylib = HookLibrary(CONFIG_KEY_PROXY);

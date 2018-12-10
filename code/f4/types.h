@@ -25,8 +25,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 //IMPORTANT(adm244): SCRATCH VERSION JUST TO GET IT UP WORKING
 
-//TODO(adm244): assert structure sizes
-
 /*
   RE notes:
     - TESScript_Compile function sets 0x02 bit for TESScript
@@ -741,6 +739,7 @@ struct Inventory {
   real32 weight; // 0x70
   uint16 unk74;
   uint16 unk76;
+  //FIX(adm244): probably BSReadWriteLock
   int32 threadId; // 0x78
   uint32 unk7C;
   // ...?

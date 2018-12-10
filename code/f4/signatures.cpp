@@ -66,6 +66,10 @@ extern "C" {
   ObScriptCommand *gObScriptCommands;
 }
 
+enum ObScriptFunctions {
+  ObScript_Lock = 114,
+};
+
 //TODO(adm244): switch to multiple patterns search (Aho-Corasick?)
 internal uint64 FindSignature(MODULEINFO *moduleInfo, char *pattern, char *mask, uint64 offset)
 {
@@ -229,15 +233,10 @@ internal void InitObScript(MODULEINFO *moduleInfo)
   assert(gObScriptCommands != 0);
 }
 
-enum ObScriptFunctions {
-  ObScript_Lock = 114,
-};
-
 internal void InitObScriptDependentPointers()
 {
   assert(gObScriptCommands != 0);
   
-  // Lock(TESObjectREFR *, ...) - 114
   ObScriptCommand obLock = gObScriptCommands[ObScript_Lock];
   
   uint64 memptr = (uint64)(obLock.function);

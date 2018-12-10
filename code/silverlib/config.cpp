@@ -132,6 +132,7 @@ internal void SettingsInitialize(HMODULE module)
   IniReadString(module, CONFIG_FILE, CONFIG_MESSAGE_SECTION, CONFIG_MESSAGE_TOGGLE_OFF,
     CONFIG_DEFAULT_MESSAGE_TOGGLE_OFF, Strings.MessageOff, STRING_SIZE);
   
+  //TODO(adm244): does this ever used?
   Settings.Timeout = IniReadInt(module, CONFIG_FILE, CONFIG_SETTINGS_SECTION, CONFIG_TIMER, CONFIG_DEFAULT_TIMER);
 }
 
