@@ -28,6 +28,63 @@ OTHER DEALINGS IN THE SOFTWARE.
 #ifndef _F4_UTILS_H_
 #define _F4_UTILS_H_
 
+//TODO(adm244): move it in a more appropriate place
+#define SWITCH_STATE_NORMAL 0
+#define SWITCH_STATE_CHANGED 1
+#define SWITCH_STATE_WAIT 2
+#define SKIP_FRAMES 30
+
+internal bool IsActivationPaused()
+{
+  static uint8 switch_state = SWITCH_STATE_NORMAL;
+  static bool state_before_change = false;
+  static uint frames = 0;
+  
+  bool state = (Settings.IgnoreInDialogue && IsPlayerInDialogue())
+      || (Settings.IgnoreInMenu && IsInMenuMode())
+      || (Settings.IgnoreInVATS && IsMenuOpen("VATSMenu"))
+      || (Settings.IgnoreInCooking && IsMenuOpen("CookingMenu"))
+      || (Settings.IgnoreIfPlayerIsDead && IsActorDead((TESActor *)TES_GetPlayer()));
+
+  switch (switch_state) {
+    case SWITCH_STATE_NORMAL: {
+      //NOTE(adm244): track state change only when leaving paused mode
+      if ((!state) && (state != state_before_change)) {
+        switch_state = SWITCH_STATE_CHANGED;
+      } else {
+        state_before_change = state;
+      }
+    } break;
+    
+    case SWITCH_STATE_CHANGED: {
+      //DisplayMessage("CHANGED state");
+      
+      frames = 0;
+      switch_state = SWITCH_STATE_WAIT;
+    } break;
+    
+    case SWITCH_STATE_WAIT: {
+      //DisplayMessage("WAIT state");
+      
+      if ((state == state_before_change) && (state_before_change)) {
+        switch_state = SWITCH_STATE_NORMAL;
+      } else {
+        if (frames >= SKIP_FRAMES) {
+          //DisplayMessage("back to NORMAL state");
+          
+          switch_state = SWITCH_STATE_NORMAL;
+          state_before_change = state;
+          return state;
+        } else {
+          ++frames;
+        }
+      }
+    } break;
+  }
+  
+  return state_before_change;
+}
+
 internal inline void DisplayMessageDebug(char *message)
 {
   if( Settings.ShowMessagesDebug ) {
