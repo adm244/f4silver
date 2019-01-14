@@ -81,9 +81,6 @@ extern "C" {
   void HackingQuit_Hook();
 }
 
-extern "C" uint64 baseAddress = 0;
-internal HMODULE f4silver = 0;
-
 struct GameState {
   bool IsInterior;
   bool IsPlayerDead;
@@ -100,7 +97,6 @@ internal GameState gGameState;
 #include "silverlib/config.cpp"
 #include "silverlib/batch_processor.cpp"
 
-internal bool Initialized = false;
 internal HANDLE QueueHandle = 0;
 internal DWORD QueueThreadID = 0;
 
@@ -359,29 +355,11 @@ internal bool IsActivationPaused()
 
 extern "C" void GameLoop()
 {
-  if( !Initialized ) {
-    QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
-    CloseHandle(QueueHandle);
-    
-#ifdef DEBUG
-    MessageBoxA(0, "Injection is successfull!", "InjectDLL", MB_OK);
-#endif
-    Initialized = true;
-  }
-  
   if( gGameState.IsGameLoaded ) {
     if (gGameState.IsPlayerDead != IsActorDead((TESActor *)TES_GetPlayer())) {
       gGameState.IsPlayerDead = !gGameState.IsPlayerDead;
       
       if (gGameState.IsPlayerDead) {
-        //gDeathCount += 1;
-        
-        //FILE *deadCountFile = fopen(FILE_DEADCOUNT, "w");
-        //if (deadCountFile) {
-        //  fprintf(deadCountFile, "%d", gDeathCount);
-        //  fclose(deadCountFile);
-        //}
-        
         //TODO(adm244): place into a separate function call?
         INPUT input = {0};
         input.type = INPUT_KEYBOARD;
@@ -481,6 +459,17 @@ internal void InitGameState()
   gGameState.IsGameLoaded = false;
 }
 
+internal void InitQueueHandler()
+{
+  QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
+  CloseHandle(QueueHandle);
+  
+#ifdef DEBUG
+  //FIX(adm244): MessageBox call in DllMain
+  MessageBoxA(0, "Injection is successfull!", "InjectDLL", MB_OK);
+#endif
+}
+
 internal void Initialize(HMODULE module)
 {
   InitSignatures();
@@ -502,6 +491,8 @@ internal void Initialize(HMODULE module)
   QueueInitialize(&ExteriorPendingQueue);
   
   RandomInitializeSeed(&DefaultRandomSequence, GetTickCount64());
+  
+  InitQueueHandler();
 }
 
 internal DWORD WINAPI WaitForDecryption(LPVOID param)
@@ -534,8 +525,6 @@ internal DWORD WINAPI WaitForDecryption(LPVOID param)
 internal BOOL WINAPI DllMain(HMODULE instance, DWORD reason, LPVOID reserved)
 {
   if(reason == DLL_PROCESS_ATTACH) {
-    f4silver = instance;
-    
     Initialize(instance);
     
     HookMainLoop();
