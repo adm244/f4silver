@@ -87,22 +87,21 @@ struct GameState {
   bool IsGameLoaded;
 };
 
+struct Queues {
+  Queue PrimaryQueue;
+  Queue InteriorPendingQueue;
+  Queue ExteriorPendingQueue;
+};
+
 internal GameState gGameState;
+internal Queues gQueues;
 
 #include "silverlib/random/functions.c"
 
-#include "f4/version.h"
 #include "f4/functions.cpp"
 
 #include "silverlib/config.cpp"
 #include "silverlib/batch_processor.cpp"
-
-internal HANDLE QueueHandle = 0;
-internal DWORD QueueThreadID = 0;
-
-internal Queue BatchQueue;
-internal Queue InteriorPendingQueue;
-internal Queue ExteriorPendingQueue;
 
 internal inline void DisplayMessageDebug(char *message)
 {
@@ -196,9 +195,9 @@ internal void ProcessQueue(Queue *queue, bool checkExecState)
       
       if( !executionStateValid ) {
         if( batch->executionState == EXEC_EXTERIOR_ONLY ) {
-          QueuePut(&ExteriorPendingQueue, dataPointer);
+          QueuePut(&gQueues.ExteriorPendingQueue, dataPointer);
         } else {
-          QueuePut(&InteriorPendingQueue, dataPointer);
+          QueuePut(&gQueues.InteriorPendingQueue, dataPointer);
         }
         
         return;
@@ -246,37 +245,23 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
     if( keys_active ){
       for( int i = 0; i < batches_count; ++i ){
         if( IsActivated(batches[i].key, &batches[i].enabled) ){
-          QueuePut(&BatchQueue, (pointer)&batches[i]);
+          QueuePut(&gQueues.PrimaryQueue, (pointer)&batches[i]);
         }
       }
       
       if( IsActivated(&CommandRandom) ) {
-        /*BatchData *batch = GetRandomBatch(&randomBatchGroup);
-        if( batch ) {
-          QueuePut(&BatchQueue, (pointer)batch);
-          DisplayRandomSuccessMessage(batch->description);
-        } else {
-          DisplayRandomFailureMessage();
-        }*/
-        
         if (!BatchRandomSequence.initialized) {
           RandomInitializeSeed(&BatchRandomSequence, GetTickCount64());
         }
         
+        //FIX(adm244): temporary solution...
         int index = -1;
-        //NOTE(adm244): temporary solution...
         do {
           index = RandomInt(&BatchRandomSequence, 0, batches_count - 1);
         } while( batches[index].excludeRandom );
         
-        QueuePut(&BatchQueue, (pointer)&batches[index]);
+        QueuePut(&gQueues.PrimaryQueue, (pointer)&batches[index]);
         DisplayRandomSuccessMessage(batches[index].description);
-        
-        /*if (IsActorDead((TESActor *)TES_GetPlayer())) {
-          MessageBox(0, "Player is dead", "Info", MB_OK);
-        } else {
-          DisplayMessage("Player is NOT dead");
-        }*/
       }
     }
   }
@@ -375,13 +360,13 @@ extern "C" void GameLoop()
         gGameState.IsInterior = !gGameState.IsInterior;
         
         if( gGameState.IsInterior ) {
-          ProcessQueue(&InteriorPendingQueue, false);
+          ProcessQueue(&gQueues.InteriorPendingQueue, false);
         } else {
-          ProcessQueue(&ExteriorPendingQueue, false);
+          ProcessQueue(&gQueues.ExteriorPendingQueue, false);
         }
       }
       
-      ProcessQueue(&BatchQueue, true);
+      ProcessQueue(&gQueues.PrimaryQueue, true);
     }
   }
 }
@@ -461,7 +446,8 @@ internal void InitGameState()
 
 internal void InitQueueHandler()
 {
-  QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
+  DWORD QueueThreadID = 0;
+  HANDLE QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
   CloseHandle(QueueHandle);
   
 #ifdef DEBUG
@@ -486,9 +472,9 @@ internal void Initialize(HMODULE module)
   
   InitializeTimers();
   
-  QueueInitialize(&BatchQueue);
-  QueueInitialize(&InteriorPendingQueue);
-  QueueInitialize(&ExteriorPendingQueue);
+  QueueInitialize(&gQueues.PrimaryQueue);
+  QueueInitialize(&gQueues.InteriorPendingQueue);
+  QueueInitialize(&gQueues.ExteriorPendingQueue);
   
   RandomInitializeSeed(&DefaultRandomSequence, GetTickCount64());
   
