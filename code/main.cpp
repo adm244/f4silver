@@ -81,22 +81,12 @@ extern "C" {
   void HackingQuit_Hook();
 }
 
-struct GameState {
-  bool IsInterior;
-  bool IsPlayerDead;
-  bool IsGameLoaded;
-};
-
-internal GameState gGameState;
-
 #include "silverlib/random/functions.c"
 #include "f4/functions.cpp"
 #include "silverlib/config.cpp"
 #include "f4/utils.cpp"
 
-#include "silverlib/batch_processor.cpp"
-#include "silverlib/queue_processor.cpp"
-#include "silverlib/game_hooks.cpp"
+#include "silverlib/main.cpp"
 
 /*#define ENUM_ITEM(e) e,
 #define _ENUM_FIRST(n) n ## FirstIndex
@@ -111,64 +101,6 @@ internal GameState gGameState;
 #define ENUM_LAST(e) _ENUM_LAST(e) - 1
 
 ENUM(TESMenus, TESMENUS)*/
-
-internal void HookMainLoop()
-{
-  WriteBranch(mainloop_hook_patch_address, (uint64)&GameLoop_Hook);
-}
-
-internal void HookLoadGame()
-{
-  WriteBranch(loadgame_start_hook_patch_address, (uint64)&LoadGameBegin_Hook);
-  WriteBranch(loadgame_end_hook_patch_address, (uint64)&LoadGameEnd_Hook);
-}
-
-internal void InitGameState()
-{
-  gGameState.IsInterior = false;
-  gGameState.IsPlayerDead = false;
-  gGameState.IsGameLoaded = false;
-}
-
-internal void InitQueueHandler()
-{
-  DWORD QueueThreadID = 0;
-  HANDLE QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
-  CloseHandle(QueueHandle);
-  
-#ifdef DEBUG
-  //FIX(adm244): MessageBox call in DllMain
-  MessageBoxA(0, "Injection is successfull!", "InjectDLL", MB_OK);
-#endif
-}
-
-internal void Initialize(HMODULE module)
-{
-  InitSignatures();
-  
-  InitGameState();
-  SettingsInitialize(module);
-  
-  int batchesCount = InitilizeBatches(module);
-  if( batchesCount <= 0 ) {
-    //FIX(adm244): MessageBox call in DllMain
-    // https://docs.microsoft.com/en-us/windows/desktop/Dlls/dynamic-link-library-best-practices
-    MessageBox(0, "Batch files could not be located!", "Error", MB_OK | MB_ICONERROR);
-  }
-  
-  InitializeTimers();
-  
-  QueueInitialize(&gQueues.PrimaryQueue);
-  QueueInitialize(&gQueues.InteriorPendingQueue);
-  QueueInitialize(&gQueues.ExteriorPendingQueue);
-  
-  RandomInitializeSeed(&DefaultRandomSequence, GetTickCount64());
-  
-  InitQueueHandler();
-  
-  HookMainLoop();
-  HookLoadGame();
-}
 
 internal BOOL WINAPI DllMain(HMODULE instance, DWORD reason, LPVOID reserved)
 {
