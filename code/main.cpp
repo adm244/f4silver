@@ -97,12 +97,6 @@ internal GameState gGameState;
 #include "f4/version.h"
 #include "f4/functions.cpp"
 
-//FIX(adm244): hack!
-#define MAX_SECTION 32767
-#define MAX_FILENAME 260
-#define MAX_DESCRIPTION 255
-#define MAX_BATCHES 50
-
 #include "silverlib/config.cpp"
 #include "silverlib/batch_processor.cpp"
 

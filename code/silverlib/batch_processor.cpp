@@ -28,6 +28,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 #ifndef BATCH_PROCESSOR_H
 #define BATCH_PROCESSOR_H
 
+#define MAX_SECTION 32767
+#define MAX_FILENAME 260
+#define MAX_DESCRIPTION 255
+#define MAX_BATCHES 50
+
 #define BATCH_DEFAULT "@default"
 #define BATCH_INTERIOR "@interior"
 #define BATCH_EXTERIOR "@exterior"
