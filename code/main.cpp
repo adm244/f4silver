@@ -36,6 +36,7 @@ TODO:
   - Repair broken armor parts command
   - Local server for message exchange with external programs
   - In-game debug menu
+  - Log file
   
   Patches:
   - Allow PushActorAway function to apply ragdoll on actors with broken limbs
@@ -46,6 +47,7 @@ TODO:
   - IsCellWithinBorderRegion sometimes returns incorrect results (CreationKit bug)
   
   Misc:
+  - Devide game-specific and non-game specific parts
   - Cache BSFixedString strings in IsMenuOpen
   - Assert structure sizes
   - Implement arena memory allocator
@@ -82,8 +84,13 @@ extern "C" {
 extern "C" uint64 baseAddress = 0;
 internal HMODULE f4silver = 0;
 
-internal bool IsInterior = 0;
-internal bool ActualGameplay = false;
+struct GameState {
+  bool IsInterior;
+  bool IsPlayerDead;
+  bool IsGameLoaded;
+};
+
+internal GameState gGameState;
 
 #include "silverlib/random/functions.c"
 
@@ -106,11 +113,6 @@ internal DWORD QueueThreadID = 0;
 internal Queue BatchQueue;
 internal Queue InteriorPendingQueue;
 internal Queue ExteriorPendingQueue;
-
-//#define FILE_DEADCOUNT "_deathcount.txt"
-//TODO(adm244): store game state in a struct?
-internal bool gIsPlayerDead = false;
-//internal uint gDeathCount = 0;
 
 internal inline void DisplayMessageDebug(char *message)
 {
@@ -198,8 +200,8 @@ internal void ProcessQueue(Queue *queue, bool checkExecState)
     if( checkExecState ) {
       //uint8 executionState = GetBatchExecState(batch->filename);
     
-      bool executionStateValid = ((batch->executionState == EXEC_EXTERIOR_ONLY) && !IsInterior)
-        || ((batch->executionState == EXEC_INTERIOR_ONLY) && IsInterior)
+      bool executionStateValid = ((batch->executionState == EXEC_EXTERIOR_ONLY) && !gGameState.IsInterior)
+        || ((batch->executionState == EXEC_INTERIOR_ONLY) && gGameState.IsInterior)
         || (batch->executionState == EXEC_DEFAULT);
       
       if( !executionStateValid ) {
@@ -246,7 +248,7 @@ internal DWORD WINAPI QueueHandler(LPVOID data)
       keys_active = !keys_active;
       
       //TODO(adm244): display it somehow on loading screen
-      if( ActualGameplay ) {
+      if( gGameState.IsGameLoaded ) {
         DisplayMessage(keys_active ? Strings.MessageOn : Strings.MessageOff);
       }
     }
@@ -373,11 +375,11 @@ extern "C" void GameLoop()
     Initialized = true;
   }
   
-  if( ActualGameplay ) {
-    if (gIsPlayerDead != IsActorDead((TESActor *)TES_GetPlayer())) {
-      gIsPlayerDead = !gIsPlayerDead;
+  if( gGameState.IsGameLoaded ) {
+    if (gGameState.IsPlayerDead != IsActorDead((TESActor *)TES_GetPlayer())) {
+      gGameState.IsPlayerDead = !gGameState.IsPlayerDead;
       
-      if (gIsPlayerDead) {
+      if (gGameState.IsPlayerDead) {
         //gDeathCount += 1;
         
         //FILE *deadCountFile = fopen(FILE_DEADCOUNT, "w");
@@ -397,10 +399,10 @@ extern "C" void GameLoop()
     }
     
     if (!IsActivationPaused()) {
-      if( IsInterior != IsPlayerInInterior() ) {
-        IsInterior = !IsInterior;
+      if( gGameState.IsInterior != IsPlayerInInterior() ) {
+        gGameState.IsInterior = !gGameState.IsInterior;
         
-        if( IsInterior ) {
+        if( gGameState.IsInterior ) {
           ProcessQueue(&InteriorPendingQueue, false);
         } else {
           ProcessQueue(&ExteriorPendingQueue, false);
@@ -414,12 +416,12 @@ extern "C" void GameLoop()
 
 extern "C" void LoadGameBegin(char *filename)
 {
-  ActualGameplay = false;
+  gGameState.IsGameLoaded = false;
 }
 
 extern "C" void LoadGameEnd()
 {
-  ActualGameplay = true;
+  gGameState.IsGameLoaded = true;
 }
 
 extern "C" void HackingPrepare()
@@ -478,15 +480,19 @@ internal void HookLoadGame()
   WriteBranch(loadgame_end_hook_patch_address, (uint64)&LoadGameEnd_Hook);
 }
 
+internal void InitGameState()
+{
+  gGameState.IsInterior = false;
+  gGameState.IsPlayerDead = false;
+  gGameState.IsGameLoaded = false;
+}
+
 internal void Initialize(HMODULE module)
 {
-  //DefineAddresses();
-  //ShiftAddresses();
   InitSignatures();
   
+  InitGameState();
   SettingsInitialize(module);
-  //NOTE(adm244): why are we initializing batches twice???
-  //InitilizeBatches(module);
   
   int batchesCount = InitilizeBatches(module);
   if( batchesCount <= 0 ) {
@@ -500,16 +506,8 @@ internal void Initialize(HMODULE module)
   QueueInitialize(&BatchQueue);
   QueueInitialize(&InteriorPendingQueue);
   QueueInitialize(&ExteriorPendingQueue);
-  //QueueHandle = CreateThread(0, 0, &QueueHandler, 0, 0, &QueueThreadID);
   
-  //RandomGeneratorInitialize(batchesCount);
   RandomInitializeSeed(&DefaultRandomSequence, GetTickCount64());
-  
-  //FILE *deadCountFile = fopen(FILE_DEADCOUNT, "r");
-  //if (deadCountFile) {
-  //  fscanf(deadCountFile, "%d", &gDeathCount);
-  //  fclose(deadCountFile);
-  //}
 }
 
 internal DWORD WINAPI WaitForDecryption(LPVOID param)

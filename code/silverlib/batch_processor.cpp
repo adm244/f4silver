@@ -219,7 +219,9 @@ internal void Tropelet()
     }
     
     assert(targetCell != 0);
-    TESObjectReference_MoveToCell((TESObjectReference *)TES_GetPlayer(), 0, targetCell);
+    
+    TESPlayer *player = TES_GetPlayer();
+    TESObjectReference_MoveToCell((TESObjectReference *)player, 0, targetCell);
     //TODO(adm244): set player's position and rotation
   } else {
     Teleport();
@@ -379,8 +381,8 @@ internal int ExecuteBatch(BatchData *batch, uint64 offset)
       } else if (strcmp(line, BATCH_RANDOM_EXCLUDE) == 0 ) {
         //NOTE(adm244): should be empty
       } else {
-        if( (IsInterior && (executionState == EXEC_INTERIOR))
-         || (!IsInterior && (executionState == EXEC_EXTERIOR))
+        if( (gGameState.IsInterior && (executionState == EXEC_INTERIOR))
+         || (!gGameState.IsInterior && (executionState == EXEC_EXTERIOR))
          || (executionState == EXEC_DEFAULT) ) {
           if( !TES_ExecuteScriptLine(line) ) {
             result = ExecuteBatch_Fail;
