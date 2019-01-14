@@ -103,64 +103,7 @@ internal Queues gQueues;
 #include "silverlib/config.cpp"
 #include "silverlib/batch_processor.cpp"
 
-internal inline void DisplayMessageDebug(char *message)
-{
-  if( Settings.ShowMessagesDebug ) {
-    //TESConsolePrint(TES_GetConsoleObject(), message);
-    TESConsolePrint(message);
-  }
-}
-
-internal inline void DisplayMessage(char *message)
-{
-  TESDisplayMessage(message, 0, 1, true);
-}
-
-internal void DisplayMessage(char *message, char *commandName)
-{
-  char buffer[256];
-  sprintf_s(buffer, 256, message, commandName);
-
-  DisplayMessageDebug(buffer);
-  TESDisplayMessage(buffer, 0, 1, true);
-}
-
-internal inline void DisplaySuccessMessage(char *commandName)
-{
-  if( Settings.ShowMessages ) {
-    DisplayMessage(Strings.Message, commandName);
-  }
-}
-
-internal inline void DisplayFailMessage(char *commandName)
-{
-  if( Settings.ShowMessages ) {
-    DisplayMessage(Strings.MessageFail, commandName);
-  }
-}
-
-internal inline void DisplayRandomSuccessMessage(char *commandName)
-{
-  if( Settings.ShowMessagesRandom ) {
-    DisplayMessage(Strings.MessageRandom, commandName);
-  }
-}
-
-internal inline void MakePreSave()
-{
-  if( Settings.SavePreActivation ) {
-    //TODO(adm244): implement this!
-    //SaveGame("PreActivation", "pre");
-  }
-}
-
-internal inline void MakePostSave()
-{
-  if( Settings.SavePostActivation ) {
-  //TODO(adm244): implement this!
-    //SaveGame("PostActivation", "post");
-  }
-}
+#include "f4/utils.cpp"
 
 internal void ProcessQueue(Queue *queue, bool checkExecState)
 {
@@ -479,45 +422,15 @@ internal void Initialize(HMODULE module)
   RandomInitializeSeed(&DefaultRandomSequence, GetTickCount64());
   
   InitQueueHandler();
-}
-
-internal DWORD WINAPI WaitForDecryption(LPVOID param)
-{
-  //48 8B 0D 2A D8 D8 04 E8  CD 1D 00 00
-  /*uint8 orig_code[12] = { 0x48, 0x8B, 0x0D, 0x2A, 0xD8, 0xD8, 0x04, 0xE8, 0xCD, 0x1D, 0x00, 0x00 };
-  uint8 cur_code[12];
-  
-  for (;;) {
-    SafeReadBuf(mainloop_hook_patch_address, cur_code, ArraySize(cur_code));
-    
-    if( ArrayEquals(cur_code, ArraySize(cur_code), orig_code, ArraySize(orig_code)) )
-    {
-      break;
-    }
-    
-    Sleep(1000);
-  }
-  
-  HookMainLoop();*/
-  
-  Sleep(3000);
   
   HookMainLoop();
-  //HookLoadGame();
-  
-  return 0;
+  HookLoadGame();
 }
 
 internal BOOL WINAPI DllMain(HMODULE instance, DWORD reason, LPVOID reserved)
 {
   if(reason == DLL_PROCESS_ATTACH) {
     Initialize(instance);
-    
-    HookMainLoop();
-    HookLoadGame();
-    
-    //HANDLE decryptionThread = CreateThread(0, 0, WaitForDecryption, 0, 0, 0);
-    //CloseHandle(decryptionThread);
   }
 
   return TRUE;
