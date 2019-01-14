@@ -70,23 +70,25 @@ TODO:
 #include "common/utils.cpp"
 #include "common/queue.cpp"
 #include "common/win32_timer.cpp"
+#include "common/randomlib.c"
+
+#include "silverlib/config.cpp"
 
 #include "f4/types.h"
-
-extern "C" {
-  void GameLoop_Hook();
-  void LoadGameBegin_Hook();
-  void LoadGameEnd_Hook();
-  void HackingPrepare_Hook();
-  void HackingQuit_Hook();
-}
-
-#include "silverlib/random/functions.c"
+#include "f4/game_hooks.h"
 #include "f4/functions.cpp"
-#include "silverlib/config.cpp"
 #include "f4/utils.cpp"
 
 #include "silverlib/main.cpp"
+
+internal BOOL WINAPI DllMain(HMODULE instance, DWORD reason, LPVOID reserved)
+{
+  if(reason == DLL_PROCESS_ATTACH) {
+    Initialize(instance);
+  }
+
+  return TRUE;
+}
 
 /*#define ENUM_ITEM(e) e,
 #define _ENUM_FIRST(n) n ## FirstIndex
@@ -101,12 +103,3 @@ extern "C" {
 #define ENUM_LAST(e) _ENUM_LAST(e) - 1
 
 ENUM(TESMenus, TESMENUS)*/
-
-internal BOOL WINAPI DllMain(HMODULE instance, DWORD reason, LPVOID reserved)
-{
-  if(reason == DLL_PROCESS_ATTACH) {
-    Initialize(instance);
-  }
-
-  return TRUE;
-}

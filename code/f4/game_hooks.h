@@ -25,46 +25,15 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 //IMPORTANT(adm244): SCRATCH VERSION JUST TO GET IT UP WORKING
 
-#ifndef RANDOM_FUNCTIONS_C
-#define RANDOM_FUNCTIONS_C
+#ifndef _F4_GAME_HOOKS_H_
+#define _F4_GAME_HOOKS_H_
 
-#include "randomlib.c"
-
-/*internal int randomGenerated = 0;
-internal uint8 randomCounters[MAX_BATCHES];
-
-internal void RandomClearCounters()
-{
-  randomGenerated = 0;
-  for( int i = 0; i < MAX_BATCHES; ++i ) {
-    randomCounters[i] = 0;
-  }
-}
-
-internal int GetNextBatchIndex(int batchesCount)
-{
-  if( randomGenerated >= batchesCount ) {
-    RandomClearCounters();
-  }
-  
-  int value;
-  for( ;; ) {
-    value = RandomInt(0, batchesCount - 1);
-    if( randomCounters[value] == 0 ) break;
-  }
-  
-  ++randomGenerated;
-  randomCounters[value] = 1;
-  
-  return value;
-}*/
-
-internal void RandomInitializeSeed(RandomSequence *seq, uint64 seed)
-{
-  uint64 ij = seed % 31328;
-  uint64 kj = ((seed >> 3) ^ seed) % 30081;
-  
-  RandomInitialize(seq, ij, kj);
+extern "C" {
+  void GameLoop_Hook();
+  void LoadGameBegin_Hook();
+  void LoadGameEnd_Hook();
+  void HackingPrepare_Hook();
+  void HackingQuit_Hook();
 }
 
 #endif

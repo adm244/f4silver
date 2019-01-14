@@ -133,6 +133,14 @@ internal void RandomInitialize(RandomSequence *seq, int ij, int kl)
   }
 }
 
+internal void RandomInitializeSeed(RandomSequence *seq, uint64 seed)
+{
+  uint64 ij = seed % 31328;
+  uint64 kj = ((seed >> 3) ^ seed) % 30081;
+  
+  RandomInitialize(seq, ij, kj);
+}
+
 /*
   This is the random number generator proposed by George Marsaglia in
   Florida State University Report: FSU-SCRI-87-50
