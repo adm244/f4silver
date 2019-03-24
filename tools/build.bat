@@ -11,7 +11,7 @@ SET deffile=%source%\x3daudio1_7_hook\exports.def
 SET hookname=X3DAudio1_7
 
 SET asmfiles=%source%\f4\game_hooks.asm
-SET objfiles=hooks.obj
+SET objfiles=game_hooks.obj
 SET masm_args=/c /nologo %asmfiles%
 
 SET debug=/Od /Zi /nologo /EHsc /DDEBUG
