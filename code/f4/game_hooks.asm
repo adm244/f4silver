@@ -32,12 +32,14 @@ extern loadgame_start_hook_return_address: qword
 extern loadgame_end_hook_return_address: qword
 extern prepare_hacking_hook_addr: qword
 extern quit_hacking_hook_addr: qword
+extern activate_vats_addr: qword
 
 extern GameLoop: proc
 extern LoadGameBegin: proc
 extern LoadGameEnd: proc
 extern HackingPrepare: proc
 extern HackingQuit: proc
+extern VATSActivate: proc
 
 pushregs MACRO
   push rbx
@@ -134,4 +136,26 @@ ENDM
     add rax, 15
     jmp rax
   HackingQuit_Hook endp
+  
+  VATSActivate_Hook proc
+    pushregs
+    call VATSActivate
+    popregs
+    
+    cmp ax, 0
+    jnz proceed
+    ret
+    
+  proceed:
+    mov byte ptr [rsp+8h], cl
+    mov r11, rsp
+    push rbp
+    push rbx
+    push rdi
+    push r12
+    
+    mov rax, activate_vats_addr
+    add rax, 12
+    jmp rax
+  VATSActivate_Hook endp
 end

@@ -116,4 +116,10 @@ extern "C" void HackingQuit()
   //BSReadWriteLock_Unlock(&extrasList->lock);
 }
 
+//NOTE(adm244): returns true if VATS is allowed to activate, false otherwise
+extern "C" bool VATSActivate()
+{
+  return IsPlayerInCombat();
+}
+
 #endif

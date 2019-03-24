@@ -389,6 +389,18 @@ internal inline bool IsActorDead(TESActor *actor)
   return funcPtr(actor, 1);
 }
 
+internal inline bool IsInCombat(TESActor *actor)
+{
+  //TODO(adm244): member function call macro?
+  _TESActor_IsInCombat funcPtr = (_TESActor_IsInCombat)( *(((uint64 *)((TESForm *)actor)->vtable) + 254) );
+  return funcPtr(actor);
+}
+
+internal inline bool IsPlayerInCombat()
+{
+  return IsInCombat((TESActor *)TES_GetPlayer());
+}
+
 //FIX(adm244): it's actually more like FillConsoleBackbuffer,
 // because it fills a buffer and adds some meta data to it (like text length, etc.)
 // which then gets copied into real console buffer

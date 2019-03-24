@@ -86,6 +86,9 @@ internal _TESObjectReference_GetCurrentLocation TESObjectReference_GetCurrentLoc
 typedef bool (__fastcall *_TESActor_IsDead)
 (TESActor *actor, bool unk02);
 
+typedef bool (__fastcall *_TESActor_IsInCombat)
+(TESActor *actor);
+
 //internal _TESActor_IsDead TESActor_IsDead;
 // ------ #TESActor ------
 

@@ -34,6 +34,7 @@ extern "C" {
   void LoadGameEnd_Hook();
   void HackingPrepare_Hook();
   void HackingQuit_Hook();
+  bool VATSActivate_Hook();
 }
 
 #endif

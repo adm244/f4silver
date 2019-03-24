@@ -58,6 +58,9 @@ extern "C" {
   uint64 prepare_hacking_hook_addr;
   uint64 quit_hacking_hook_addr;
   
+  // VATS
+  uint64 activate_vats_addr;
+  
   TESObjectReference **gActiveTerminalREFR;
   BGSTerminal **gActiveTerminalForm;
   int32 *gTerminalTryCount;
@@ -216,10 +219,21 @@ internal void PatchTerminalHacking(MODULEINFO *moduleInfo)
   SafeWrite8(quit_hacking_hook_addr + 14, 0x90);
 }
 
+internal void PatchVATSActivation(MODULEINFO *moduleInfo)
+{
+  activate_vats_addr = FindSignature(moduleInfo,
+    "\x88\x4C\x24\x08\x4C\x8B\xDC\x55\x53\x57\x41\x54\x41\x55\x41\x57",
+    "xxxxxxxxxxxxxxxx", 0);
+  assert(activate_vats_addr != 0);
+  
+  WriteBranch(activate_vats_addr, (uint64)VATSActivate_Hook);
+}
+
 internal void InitPatches(MODULEINFO *moduleInfo)
 {
   PatchRandom(moduleInfo);
   PatchTerminalHacking(moduleInfo);
+  PatchVATSActivation(moduleInfo);
 }
 
 internal void InitObScript(MODULEINFO *moduleInfo)
