@@ -63,6 +63,8 @@ popregs MACRO
   pop rbx
 ENDM
 
+;FIX(adm244): ALLOCATE 32 BYTES FOR "SHADOW SPACE" BEFORE CALLING A FUNCTION !!!
+
 .code
   GameLoop_Hook proc
     pushregs

@@ -85,12 +85,13 @@ internal bool IsActivationPaused()
   return state_before_change;
 }
 
-internal inline void DisplayMessageDebug(char *message)
+internal inline void DisplayMessageDebug(char *message, char *commandName)
 {
-  if( Settings.ShowMessagesDebug ) {
-    //TESConsolePrint(TES_GetConsoleObject(), message);
-    TESConsolePrint(message);
-  }
+  char buffer[256];
+  sprintf_s(buffer, 256, message, commandName);
+
+  //TESConsolePrint(TES_GetConsoleObject(), message);
+  TESConsolePrint(buffer);
 }
 
 internal inline void DisplayMessage(char *message)
@@ -103,7 +104,6 @@ internal void DisplayMessage(char *message, char *commandName)
   char buffer[256];
   sprintf_s(buffer, 256, message, commandName);
 
-  DisplayMessageDebug(buffer);
   TESDisplayMessage(buffer, 0, 1, true);
 }
 
@@ -112,6 +112,10 @@ internal inline void DisplaySuccessMessage(char *commandName)
   if( Settings.ShowMessages ) {
     DisplayMessage(Strings.Message, commandName);
   }
+  
+  if( Settings.ShowMessagesDebug ) {
+    DisplayMessageDebug(Strings.Message, commandName);
+  }
 }
 
 internal inline void DisplayFailMessage(char *commandName)
@@ -119,12 +123,20 @@ internal inline void DisplayFailMessage(char *commandName)
   if( Settings.ShowMessages ) {
     DisplayMessage(Strings.MessageFail, commandName);
   }
+  
+  if( Settings.ShowMessagesDebug ) {
+    DisplayMessageDebug(Strings.MessageFail, commandName);
+  }
 }
 
 internal inline void DisplayRandomSuccessMessage(char *commandName)
 {
   if( Settings.ShowMessagesRandom ) {
     DisplayMessage(Strings.MessageRandom, commandName);
+  }
+  
+  if( Settings.ShowMessagesDebug ) {
+    DisplayMessageDebug(Strings.MessageRandom, commandName);
   }
 }
 
