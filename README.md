@@ -16,12 +16,12 @@ A plugin for Fallout 4 that allows to activate console commands through key pres
 * VATS detection
 * Game pause detection
 * Dialogue detection
+* Support for steam version
 * something else?
 
 ### Yet to be implemented
 * Save\Load game commands
 * Pre\Post batch execution save
-* Support for steam version
 
 ### Compilation
 Compilation is done as a single unit, just assemble hooks.asm, compile main.cpp, link them and it should work.
@@ -31,13 +31,15 @@ For more details see tools/build.bat file.
 ### Installation
 * Extract contents of a zip file (see release page) into root Fallout 4 folder (the one with Fallout4.exe).
 
-Note that that this plugin will not currently load into steam version (use external dll injector).
-
 ### Supported versions
 Should work on most game versions (create an issue if it doesn't and specify problematic version).
 List of versions that were tested is located below.
 
 ### Tested versions
+* 1.10.138
+* 1.10.130
+* 1.10.120
+* 1.10.114
 * 1.10.111
 * 1.10.106
 * 1.10.98
