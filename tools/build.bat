@@ -16,12 +16,12 @@ SET masm_args=/c /nologo %asmfiles%
 
 SET debug=/Od /Zi /nologo /EHsc /DDEBUG
 SET release=/W2 /Ot /Oi /O2 /WX /nologo /EHsc
-SET args=%debug% /Fe%project% %files% /LD /link %objfiles% %libs% Psapi.lib
+SET args=%release% /Fe%project% %files% /LD /link %objfiles% %libs% Psapi.lib
 
 SET libargs=%release% /c
 
 SET includepath=%ProgramFiles(x86)%\Microsoft DirectX SDK (June 2010)\Include
-SET hookargs=/I "%includepath%" %release% /Fe%hookname% %hookfile% /LD /link /DEF:%deffile% %libs%
+SET hookargs=/I "%includepath%" %release% /Fe%hookname% %hookfile% /LD /link /DEF:%deffile% %libs% Shell32.lib
 REM SET hookargs=/I "%includepath%" %release% /Fe%hookname% %hookfile% /LD /link %libs%
 
 SET injector=tools\injector

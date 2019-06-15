@@ -29,15 +29,16 @@ OTHER DEALINGS IN THE SOFTWARE.
   TODO:
     - add check for game exe! (creation kit also using this library)
     
-    - get path to system32 folder from windows
     - optional warning message if f4silver.dll is not found
     - remove c++ string
     - compile without c-runtime Library
 */
 
-#include <string>
 #include <windows.h>
+#include <Shlobj.h>
 #include <x3daudio.h>
+#include <assert.h>
+#include <string>
 
 #define internal static
 #define CONFIG_FILE "x3daudio.ini"
@@ -49,24 +50,7 @@ internal HMODULE proxylib = 0;
 
 // LIBRARY FUNCTIONS
 typedef void __stdcall X3DAudioInitializeFunc(UINT32 SpeakerChannelMask, FLOAT32 SpeedOfSound, X3DAUDIO_HANDLE Instance);
-typedef void __stdcall X3DAudioCalculateFunc(const X3DAUDIO_HANDLE Instance, const X3DAUDIO_LISTENER* pListener,
-  const X3DAUDIO_EMITTER* pEmitter, UINT32 Flags, X3DAUDIO_DSP_SETTINGS* pDSPSettings);
-
-extern "C"
-void __stdcall Fake_X3DAudioInitialize(UINT32 SpeakerChannelMask, FLOAT32 SpeedOfSound, X3DAUDIO_HANDLE Instance)
-{
-  X3DAudioInitializeFunc *X3DAudioInitialize = (X3DAudioInitializeFunc *)GetProcAddress(proxylib, "X3DAudioInitialize");
-  X3DAudioInitialize(SpeakerChannelMask, SpeedOfSound, Instance);
-}
-
-extern "C"
-void __stdcall Fake_X3DAudioCalculate(const X3DAUDIO_HANDLE Instance, const X3DAUDIO_LISTENER* pListener,
-  const X3DAUDIO_EMITTER* pEmitter, UINT32 Flags, X3DAUDIO_DSP_SETTINGS* pDSPSettings)
-{
-  X3DAudioCalculateFunc *X3DAudioCalculate = (X3DAudioCalculateFunc *)GetProcAddress(proxylib, "X3DAudioCalculate");
-  X3DAudioCalculate(Instance, pListener, pEmitter, Flags, pDSPSettings);
-}
-// END
+typedef void __stdcall X3DAudioCalculateFunc(const X3DAUDIO_HANDLE Instance, const X3DAUDIO_LISTENER* pListener, const X3DAUDIO_EMITTER* pEmitter, UINT32 Flags, X3DAUDIO_DSP_SETTINGS* pDSPSettings);
 
 std::string GetDirectoryFromPath(std::string path)
 {
@@ -88,32 +72,56 @@ internal HMODULE HookLibrary(char *key)
   HMODULE library = 0;
   
   int result = IniReadString(CONFIG_FILE, CONFIG_SECTION_PROXY, key, 0, libraryName, sizeof(libraryName));
-  
-  if( result ) {
-    library = LoadLibrary(libraryName);
+  if(result) {
+    library = LoadLibraryA(libraryName);
   }
   
   return library;
 }
 
-internal BOOL WINAPI DllMain(HANDLE procHandle, DWORD reason, LPVOID reserved)
+internal HMODULE LoadX3DAudio()
 {
-  //FIX(adm244): don't call LoadLibrary from DllMain
-  if( reason == DLL_PROCESS_ATTACH )
-  {
-    proxylib = HookLibrary(CONFIG_KEY_PROXY);
-    if( !proxylib ) {
-      proxylib = LoadLibrary("c:\\windows\\system32\\X3DAudio1_7.dll");
-    }
+  HMODULE library = HookLibrary(CONFIG_KEY_PROXY);
+  if(!library) {
+    const char *libname = "\\X3DAudio1_7.dll";
+  
+    char libpath[MAX_PATH];
+    HRESULT result = SHGetFolderPathA(0, CSIDL_SYSTEM, 0, SHGFP_TYPE_CURRENT, libpath);
+    assert(result == S_OK);
+    
+    strcat_s(libpath, MAX_PATH, libname);
+    
+    library = LoadLibraryA(libpath);
+  }
+  
+  return library;
+}
+
+extern "C"
+void __stdcall Fake_X3DAudioInitialize(UINT32 SpeakerChannelMask, FLOAT32 SpeedOfSound, X3DAUDIO_HANDLE Instance)
+{
+  if (!proxylib) {
+    proxylib = LoadX3DAudio();
+    assert(proxylib != 0);
     
     f4silver = LoadLibrary("f4silver.dll");
-    if( !f4silver ) {
-      //MessageBox(0, "Plugin f4silver.dll was not found!", "Plugin dll not found", MB_OK | MB_ICONERROR);
-      return FALSE;
-    } else {
-      //MessageBox(0, "f4silver.dll is loaded!", "Yay!", 0);
-    }
+    assert(f4silver != 0);
   }
+  
+  X3DAudioInitializeFunc *X3DAudioInitialize = (X3DAudioInitializeFunc *)GetProcAddress(proxylib, "X3DAudioInitialize");
+  X3DAudioInitialize(SpeakerChannelMask, SpeedOfSound, Instance);
+}
 
+extern "C"
+void __stdcall Fake_X3DAudioCalculate(const X3DAUDIO_HANDLE Instance, const X3DAUDIO_LISTENER* pListener,
+  const X3DAUDIO_EMITTER* pEmitter, UINT32 Flags, X3DAUDIO_DSP_SETTINGS* pDSPSettings)
+{
+  X3DAudioCalculateFunc *X3DAudioCalculate = (X3DAudioCalculateFunc *)GetProcAddress(proxylib, "X3DAudioCalculate");
+  X3DAudioCalculate(Instance, pListener, pEmitter, Flags, pDSPSettings);
+}
+// END
+
+internal BOOL WINAPI DllMain(HANDLE procHandle, DWORD reason, LPVOID reserved)
+{
   return TRUE;
 }
